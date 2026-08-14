@@ -1,0 +1,11 @@
+{
+  "schema": "recipe.v1",
+  "paper_id": "synthetic-identity-paper",
+  "title": "A Synthetic Identity Theorem",
+  "claims": [
+    {
+      "declaration_gid": "SYNTH.THEOREM.IDENTITY",
+      "describe_anchor": "describe:synthetic-identity"
+    }
+  ]
+}

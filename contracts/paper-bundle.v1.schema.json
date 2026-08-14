@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-bundle.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "paper_tex_sha256", "source_snapshot_sha256"],
+  "properties": {
+    "schema": { "const": "paper-bundle.v1" },
+    "paper_tex_sha256": { "$ref": "#/$defs/sha256" },
+    "source_snapshot_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": { "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+}

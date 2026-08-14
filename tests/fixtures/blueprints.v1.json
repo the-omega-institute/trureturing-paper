@@ -1,0 +1,8 @@
+[
+  {
+    "describe_anchor": "describe:synthetic-identity",
+    "declaration_gid": "SYNTH.THEOREM.IDENTITY",
+    "truth_anchor": "truth:SYNTH.THEOREM.IDENTITY",
+    "narrative": "The frozen identity declaration states that every selected object equals itself."
+  }
+]

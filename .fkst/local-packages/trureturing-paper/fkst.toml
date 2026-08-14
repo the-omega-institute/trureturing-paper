@@ -1,0 +1,3 @@
+# fkst-layer.v1 walking skeleton; lifecycle programs are TBD.
+kind = "package"
+persistence_class = "stateless_adapter"

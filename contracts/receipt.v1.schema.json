@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "receipt.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "phase", "paper_bundle_sha256"],
+  "properties": {
+    "schema": { "const": "receipt.v1" },
+    "phase": { "enum": ["candidate", "verified", "terminal"] },
+    "paper_bundle_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

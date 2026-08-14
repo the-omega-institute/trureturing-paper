@@ -1,0 +1,12 @@
+[
+  {
+    "declaration_gid": "SYNTH.THEOREM.IDENTITY",
+    "status": "frozen",
+    "statement_left": "x",
+    "statement_right": "x",
+    "truth_anchor": "truth:SYNTH.THEOREM.IDENTITY",
+    "lean_report_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "declared_axioms": ["propext", "Classical.choice", "Quot.sound"],
+    "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"]
+  }
+]

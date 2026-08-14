@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "source-snapshot.v1",
+  "title": "Canonical source-snapshot.v1",
+  "description": "器官间上下连接的唯一入口契约；内容由人工盖章后不可变并按内容寻址。pages 仓早期仅含 repo/commit/tree/deriver/open_set 的 source-snapshot.v1 是未投产原型，本契约是 canonical 唯一真源。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "source_repo",
+    "source_commit",
+    "source_tree",
+    "repository_snapshot_digest",
+    "producer_version",
+    "truth_root_sha256",
+    "truth_graph_sha256",
+    "lean_report_sha256",
+    "blueprint_tree_digest",
+    "theory_tree_digest",
+    "library_tree_digest",
+    "evidence_digest",
+    "derived_at",
+    "blessed_by"
+  ],
+  "properties": {
+    "schema": {
+      "const": "source-snapshot.v1"
+    },
+    "source_repo": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+      "description": "Source repository identity in org/repo form."
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{40}$",
+      "description": "Exact source commit object ID."
+    },
+    "source_tree": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{40}$",
+      "description": "Exact source tree object ID."
+    },
+    "repository_snapshot_digest": {
+      "$ref": "#/$defs/prefixedSha256"
+    },
+    "producer_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Producer version; exact version semantics are TBD."
+    },
+    "truth_root_sha256": {
+      "$ref": "#/$defs/rawSha256"
+    },
+    "truth_graph_sha256": {
+      "$ref": "#/$defs/rawSha256"
+    },
+    "lean_report_sha256": {
+      "$ref": "#/$defs/rawSha256"
+    },
+    "blueprint_tree_digest": {
+      "$ref": "#/$defs/prefixedSha256"
+    },
+    "theory_tree_digest": {
+      "$ref": "#/$defs/prefixedSha256"
+    },
+    "library_tree_digest": {
+      "$ref": "#/$defs/prefixedSha256"
+    },
+    "evidence_digest": {
+      "$ref": "#/$defs/prefixedSha256"
+    },
+    "derived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Derivation timestamp; exact operational semantics are TBD."
+    },
+    "blessed_by": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human blessing marker; exact identity semantics are TBD."
+    }
+  },
+  "$defs": {
+    "rawSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "prefixedSha256": {
+      "type": "string",
+      "pattern": "^sha256-[0-9a-f]{64}$"
+    }
+  }
+}

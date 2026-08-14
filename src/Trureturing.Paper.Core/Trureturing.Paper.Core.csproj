@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="../../vendor/scribe/Formula.cs" Link="Vendor/Scribe/Formula.cs" />
+    <Compile Include="../../vendor/scribe/LatexWriter.cs" Link="Vendor/Scribe/LatexWriter.cs" />
+  </ItemGroup>
+</Project>

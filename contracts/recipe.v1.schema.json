@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recipe.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "paper_id", "title", "claims"],
+  "properties": {
+    "schema": { "const": "recipe.v1" },
+    "paper_id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["declaration_gid", "describe_anchor"],
+        "properties": {
+          "declaration_gid": { "type": "string", "minLength": 1 },
+          "describe_anchor": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

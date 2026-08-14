@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Trureturing.Paper.Core/Trureturing.Paper.Core.csproj" />
+  </ItemGroup>
+</Project>
