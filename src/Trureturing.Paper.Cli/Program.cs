@@ -20,7 +20,7 @@ internal static class Program
             var options = CliOptions.Parse(args);
             var recipe = ReadJson<PaperRecipe>(options.RecipePath);
             var ports = new FrozenBundleFilePorts(options.BundleDirectory);
-            var bytes = new PaperAssemblyService(ports, ports, ports, ports, ports).Assemble(recipe);
+            var bytes = new PaperAssemblyService(ports, ports, ports, ports, ports, ports).Assemble(recipe);
             var outputPath = Path.GetFullPath(options.OutputPath);
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllBytes(outputPath, bytes);
@@ -77,7 +77,8 @@ internal sealed class FrozenBundleFilePorts :
     IFrozenTruthPort,
     IBlueprintPort,
     ICitationPort,
-    IEvidencePort
+    IEvidencePort,
+    ITruthGraphPort
 {
     private readonly string _root;
 
@@ -89,6 +90,21 @@ internal sealed class FrozenBundleFilePorts :
     public BlessedSnapshotEnvelope Read() => new(
         File.ReadAllBytes(Path.Combine(_root, "source-snapshot.v1.json")),
         File.ReadAllText(Path.Combine(_root, "source-snapshot.v1.sha256")).Trim());
+
+    // Required in the production path: the assembler verifies this against the snapshot's
+    // truth_graph_sha256 and requires every claimed declaration to be a closed node in it, so a
+    // tampered frozen-truth.v1.json cannot impersonate a frozen theorem.
+    public TruthGraphEnvelope ReadTruthGraph()
+    {
+        var path = Path.Combine(_root, "truth-graph.v1.json");
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException(
+                "Frozen bundle is missing truth-graph.v1.json; the closed-theorem binding cannot be verified.",
+                path);
+        }
+        return new TruthGraphEnvelope(File.ReadAllBytes(path));
+    }
 
     public IReadOnlyList<FrozenDeclaration> ReadDeclarations()
     {

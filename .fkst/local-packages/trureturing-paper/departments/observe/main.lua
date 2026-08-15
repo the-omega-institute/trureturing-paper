@@ -24,8 +24,11 @@ function pipeline(event)
   end
   local ledger = ""
   if file.exists(pth.pubs) then ledger = file.read(pth.pubs) end
-  if not core.needs_publish(blessed_dig, ledger) then
-    log.info("observe: truth_graph " .. blessed_dig .. " already published")
+  -- Republish if the digest is unrecorded OR the output was deleted/lost: the ledger is
+  -- publication history, but the current artifact must also exist. act's record stays idempotent
+  -- by digest, so re-materializing a deleted paper.tex does not append a second receipt.
+  if not core.needs_publish(blessed_dig, ledger) and file.exists(pth.tex) then
+    log.info("observe: truth_graph " .. blessed_dig .. " already published and materialized")
     return
   end
   raise("paper_reproject", {
