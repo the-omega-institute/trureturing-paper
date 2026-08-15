@@ -1,3 +1,9 @@
-# fkst-layer.v1 walking skeleton; lifecycle programs are TBD.
 kind = "package"
+name = "trureturing-paper"
 persistence_class = "stateless_adapter"
+
+[code]
+root = "."
+
+[lib_deps]
+libraries = []
