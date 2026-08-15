@@ -5,7 +5,8 @@ public static class ClaimGate
     public static PaperDocument Resolve(
         PaperRecipe recipe,
         FrozenInputs inputs,
-        SourceSnapshot snapshot)
+        SourceSnapshot snapshot,
+        FrozenTruthGraph? truthGraph = null)
     {
         ArgumentNullException.ThrowIfNull(recipe);
         ArgumentNullException.ThrowIfNull(inputs);
@@ -44,6 +45,21 @@ public static class ClaimGate
             if (!string.Equals(declaration.Status, "frozen", StringComparison.Ordinal))
             {
                 throw new ClaimGateException($"Declaration '{claim.DeclarationGid}' is not frozen.");
+            }
+            if (truthGraph is not null)
+            {
+                var binding = TruthGraphReader.RequireClosedTheorem(
+                    truthGraph,
+                    declaration.DeclarationGid,
+                    claim.DescribeAnchor);
+                if (!string.Equals(
+                        declaration.TruthAnchor,
+                        binding.DocumentGid,
+                        StringComparison.Ordinal))
+                {
+                    throw new ClaimGateException(
+                        $"Declaration '{claim.DeclarationGid}' is not bound to its closed truth-graph node.");
+                }
             }
             if (!string.Equals(declaration.LeanReportSha256, snapshot.LeanReportSha256, StringComparison.Ordinal))
             {

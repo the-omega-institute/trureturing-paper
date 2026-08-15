@@ -1,0 +1,11 @@
+{
+  "schema": "recipe.v1",
+  "paper_id": "real-trace-conjugation-paper",
+  "title": "Trace Invariance Under Conjugation",
+  "claims": [
+    {
+      "declaration_gid": "D5/S0/Carrier/TraceConjugation.trace_conj",
+      "describe_anchor": "describe:trace-invariance-under-conjugation"
+    }
+  ]
+}

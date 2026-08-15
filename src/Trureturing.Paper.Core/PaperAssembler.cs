@@ -6,7 +6,10 @@ public static class PaperAssembler
     {
         ArgumentNullException.ThrowIfNull(frozenInputs);
         var snapshot = SourceSnapshotReader.ReadAndVerify(frozenInputs.Snapshot);
-        var document = ClaimGate.Resolve(recipe, frozenInputs, snapshot);
+        var truthGraph = frozenInputs.TruthGraph is null
+            ? null
+            : TruthGraphReader.ReadAndVerify(frozenInputs.TruthGraph, snapshot);
+        var document = ClaimGate.Resolve(recipe, frozenInputs, snapshot, truthGraph);
         return LatexDocumentWriter.Write(document);
     }
 }

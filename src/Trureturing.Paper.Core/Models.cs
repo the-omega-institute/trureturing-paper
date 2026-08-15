@@ -12,12 +12,15 @@ public sealed record RecipeClaim(string DeclarationGid, string DescribeAnchor);
 
 public sealed record BlessedSnapshotEnvelope(byte[] Json, string ContentSha256);
 
+public sealed record TruthGraphEnvelope(byte[] Json);
+
 public sealed record FrozenInputs(
     BlessedSnapshotEnvelope Snapshot,
     IReadOnlyList<FrozenDeclaration> Declarations,
     IReadOnlyList<BlueprintBlock> BlueprintBlocks,
     IReadOnlyList<Citation> Citations,
-    IReadOnlyList<EvidenceItem> Evidence);
+    IReadOnlyList<EvidenceItem> Evidence,
+    TruthGraphEnvelope? TruthGraph = null);
 
 public sealed record FrozenDeclaration(
     string DeclarationGid,
@@ -40,10 +43,56 @@ public sealed record EvidenceItem(string Key, string Digest);
 
 public sealed record SourceSnapshot(
     string SourceCommit,
+    string RepositorySnapshotDigest,
     string TruthRootSha256,
     string TruthGraphSha256,
     string LeanReportSha256,
     string BlessedBy);
+
+public sealed record FrozenTruthGraph(
+    IReadOnlyList<TruthGraphNode> Nodes,
+    IReadOnlyList<TruthGraphEdge> Edges,
+    IReadOnlyList<TruthGraphDescribeNode> DescribeNodes,
+    IReadOnlyList<TruthGraphAnchor> TruthAnchors,
+    TruthGraphProvenance Provenance,
+    IReadOnlyList<string> DeferredLayers);
+
+public sealed record TruthGraphNode(
+    int Depth,
+    string? Gid,
+    string? ModuleName,
+    string RepoPath,
+    string State);
+
+public sealed record TruthGraphEdge(string Dependency, string Dependent);
+
+public sealed record TruthGraphDescribeNode(
+    string DescribeId,
+    string DocumentGid,
+    string FormulaProvenance,
+    string Kind,
+    string? LeanDeclarationGid,
+    string RepoPath);
+
+public sealed record TruthGraphAnchor(
+    string DescribeId,
+    string DocumentGid,
+    string DocumentRepoPath,
+    string FormalTruthRepoPath,
+    string LeanDeclarationGid);
+
+public sealed record TruthGraphProvenance(
+    string LeanReportDigest,
+    string SnapshotContentDigest,
+    string TruthRootSha256,
+    string DependencyGranularity);
+
+public sealed record ClosedTruthBinding(
+    string DescribeId,
+    string DocumentGid,
+    string LeanDeclarationGid,
+    string DocumentRepoPath,
+    string FormalTruthRepoPath);
 
 public sealed record PaperDocument(string PaperId, string Title, IReadOnlyList<TheoremBlock> Theorems);
 

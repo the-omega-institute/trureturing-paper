@@ -1,0 +1,14 @@
+{
+  "schema": "blueprints.v1",
+  "blocks": [
+    {
+      "describe_anchor": "describe:trace-invariance-under-conjugation",
+      "declaration_gid": "D5/S0/Carrier/TraceConjugation.trace_conj",
+      "truth_anchor": "D5/S0/Carrier/TraceConjugation",
+      "document_repo_path": "Blueprint/D5/S0/Carrier/TraceConjugation.md",
+      "formal_truth_repo_path": "D5/S0/Carrier/TraceConjugation.lean",
+      "latex_statement": "$$\\operatorname{trace}\\left(\\operatorname{conj}\\left(x\\right)\\right) = \\operatorname{trace}\\left(x\\right)$$",
+      "narrative": "Conjugating a golden integer preserves its integral trace. In coordinates, conjugation sends `(a,b)` to `(a+b,-b)`, and both traces simplify to `2a+b`."
+    }
+  ]
+}

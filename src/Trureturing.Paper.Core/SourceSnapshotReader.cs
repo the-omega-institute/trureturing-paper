@@ -72,7 +72,10 @@ public static class SourceSnapshotReader
                 "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", "source_repo");
             var commit = RequirePattern(ReadString(root, "source_commit"), "^[0-9a-fA-F]{40}$", "source_commit");
             RequirePattern(ReadString(root, "source_tree"), "^[0-9a-fA-F]{40}$", "source_tree");
-            RequirePattern(ReadString(root, "repository_snapshot_digest"), "^sha256-[0-9a-f]{64}$", "repository_snapshot_digest");
+            var repositorySnapshotDigest = RequirePattern(
+                ReadString(root, "repository_snapshot_digest"),
+                "^sha256-[0-9a-f]{64}$",
+                "repository_snapshot_digest");
             RequireNonempty(ReadString(root, "producer_version"), "producer_version");
             var truthRoot = RequireRawDigest(root, "truth_root_sha256");
             var truthGraph = RequireRawDigest(root, "truth_graph_sha256");
@@ -91,7 +94,13 @@ public static class SourceSnapshotReader
                 throw new ClaimGateException("source-snapshot.v1 derived_at is not an RFC 3339 timestamp.");
             }
             var blessedBy = RequireNonempty(ReadString(root, "blessed_by"), "blessed_by");
-            return new SourceSnapshot(commit, truthRoot, truthGraph, leanReport, blessedBy);
+            return new SourceSnapshot(
+                commit,
+                repositorySnapshotDigest,
+                truthRoot,
+                truthGraph,
+                leanReport,
+                blessedBy);
         }
     }
 
