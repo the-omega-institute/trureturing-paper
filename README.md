@@ -48,10 +48,18 @@ dotnet run --project src/Trureturing.Paper.Cli -- assemble \
   --output out/paper.tex
 ```
 
+## Real acceptance (now live)
+
+The real acceptance test **runs and passes** (`Real_blessed_snapshot_acceptance`). It consumes a
+real blessed `source-snapshot.v1` and the real `truth-graph.v1.json` for `trureturing@90059eb`
+(670 kernel-frozen theorems), verifies full content-addressing / provenance closure, and
+assembles a byte-reproducible `paper.tex` citing a real closed theorem
+(`D5/S0/Carrier/TraceConjugation.trace_conj`, real axiom closure `{propext}`); a fabricated
+frozen GID fails the claim gate against the real graph. Fixtures live under `tests/fixtures-real/`;
+`TruthGraphReader` parses the canonical lower_snake_case truth-graph schema.
+
 ## Explicitly deferred
 
-The real acceptance test is intentionally skipped until dev produces both a real
-blessed `source-snapshot.v1` and `Generated/truth-graph.v1.json`. Also deferred are real
-D5-P001 content, recipe-validation-first, topic selection, research-loop automation,
-citation/evidence rendering, PDF production, and arXiv packaging. The fkst package below
-is directory shape only; its lifecycle programs and trusted verifier remain TBD.
+Still deferred: recipe-validation-first, topic selection, research-loop automation,
+citation/evidence rendering, PDF production, and arXiv packaging. The fkst package below is
+directory shape only; its lifecycle programs and trusted verifier remain TBD.
