@@ -1,12 +1,19 @@
-[
-  {
-    "declaration_gid": "SYNTH.THEOREM.IDENTITY",
-    "status": "frozen",
-    "statement_left": "x",
-    "statement_right": "x",
-    "truth_anchor": "truth:SYNTH.THEOREM.IDENTITY",
-    "lean_report_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
-    "declared_axioms": ["propext", "Classical.choice", "Quot.sound"],
-    "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"]
-  }
-]
+{
+  "schema": "frozen-truth.v1",
+  "declarations": [
+    {
+      "declaration_gid": "SYNTH.THEOREM.IDENTITY",
+      "status": "frozen",
+      "truth_anchor": "truth:SYNTH.THEOREM.IDENTITY",
+      "lean_report_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "declared_axioms": ["propext", "Classical.choice", "Quot.sound"],
+      "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"],
+      "statement_ast": {
+        "kind": "relation",
+        "operator": "equal",
+        "left": { "kind": "symbol", "name": "x" },
+        "right": { "kind": "symbol", "name": "x" }
+      }
+    }
+  ]
+}

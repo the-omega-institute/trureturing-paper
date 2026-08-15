@@ -240,7 +240,9 @@ internal static class RealFixture
             File.ReadAllBytes(Path.Combine(root, fileName)), JsonOptions)
         ?? throw new InvalidOperationException($"Real fixture '{fileName}' is invalid.");
 
-    private static Formula ToFormula(FormulaFixture value) => value.Kind switch
+    // Shared statement_ast -> Formula reader, so both the real and synthetic fixtures
+    // consume the single frozen-truth envelope format (no DTO left/right path).
+    internal static Formula ToFormula(FormulaFixture value) => value.Kind switch
     {
         "symbol" => new Formula.Symbol(FormulaIdentifier.Create(value.Name!)),
         "function" => new Formula.FunctionCall(
@@ -273,7 +275,7 @@ internal static class RealFixture
         string LatexStatement,
         FormulaFixture StatementAst);
 
-    private sealed record FormulaFixture(
+    internal sealed record FormulaFixture(
         string Kind,
         string? Name,
         string? Operator,
@@ -308,23 +310,25 @@ internal static class Fixture
         var root = Path.Combine(AppContext.BaseDirectory, "fixtures");
         var recipe = JsonSerializer.Deserialize<PaperRecipe>(
             File.ReadAllBytes(Path.Combine(root, "synthetic-minimal.recipe.v1.json")), JsonOptions)!;
-        var truths = JsonSerializer.Deserialize<TruthFixture[]>(
+        var truthEnvelope = JsonSerializer.Deserialize<SyntheticTruthEnvelope>(
             File.ReadAllBytes(Path.Combine(root, "frozen-truth.v1.json")), JsonOptions)!;
-        var truth = Assert.Single(truths);
-        var blueprints = JsonSerializer.Deserialize<BlueprintBlock[]>(
+        var truth = Assert.Single(truthEnvelope.Declarations);
+        var blueprintEnvelope = JsonSerializer.Deserialize<SyntheticBlueprintEnvelope>(
             File.ReadAllBytes(Path.Combine(root, "blueprints.v1.json")), JsonOptions)!;
-        var statement = new Formula.Relation(
-            new Formula.Symbol(FormulaIdentifier.Create(truth.StatementLeft)),
-            FormulaRelationOperator.Equal,
-            new Formula.Symbol(FormulaIdentifier.Create(truth.StatementRight)));
+        // Same envelope entrypoint as the real fixture: the statement is built from the
+        // frozen ledger's structured AST, never from opaque left/right symbols.
         var declaration = new FrozenDeclaration(
             truth.DeclarationGid,
             truth.Status,
-            statement,
+            RealFixture.ToFormula(truth.StatementAst),
             truth.TruthAnchor,
             truth.LeanReportSha256,
             truth.DeclaredAxioms,
             truth.AllowedAxioms);
+        var blueprints = blueprintEnvelope.Blocks
+            .Select(block => new BlueprintBlock(
+                block.DescribeAnchor, block.DeclarationGid, block.TruthAnchor, block.Narrative))
+            .ToArray();
         var snapshotBytes = File.ReadAllBytes(Path.Combine(root, "source-snapshot.v1.json"));
         var digest = File.ReadAllText(Path.Combine(root, "source-snapshot.v1.sha256")).Trim();
         return (recipe, new FrozenInputs(
@@ -335,13 +339,26 @@ internal static class Fixture
             []));
     }
 
-    private sealed record TruthFixture(
+    private sealed record SyntheticTruthEnvelope(
+        string Schema,
+        SyntheticTruth[] Declarations);
+
+    private sealed record SyntheticTruth(
         string DeclarationGid,
         string Status,
-        string StatementLeft,
-        string StatementRight,
         string TruthAnchor,
         string LeanReportSha256,
         string[] DeclaredAxioms,
-        string[] AllowedAxioms);
+        string[] AllowedAxioms,
+        RealFixture.FormulaFixture StatementAst);
+
+    private sealed record SyntheticBlueprintEnvelope(
+        string Schema,
+        SyntheticBlueprintBlock[] Blocks);
+
+    private sealed record SyntheticBlueprintBlock(
+        string DescribeAnchor,
+        string DeclarationGid,
+        string TruthAnchor,
+        string Narrative);
 }
