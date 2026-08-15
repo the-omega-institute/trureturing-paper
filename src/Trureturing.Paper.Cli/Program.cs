@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text.Json;
 using StrataLint.Scribe;
 using Trureturing.Paper.Core;
@@ -91,22 +92,46 @@ internal sealed class FrozenBundleFilePorts :
 
     public IReadOnlyList<FrozenDeclaration> ReadDeclarations()
     {
-        var values = Program.ReadJson<FrozenTruthDto[]>(Path.Combine(_root, "frozen-truth.v1.json"));
-        return values.Select(static value => new FrozenDeclaration(
+        var envelope = Program.ReadJson<FrozenTruthEnvelopeDto>(Path.Combine(_root, "frozen-truth.v1.json"));
+        return envelope.Declarations.Select(static value => new FrozenDeclaration(
             value.DeclarationGid,
             value.Status,
-            new Formula.Relation(
-                new Formula.Symbol(FormulaIdentifier.Create(value.StatementLeft)),
-                FormulaRelationOperator.Equal,
-                new Formula.Symbol(FormulaIdentifier.Create(value.StatementRight))),
+            // The statement is rendered from the frozen ledger's own structured AST, so the
+            // paper reproduces the theorem faithfully (LatexWriter renders FunctionCall nodes as
+            // \operatorname{...}). The ledger's latex_statement is that same render; the paper
+            // never re-interprets or degrades the statement to opaque left = right symbols.
+            ToFormula(value.StatementAst),
             value.TruthAnchor,
             value.LeanReportSha256,
             value.DeclaredAxioms,
             value.AllowedAxioms)).ToArray();
     }
 
-    public IReadOnlyList<BlueprintBlock> ReadBlocks() =>
-        Program.ReadJson<BlueprintBlock[]>(Path.Combine(_root, "blueprints.v1.json"));
+    // statement_ast -> Scribe Formula. Mirrors the reader the walking-skeleton tests use, and is
+    // kept in one place so the CLI and tests consume the single frozen-truth envelope format.
+    private static Formula ToFormula(FormulaAstDto value) => value.Kind switch
+    {
+        "symbol" => new Formula.Symbol(FormulaIdentifier.Create(value.Name!)),
+        "function" => new Formula.FunctionCall(
+            FormulaIdentifier.Create(value.Name!),
+            value.Arguments!.Select(ToFormula).ToImmutableArray()),
+        "relation" when string.Equals(value.Operator, "equal", StringComparison.Ordinal) =>
+            new Formula.Relation(
+                ToFormula(value.Left!),
+                FormulaRelationOperator.Equal,
+                ToFormula(value.Right!)),
+        _ => throw new ArgumentException($"Unsupported frozen-truth formula node '{value.Kind}'.")
+    };
+
+    public IReadOnlyList<BlueprintBlock> ReadBlocks()
+    {
+        var envelope = Program.ReadJson<BlueprintEnvelopeDto>(Path.Combine(_root, "blueprints.v1.json"));
+        return envelope.Blocks.Select(static block => new BlueprintBlock(
+            block.DescribeAnchor,
+            block.DeclarationGid,
+            block.TruthAnchor,
+            block.Narrative)).ToArray();
+    }
 
     public IReadOnlyList<Citation> ReadCitations() =>
         ReadOptional<Citation>("citations.v1.json");
@@ -120,13 +145,34 @@ internal sealed class FrozenBundleFilePorts :
         return File.Exists(path) ? Program.ReadJson<T[]>(path) : [];
     }
 
-    private sealed record FrozenTruthDto(
+    private sealed record FrozenTruthEnvelopeDto(
+        string Schema,
+        FrozenTruthDeclarationDto[] Declarations);
+
+    private sealed record FrozenTruthDeclarationDto(
         string DeclarationGid,
         string Status,
-        string StatementLeft,
-        string StatementRight,
         string TruthAnchor,
         string LeanReportSha256,
         string[] DeclaredAxioms,
-        string[] AllowedAxioms);
+        string[] AllowedAxioms,
+        FormulaAstDto StatementAst);
+
+    private sealed record FormulaAstDto(
+        string Kind,
+        string? Name,
+        string? Operator,
+        FormulaAstDto? Left,
+        FormulaAstDto? Right,
+        FormulaAstDto[]? Arguments);
+
+    private sealed record BlueprintEnvelopeDto(
+        string Schema,
+        BlueprintBlockDto[] Blocks);
+
+    private sealed record BlueprintBlockDto(
+        string DescribeAnchor,
+        string DeclarationGid,
+        string TruthAnchor,
+        string Narrative);
 }

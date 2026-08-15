@@ -1,0 +1,42 @@
+{
+  "schema": "frozen-truth.v1",
+  "declarations": [
+    {
+      "declaration_gid": "D5/S0/Carrier/TraceConjugation.trace_conj",
+      "lean_declaration_name": "D5.S0.Carrier.trace_conj",
+      "document_gid": "D5/S0/Carrier/TraceConjugation",
+      "describe_id": "trace-invariance-under-conjugation",
+      "status": "frozen",
+      "truth_anchor": "D5/S0/Carrier/TraceConjugation",
+      "lean_report_sha256": "8001d1e45724d516139b7fd7ee33be9e96709698547d3bd10381a99d95ff1f2d",
+      "declared_axioms": ["propext"],
+      "allowed_axioms": ["propext"],
+      "axiom_source": ".lake/build/stratalint/raw-lean-report.json",
+      "latex_statement": "$$\\operatorname{trace}\\left(\\operatorname{conj}\\left(x\\right)\\right) = \\operatorname{trace}\\left(x\\right)$$",
+      "statement_ast": {
+        "kind": "relation",
+        "operator": "equal",
+        "left": {
+          "kind": "function",
+          "name": "trace",
+          "arguments": [
+            {
+              "kind": "function",
+              "name": "conj",
+              "arguments": [
+                { "kind": "symbol", "name": "x" }
+              ]
+            }
+          ]
+        },
+        "right": {
+          "kind": "function",
+          "name": "trace",
+          "arguments": [
+            { "kind": "symbol", "name": "x" }
+          ]
+        }
+      }
+    }
+  ]
+}
