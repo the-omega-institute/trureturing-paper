@@ -59,7 +59,7 @@ public sealed class WalkingSkeletonTests
         var fixture = RealFixture.Load();
 
         Assert.Equal("90059ebbb6c1d61da93690723af581145b88bad1", fixture.Snapshot.SourceCommit);
-        Assert.Equal("AlyicaBHZ", fixture.Snapshot.BlessedBy);
+        Assert.Equal("AlyciaBHZ", fixture.Snapshot.BlessedBy);
         Assert.Equal(669, fixture.TruthGraph.Edges.Count);
         Assert.Equal(["digestion"], fixture.TruthGraph.DeferredLayers);
         Assert.Equal(fixture.Snapshot.TruthGraphSha256, Sha256(fixture.TruthGraphBytes));
