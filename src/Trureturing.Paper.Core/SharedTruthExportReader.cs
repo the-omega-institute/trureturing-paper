@@ -94,7 +94,7 @@ public static class SharedTruthExportReader
         try
         {
             document = JsonDocument.Parse(
-                utf8,
+                text,
                 new JsonDocumentOptions
                 {
                     AllowTrailingCommas = false,
@@ -307,9 +307,9 @@ public static class SharedTruthExportReader
     private static string RequireRepoPath(string value)
     {
         if (string.IsNullOrWhiteSpace(value)
-            || value.StartsWith('/', StringComparison.Ordinal)
-            || value.Contains('\\', StringComparison.Ordinal)
-            || value.Contains('\0', StringComparison.Ordinal)
+            || value.StartsWith("/", StringComparison.Ordinal)
+            || value.Contains("\\", StringComparison.Ordinal)
+            || value.Contains('\0')
             || !value.EndsWith(".lean", StringComparison.Ordinal))
         {
             throw Invalid("repo_path is not a canonical relative Lean path.");
