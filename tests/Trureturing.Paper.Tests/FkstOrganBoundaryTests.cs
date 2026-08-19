@@ -52,7 +52,15 @@ public sealed class FkstOrganBoundaryTests
             "act",
             "main.lua")));
         Assert.Contains(
-            "\"dotnet\", \"run\", \"--project\", pth.cli_project",
+            "\"dotnet\", pth.cli_dll",
+            act,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "\"dotnet\", \"run\"",
+            act,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "--project",
             act,
             StringComparison.Ordinal);
     }
