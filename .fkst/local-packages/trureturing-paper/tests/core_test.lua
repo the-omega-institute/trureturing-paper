@@ -1,7 +1,7 @@
 local core = require("core")
 local t = fkst.test
 
-local A = string.rep("a", 64) -- a valid 64-hex digest
+local A = string.rep("a", 64)
 local B = string.rep("b", 64)
 
 return {
@@ -13,7 +13,9 @@ return {
     t.eq(p.recipe, "/repo/Papers/recipe.v1.json")
     t.eq(p.tex, "/repo/Papers/paper.tex")
     t.eq(p.pubs, "/repo/Papers/publications.jsonl")
-    t.eq(p.cli_project, "/repo/src/Trureturing.Paper.Cli")
+    t.eq(
+      p.cli_dll,
+      "/repo/src/Trureturing.Paper.Cli/bin/Release/net10.0/Trureturing.Paper.Cli.dll")
   end,
   test_paths_rejects_non_bundle = function()
     local p, err = core.paths("/repo/other/file.json")
