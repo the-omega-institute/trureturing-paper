@@ -21,6 +21,17 @@ Formula emission reuses the read-only vendored Scribe `Formula` AST and `LatexWr
 from the pinned `trureturing` commit documented in `vendor/scribe/README.md`. Document
 assembly is local to this repository.
 
+### FKST boundary
+
+`fkst-ops` and the FKST engine know only generic deployment, package, event, and
+lifecycle mechanics. They do not know what a paper, theorem, claim, or formalization is.
+The repository-local package at `.fkst/local-packages/trureturing-paper/` owns only this
+organ's orchestration: it watches files inside this repository, invokes the local
+`Trureturing.Paper.Cli`, and writes the local `Papers/paper.tex` plus publication receipt.
+It never reads a sibling checkout, the base frozen ledger, a base skill, or a GitHub/network
+control plane. The architecture test `FkstOrganBoundaryTests` keeps that separation
+machine-visible.
+
 ## First slice
 
 The walking skeleton proves only this path:
@@ -58,8 +69,18 @@ assembles a byte-reproducible `paper.tex` citing a real closed theorem
 frozen GID fails the claim gate against the real graph. Fixtures live under `tests/fixtures-real/`;
 `TruthGraphReader` parses the canonical lower_snake_case truth-graph schema.
 
+## Repository-local FKST lifecycle
+
+The host package is a live on-demand `observe → act` chain. It detects an unpublished
+blessed input, invokes the local assembler, fails loud when the claim gate rejects, and
+records the generated paper idempotently. It is not a directory-shape placeholder. The
+package remains local because its event names, input paths, CLI, output, and publication
+receipt are paper-domain concerns.
+
 ## Explicitly deferred
 
-Still deferred: recipe-validation-first, topic selection, research-loop automation,
-citation/evidence rendering, PDF production, and arXiv packaging. The fkst package below is
-directory shape only; its lifecycle programs and trusted verifier remain TBD.
+Still deferred: migration from the manually pinned frozen bundle to the shared
+`truth-release.v1` intake, topic selection, research-loop automation, citation/evidence
+rendering, PDF production, and arXiv packaging. Supervise/daemon concurrency hardening
+(build-key dedup over the full input closure and serialized install+record) remains deferred
+until concurrent delivery becomes real.
