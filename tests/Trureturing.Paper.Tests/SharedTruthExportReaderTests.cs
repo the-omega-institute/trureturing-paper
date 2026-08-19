@@ -16,7 +16,7 @@ public sealed class SharedTruthExportReaderTests
         var node = Assert.Single(export.Nodes);
         Assert.Equal("D5/S0/Carrier/TraceConjugation.lean", node.RepoPath);
         Assert.Equal("sha256:" + new string('a', 64), node.FrozenNodeId);
-        Assert.Equal(["propext"], node.NodeAxiomClosure);
+        Assert.True(node.NodeAxiomClosure.SequenceEqual(["propext"], StringComparer.Ordinal));
         var declaration = Assert.Single(node.Declarations);
         Assert.Equal("D5.S0.Carrier.trace_conj", declaration.DeclarationNameKey);
         Assert.Equal("theorem", declaration.Kind);
