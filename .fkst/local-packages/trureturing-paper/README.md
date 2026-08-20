@@ -7,18 +7,26 @@ upstream truth.
 ## Runtime boundary
 
 ```text
-CI / preflight
+CI / repository preflight
     restore + Release build
         ↓
 src/Trureturing.Paper.Cli/bin/Release/net10.0/Trureturing.Paper.Cli.dll
         ↓
 repository-local FKST Lua
     dotnet <prebuilt local DLL> assemble ...
+
+deployment composition
+    selects exact target, platform, engine, machine roots, and activation policy
 ```
 
 Runtime Lua never calls `dotnet run`, restore, or build. A missing prebuilt local DLL is
-a fail-loud deployment/preflight defect. `fkst-ops` and the FKST engine remain generic;
+a fail-loud repository-preflight defect. `fkst-ops` and the FKST engine remain generic;
 all paper paths, event names, CLI arguments, output, and receipt logic stay in this repository.
+
+The package does not know the engine repository, engine revision, deployment set, lock
+file, machine profile, or platform checkout. Those facts belong exclusively to deployment
+composition. The deployment activation gate validates the selected engine against this
+opaque local package.
 
 ## Event chain
 
@@ -55,7 +63,7 @@ this PR.
 - local executable: `src/Trureturing.Paper.Cli/bin/Release/net10.0/Trureturing.Paper.Cli.dll`.
 
 No runtime marker or cache is authoritative. A wiped runtime can recover from these local
-files after preflight rebuilds the C# solution.
+files after repository preflight rebuilds the C# solution.
 
 ## Remaining runtime hardening
 
@@ -66,8 +74,11 @@ files after preflight rebuilds the C# solution.
 
 ## Gates
 
-Repository CI builds the Release solution with warnings as errors and runs the full paper
-test suite. The previous FKST package `test`, `conformance`, and end-to-end `run` readings
-were taken before this invocation change. Before this PR merges, rerun all three with the
-exact deployment-selected engine and attach the receipts. Until then, keep the PR Draft
-and make no deployment-readiness claim.
+The business-repository merge gate builds the Release solution with warnings as errors,
+runs the full paper test suite, and enforces the repository-local FKST boundary. These
+gates prove the local package and local CLI without selecting an engine or deployment.
+
+The exact deployment-selected engine must still run package `test`, `conformance`, and an
+end-to-end `run` before activation. That evidence belongs to the deployment composition
+and activation PR. Its absence blocks activation and deployment-readiness claims; it does
+not make this business repository own an engine pin.
