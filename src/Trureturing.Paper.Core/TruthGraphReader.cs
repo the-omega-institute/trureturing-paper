@@ -35,30 +35,36 @@ public static class TruthGraphReader
             throw new ClaimGateException($"truth-graph.v1 is invalid: {exception.Message}");
         }
 
+        // The shared reader validates schema/ordering/counts/depth/canonical bytes but permits empty
+        // strings; paper's replaced reader rejected null/empty/whitespace on every required field. Restore
+        // that domain invariant so an empty describe_id/kind/etc. cannot enter paper's non-null domain (an
+        // empty describe_id could otherwise match the "describe:" anchor prefix). Nullable fields
+        // (gid, module_name, lean_declaration_gid) stay nullable, exactly as before.
         var nodes = shared.Truth.Nodes.Select(node => new TruthGraphNode(
             node.Depth,
             node.Gid,
             node.ModuleName,
-            node.RepoPath,
-            node.State)).ToArray();
+            RequireNonEmpty(node.RepoPath, "truth.nodes.repo_path"),
+            RequireNonEmpty(node.State, "truth.nodes.state"))).ToArray();
         var edges = shared.Truth.Edges.Select(edge => new TruthGraphEdge(
-            edge.Dependency,
-            edge.Dependent)).ToArray();
+            RequireNonEmpty(edge.Dependency, "truth.edges.dependency"),
+            RequireNonEmpty(edge.Dependent, "truth.edges.dependent"))).ToArray();
         var describeNodes = shared.Documents.DescribeNodes.Select(node => new TruthGraphDescribeNode(
-            node.DescribeId,
-            node.DocumentGid,
-            node.FormulaProvenance,
-            node.Kind,
+            RequireNonEmpty(node.DescribeId, "documents.describe_nodes.describe_id"),
+            RequireNonEmpty(node.DocumentGid, "documents.describe_nodes.document_gid"),
+            RequireNonEmpty(node.FormulaProvenance, "documents.describe_nodes.formula_provenance"),
+            RequireNonEmpty(node.Kind, "documents.describe_nodes.kind"),
             node.LeanDeclarationGid,
-            node.RepoPath)).ToArray();
+            RequireNonEmpty(node.RepoPath, "documents.describe_nodes.repo_path"))).ToArray();
         var anchors = shared.Joins.TruthAnchors.Select(anchor => new TruthGraphAnchor(
-            anchor.DescribeId
-                ?? throw new ClaimGateException(
+            RequireNonEmpty(
+                anchor.DescribeId ?? throw new ClaimGateException(
                     "truth-graph.v1 truth anchor describe_id is null."),
-            anchor.DocumentGid,
-            anchor.DocumentRepoPath,
-            anchor.FormalTruthRepoPath,
-            anchor.LeanDeclarationGid)).ToArray();
+                "joins.truth_anchors.describe_id"),
+            RequireNonEmpty(anchor.DocumentGid, "joins.truth_anchors.document_gid"),
+            RequireNonEmpty(anchor.DocumentRepoPath, "joins.truth_anchors.document_repo_path"),
+            RequireNonEmpty(anchor.FormalTruthRepoPath, "joins.truth_anchors.formal_truth_repo_path"),
+            RequireNonEmpty(anchor.LeanDeclarationGid, "joins.truth_anchors.lean_declaration_gid"))).ToArray();
         var provenance = new TruthGraphProvenance(
             shared.Provenance.LeanReportDigest,
             shared.Provenance.SnapshotContentDigest,
@@ -197,4 +203,8 @@ public static class TruthGraphReader
     private static string Sha256(byte[] bytes) =>
         Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 
+    private static string RequireNonEmpty(string value, string name) =>
+        string.IsNullOrWhiteSpace(value)
+            ? throw new ClaimGateException($"truth-graph.v1 {name} is empty.")
+            : value;
 }
