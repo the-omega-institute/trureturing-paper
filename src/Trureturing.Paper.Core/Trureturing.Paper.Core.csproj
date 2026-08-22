@@ -3,4 +3,7 @@
     <Compile Include="../../vendor/scribe/Formula.cs" Link="Vendor/Scribe/Formula.cs" />
     <Compile Include="../../vendor/scribe/LatexWriter.cs" Link="Vendor/Scribe/LatexWriter.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Trureturing.Truth" Version="0.1.0-dev" />
+  </ItemGroup>
 </Project>
