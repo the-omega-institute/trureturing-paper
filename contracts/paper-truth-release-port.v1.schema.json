@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-truth-release-port.v1",
+  "title": "Paper truth-release index port",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "release_digest",
+    "source_commit",
+    "source_tree",
+    "declarations"
+  ],
+  "properties": {
+    "schema": { "const": "paper-truth-release-port.v1" },
+    "release_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "source_commit": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
+    "source_tree": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
+    "declarations": { "type": "array" }
+  }
+}

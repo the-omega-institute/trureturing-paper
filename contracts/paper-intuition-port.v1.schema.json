@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-intuition-port.v1",
+  "title": "Paper advisory Intuition port",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source_truth_release_digest", "candidates"],
+  "properties": {
+    "schema": { "const": "paper-intuition-port.v1" },
+    "source_truth_release_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "candidates": { "type": "array" }
+  }
+}

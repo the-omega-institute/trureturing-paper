@@ -84,3 +84,20 @@ Still deferred: migration from the manually pinned frozen bundle to the shared
 rendering, PDF production, and arXiv packaging. Supervise/daemon concurrency hardening
 (build-key dedup over the full input closure and serialized install+record) remains deferred
 until concurrent delivery becomes real.
+
+
+## Truth and Intuition research indexes
+
+The next-generation intake is split by authority:
+
+- `PaperTruthIndex` contains certified declaration identity, exact frozen prerequisite
+  closure, axiom closure and mdBook anchors from a Pages-independent
+  `paper-truth-release-port.v1`.
+- `PaperIntuitionIndex` contains advisory candidate bridges, evidence, falsifiers and
+  predicted reachability/pruning from `paper-intuition-port.v1`.
+
+An upstream adapter will verify the shared release and produce the Paper-owned truth
+port. The Paper core does not own the upstream wire parser. Intuition proposals can
+identify research gaps, but they cannot be retrieved as certified declarations or pass
+the existing claim gate. See
+[`docs/TRUTH_AND_INTUITION_INDEXES.md`](docs/TRUTH_AND_INTUITION_INDEXES.md).
