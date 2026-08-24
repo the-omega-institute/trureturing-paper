@@ -1,0 +1,38 @@
+{
+  "schema": "paper-intuition-port.v1",
+  "source_truth_release_digest": "sha256:1fde9beb7d1999d06c042d24b57e18caea67612f209d725b5eb931addccb0e46",
+  "candidates": [
+    {
+      "proposal_id": "advisory/trace-norm-interaction",
+      "relation_type": "Trace and norm compatibility under conjugation",
+      "status": "evidence-backed",
+      "inputs": [
+        "D5/S0/Carrier/TraceConjugation.trace_conj"
+      ],
+      "outputs": [
+        "research/trace-norm-compatibility"
+      ],
+      "evidence_refs": [
+        "describe:trace-invariance-under-conjugation"
+      ],
+      "falsifier": "A closed counterexample where conjugation preserves trace but breaks the proposed norm relation.",
+      "predicted_reachability_gain": 0.18,
+      "predicted_pruning_gain": 0.06
+    },
+    {
+      "proposal_id": "advisory/higher-carrier-trace",
+      "relation_type": "Lift trace invariance to higher carrier layers",
+      "status": "proposed",
+      "inputs": [
+        "D5/S0/Carrier/TraceConjugation.trace_conj"
+      ],
+      "outputs": [
+        "research/higher-carrier-trace-invariance"
+      ],
+      "evidence_refs": [],
+      "falsifier": "A higher-layer carrier satisfying the current hypotheses whose trace changes under conjugation.",
+      "predicted_reachability_gain": 0.31,
+      "predicted_pruning_gain": 0.12
+    }
+  ]
+}

@@ -71,7 +71,10 @@ public static class SourceSnapshotReader
             RequirePattern(ReadString(root, "source_repo"),
                 "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", "source_repo");
             var commit = RequirePattern(ReadString(root, "source_commit"), "^[0-9a-fA-F]{40}$", "source_commit");
-            RequirePattern(ReadString(root, "source_tree"), "^[0-9a-fA-F]{40}$", "source_tree");
+            var sourceTree = RequirePattern(
+                ReadString(root, "source_tree"),
+                "^[0-9a-fA-F]{40}$",
+                "source_tree");
             var repositorySnapshotDigest = RequirePattern(
                 ReadString(root, "repository_snapshot_digest"),
                 "^sha256-[0-9a-f]{64}$",
@@ -100,7 +103,10 @@ public static class SourceSnapshotReader
                 truthRoot,
                 truthGraph,
                 leanReport,
-                blessedBy);
+                blessedBy)
+            {
+                SourceTree = sourceTree
+            };
         }
     }
 

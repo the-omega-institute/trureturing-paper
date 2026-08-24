@@ -1,0 +1,20 @@
+{
+  "schema": "paper-truth-release-port.v1",
+  "release_digest": "sha256:1fde9beb7d1999d06c042d24b57e18caea67612f209d725b5eb931addccb0e46",
+  "source_commit": "90059ebbb6c1d61da93690723af581145b88bad1",
+  "source_tree": "877274eb0b0354af1410b23353d551881e22665c",
+  "declarations": [
+    {
+      "declaration_id": "D5/S0/Carrier/TraceConjugation.trace_conj",
+      "statement_id": "sha256:1ab96b4bf35982c1c1e3c9ef01d916fa2547b0166636e475fb3ee3970c06810a",
+      "frozen_node_id": "sha256:7804b44f3f41b724896f751b7806927eca860dd10c177e6105ecd8570a3c9aef",
+      "repo_path": "D5/S0/Carrier/TraceConjugation.lean",
+      "kind": "theorem",
+      "prerequisite_frozen_node_ids": [],
+      "axiom_closure": [
+        "propext"
+      ],
+      "mdbook_path": "Blueprint/D5/S0/Carrier/TraceConjugation.md"
+    }
+  ]
+}

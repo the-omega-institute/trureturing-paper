@@ -101,3 +101,35 @@ port. The Paper core does not own the upstream wire parser. Intuition proposals 
 identify research gaps, but they cannot be retrieved as certified declarations or pass
 the existing claim gate. See
 [`docs/TRUTH_AND_INTUITION_INDEXES.md`](docs/TRUTH_AND_INTUITION_INDEXES.md).
+
+## Local example: consume, assemble, publish
+
+The example cycle is deliberately local and deterministic. Its mock adapter validates the
+checked-in real subset in `Papers/frozen-bundle`, then emits the exact Paper-owned truth and
+Intuition port contracts. It demonstrates the consumption mechanism; it is not the upstream
+truth-release verifier.
+
+Run the complete cycle from the repository root:
+
+```sh
+dotnet run --project src/Trureturing.Paper.Cli -- example-cycle \
+  --frozen-bundle Papers/frozen-bundle \
+  --output-root .
+```
+
+The command writes the typed ports and reproducible LaTeX under `Papers/example/`, then
+publishes the reading site to `site/index.html`. The certified theorem is selected through
+`PaperTruthIndex` and must still pass the existing frozen claim gate. Research candidates are
+read only from `PaperIntuitionIndex`, rendered as advisory, and cannot be retrieved or claimed
+as certified declarations.
+
+For consumption-only development, emit just the mock ports:
+
+```sh
+dotnet run --project src/Trureturing.Paper.Cli -- emit-local-ports \
+  --frozen-bundle Papers/frozen-bundle \
+  --output Papers/example
+```
+
+On pushes to `dev`, the Pages workflow uploads `site/` and deploys it. Repository Pages
+settings remain an operator responsibility.
