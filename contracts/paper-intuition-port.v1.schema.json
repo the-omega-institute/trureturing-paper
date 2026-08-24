@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-intuition-port.v1",
+  "title": "Paper advisory Intuition port",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source_truth_release_digest", "candidates"],
+  "properties": {
+    "schema": { "const": "paper-intuition-port.v1" },
+    "source_truth_release_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "proposal_id",
+          "relation_type",
+          "status",
+          "inputs",
+          "outputs",
+          "evidence_refs",
+          "falsifier",
+          "predicted_reachability_gain",
+          "predicted_pruning_gain"
+        ],
+        "properties": {
+          "proposal_id": { "type": "string", "minLength": 1 },
+          "relation_type": { "type": "string", "minLength": 1 },
+          "status": {
+            "enum": [
+              "proposed",
+              "evidence-backed",
+              "under-verification",
+              "proved",
+              "refuted",
+              "wall",
+              "duplicate",
+              "trivial",
+              "open",
+              "infrastructure-failure"
+            ]
+          },
+          "inputs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "outputs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "falsifier": { "type": "string", "minLength": 1 },
+          "predicted_reachability_gain": { "type": ["number", "null"] },
+          "predicted_pruning_gain": { "type": ["number", "null"] }
+        }
+      }
+    }
+  }
+}
