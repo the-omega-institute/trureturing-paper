@@ -3,14 +3,18 @@ namespace Trureturing.Paper.Core;
 public static class PaperAssembler
 {
     public static byte[] Assemble(PaperRecipe recipe, FrozenInputs frozenInputs)
+        => LatexDocumentWriter.Write(AssembleDocument(recipe, frozenInputs));
+
+    public static PaperDocument AssembleDocument(
+        PaperRecipe recipe,
+        FrozenInputs frozenInputs)
     {
         ArgumentNullException.ThrowIfNull(frozenInputs);
         var snapshot = SourceSnapshotReader.ReadAndVerify(frozenInputs.Snapshot);
         var truthGraph = frozenInputs.TruthGraph is null
             ? null
             : TruthGraphReader.ReadAndVerify(frozenInputs.TruthGraph, snapshot);
-        var document = ClaimGate.Resolve(recipe, frozenInputs, snapshot, truthGraph);
-        return LatexDocumentWriter.Write(document);
+        return ClaimGate.Resolve(recipe, frozenInputs, snapshot, truthGraph);
     }
 }
 

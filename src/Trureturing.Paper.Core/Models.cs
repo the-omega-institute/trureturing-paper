@@ -47,7 +47,10 @@ public sealed record SourceSnapshot(
     string TruthRootSha256,
     string TruthGraphSha256,
     string LeanReportSha256,
-    string BlessedBy);
+    string BlessedBy)
+{
+    public string? SourceTree { get; init; }
+}
 
 public sealed record FrozenTruthGraph(
     IReadOnlyList<TruthGraphNode> Nodes,

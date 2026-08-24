@@ -17,15 +17,13 @@ internal static class Program
     {
         try
         {
-            var options = CliOptions.Parse(args);
-            var recipe = ReadJson<PaperRecipe>(options.RecipePath);
-            var ports = new FrozenBundleFilePorts(options.BundleDirectory);
-            var bytes = new PaperAssemblyService(ports, ports, ports, ports, ports, ports).Assemble(recipe);
-            var outputPath = Path.GetFullPath(options.OutputPath);
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-            File.WriteAllBytes(outputPath, bytes);
-            Console.WriteLine(outputPath);
-            return 0;
+            return args.FirstOrDefault() switch
+            {
+                "assemble" => Assemble(args),
+                "emit-local-ports" => EmitLocalPorts(args),
+                "example-cycle" => RunExampleCycle(args),
+                _ => throw new ArgumentException(Usage)
+            };
         }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException
@@ -42,34 +40,116 @@ internal static class Program
         JsonSerializer.Deserialize<T>(File.ReadAllBytes(path), JsonOptions)
         ?? throw new JsonException($"'{path}' is empty or does not match the expected contract.");
 
-    private sealed record CliOptions(string RecipePath, string BundleDirectory, string OutputPath)
+    private static int Assemble(string[] args)
     {
-        public static CliOptions Parse(string[] args)
-        {
-            if (args.Length != 7 || !string.Equals(args[0], "assemble", StringComparison.Ordinal))
-            {
-                throw new ArgumentException(
-                    "Usage: trureturing-paper assemble --recipe <recipe.json> --frozen-bundle <directory> --output <paper.tex>");
-            }
-
-            var values = new Dictionary<string, string>(StringComparer.Ordinal);
-            for (var index = 1; index < args.Length; index += 2)
-            {
-                if (!values.TryAdd(args[index], args[index + 1]))
-                {
-                    throw new ArgumentException($"Duplicate CLI option '{args[index]}'.");
-                }
-            }
-            if (!values.TryGetValue("--recipe", out var recipe)
-                || !values.TryGetValue("--frozen-bundle", out var bundle)
-                || !values.TryGetValue("--output", out var output)
-                || values.Count != 3)
-            {
-                throw new ArgumentException("CLI options are incomplete or unknown.");
-            }
-            return new CliOptions(Path.GetFullPath(recipe), Path.GetFullPath(bundle), output);
-        }
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "assemble",
+            "--recipe",
+            "--frozen-bundle",
+            "--output");
+        var recipe = ReadJson<PaperRecipe>(values["--recipe"]);
+        var ports = new FrozenBundleFilePorts(values["--frozen-bundle"]);
+        byte[] bytes = new PaperAssemblyService(ports, ports, ports, ports, ports, ports)
+            .Assemble(recipe);
+        WriteFile(values["--output"], bytes);
+        return 0;
     }
+
+    private static int EmitLocalPorts(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "emit-local-ports",
+            "--frozen-bundle",
+            "--output");
+        LocalDevRelease release = LocalDevTruthReleaseAdapter.Read(
+            values["--frozen-bundle"]);
+        WritePorts(values["--output"], release);
+        return 0;
+    }
+
+    private static int RunExampleCycle(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "example-cycle",
+            "--frozen-bundle",
+            "--output-root");
+        string outputRoot = Path.GetFullPath(values["--output-root"]);
+        LocalDevRelease release = LocalDevTruthReleaseAdapter.Read(
+            values["--frozen-bundle"]);
+        string exampleRoot = Path.Combine(outputRoot, "Papers", "example");
+        WritePorts(exampleRoot, release);
+
+        // Cross the serialized contract boundary exactly as a real upstream adapter would.
+        PaperTruthReleasePort truthPort = PaperPortJson.ReadTruthReleasePort(
+            File.ReadAllBytes(Path.Combine(exampleRoot, "paper-truth-release-port.v1.json")));
+        PaperIntuitionPort intuitionPort = PaperPortJson.ReadIntuitionPort(
+            File.ReadAllBytes(Path.Combine(exampleRoot, "paper-intuition-port.v1.json")));
+        ExamplePaperArtifacts artifacts = ExamplePaperPublisher.Produce(
+            truthPort,
+            intuitionPort,
+            release.FrozenInputs);
+        WriteFile(Path.Combine(exampleRoot, "paper.tex"), artifacts.Latex);
+        WriteFile(Path.Combine(outputRoot, "site", "index.html"), artifacts.Html);
+        return 0;
+    }
+
+    private static void WritePorts(string outputDirectory, LocalDevRelease release)
+    {
+        string root = Path.GetFullPath(outputDirectory);
+        WriteFile(
+            Path.Combine(root, "paper-truth-release-port.v1.json"),
+            PaperPortJson.Write(release.TruthPort));
+        WriteFile(
+            Path.Combine(root, "paper-intuition-port.v1.json"),
+            PaperPortJson.Write(release.IntuitionPort));
+    }
+
+    private static void WriteFile(string path, byte[] bytes)
+    {
+        string outputPath = Path.GetFullPath(path);
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        File.WriteAllBytes(outputPath, bytes);
+        Console.WriteLine(outputPath);
+    }
+
+    private static Dictionary<string, string> ParseValues(
+        string[] args,
+        string verb,
+        params string[] expectedOptions)
+    {
+        if (args.Length != 1 + (expectedOptions.Length * 2)
+            || !string.Equals(args[0], verb, StringComparison.Ordinal))
+        {
+            throw new ArgumentException(Usage);
+        }
+
+        var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        for (var index = 1; index < args.Length; index += 2)
+        {
+            if (!values.TryAdd(args[index], args[index + 1]))
+            {
+                throw new ArgumentException($"Duplicate CLI option '{args[index]}'.");
+            }
+        }
+
+        if (values.Count != expectedOptions.Length
+            || expectedOptions.Any(option => !values.ContainsKey(option)))
+        {
+            throw new ArgumentException("CLI options are incomplete or unknown.\n" + Usage);
+        }
+
+        return values;
+    }
+
+    private const string Usage = """
+Usage:
+  trureturing-paper assemble --recipe <recipe.json> --frozen-bundle <directory> --output <paper.tex>
+  trureturing-paper emit-local-ports --frozen-bundle <directory> --output <directory>
+  trureturing-paper example-cycle --frozen-bundle <directory> --output-root <repository-root>
+""";
 }
 
 internal sealed class FrozenBundleFilePorts :
