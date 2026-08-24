@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using Trureturing.Paper.Core;
 using Xunit;
@@ -18,6 +19,36 @@ public sealed class PaperPortContractTests
         AssertSchemaMatchesRecord(
             "paper-intuition-port.v1.schema.json",
             typeof(PaperIntuitionPort));
+    }
+
+    [Fact]
+    public void ReaderRejectsSchemaRequiredItemFieldWhenOmitted()
+    {
+        string json = $$"""
+            {
+              "schema": "paper-truth-release-port.v1",
+              "release_digest": "{{Sha('1')}}",
+              "source_commit": "{{new string('a', 40)}}",
+              "source_tree": "{{new string('b', 40)}}",
+              "declarations": [
+                {
+                  "declaration_id": "A.theorem",
+                  "statement_id": "{{Sha('2')}}",
+                  "frozen_node_id": "{{Sha('3')}}",
+                  "repo_path": "A.lean",
+                  "kind": "theorem",
+                  "prerequisite_frozen_node_ids": [],
+                  "axiom_closure": []
+                }
+              ]
+            }
+            """;
+
+        ClaimGateException error = Assert.Throws<ClaimGateException>(
+            () => PaperPortJson.ReadTruthReleasePort(
+                Encoding.UTF8.GetBytes(json)));
+
+        Assert.Contains("mdbook_path", error.Message, StringComparison.Ordinal);
     }
 
     private static void AssertSchemaMatchesRecord(string fileName, Type recordType)
@@ -174,4 +205,6 @@ public sealed class PaperPortContractTests
 
         throw new InvalidOperationException("Repository root not found.");
     }
+
+    private static string Sha(char value) => "sha256:" + new string(value, 64);
 }

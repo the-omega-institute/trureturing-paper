@@ -1,3 +1,4 @@
+using System.Collections;
 using Trureturing.Paper.Core;
 using Xunit;
 
@@ -132,6 +133,96 @@ public sealed class TruthAndIntuitionIndexTests
             truth));
     }
 
+    [Fact]
+    public void TruthIndexUsesOneDeepSnapshotOfHostileCollections()
+    {
+        PaperTruthReleasePort valid = TruthPort();
+        var prerequisites = new ChangingReadOnlyList<string>(
+            new[] { Hash('a') },
+            new[] { Hash('f') });
+        var axioms = new ChangingReadOnlyList<string>(
+            new[] { "Classical.choice" },
+            new[] { "Bypass.axiom" });
+        PaperDeclarationPort[] firstDeclarations = valid.Declarations
+            .Select((declaration, index) => index == 1
+                ? declaration with
+                {
+                    PrerequisiteFrozenNodeIds = prerequisites,
+                    AxiomClosure = axioms
+                }
+                : declaration)
+            .ToArray();
+        var declarations = new ChangingReadOnlyList<PaperDeclarationPort>(
+            firstDeclarations,
+            new[]
+            {
+                firstDeclarations[0] with
+                {
+                    DeclarationId = "unvalidated.bypass",
+                    FrozenNodeId = Hash('f')
+                }
+            });
+
+        PaperTruthIndex index = PaperTruthIndex.Build(
+            valid with { Declarations = declarations });
+
+        PaperTruthEntry entry = index.GetDeclaration("B.theorem");
+        Assert.Equal(new[] { Hash('a') }, entry.PrerequisiteFrozenNodeIds);
+        Assert.Equal(new[] { "Classical.choice" }, entry.AxiomClosure);
+        Assert.Equal(1, declarations.EnumerationCount);
+        Assert.Equal(1, prerequisites.EnumerationCount);
+        Assert.Equal(1, axioms.EnumerationCount);
+        Assert.Throws<ClaimGateException>(
+            () => index.GetDeclaration("unvalidated.bypass"));
+    }
+
+    [Fact]
+    public void IntuitionIndexUsesOneDeepSnapshotOfHostileCollections()
+    {
+        PaperTruthIndex truth = BuildTruthIndex();
+        PaperIntuitionPort valid = IntuitionPort(truth.ReleaseDigest);
+        var inputs = new ChangingReadOnlyList<string>(
+            new[] { "A.theorem" },
+            new[] { "unvalidated.input" });
+        var outputs = new ChangingReadOnlyList<string>(
+            new[] { "C.theorem" },
+            new[] { "unvalidated.output" });
+        var evidence = new ChangingReadOnlyList<string>(
+            new[] { "evidence:1" },
+            new[] { "unvalidated:evidence" });
+        PaperIntuitionCandidatePort firstCandidate = valid.Candidates[0] with
+        {
+            Inputs = inputs,
+            Outputs = outputs,
+            EvidenceRefs = evidence
+        };
+        var candidates = new ChangingReadOnlyList<PaperIntuitionCandidatePort>(
+            new[] { firstCandidate },
+            new[]
+            {
+                firstCandidate with
+                {
+                    ProposalId = "unvalidated-bypass",
+                    Status = "certified"
+                }
+            });
+
+        PaperIntuitionIndex index = PaperIntuitionIndex.Build(
+            valid with { Candidates = candidates },
+            truth);
+
+        PaperIntuitionEntry candidate = index.GetCandidate("proposal-1");
+        Assert.Equal(new[] { "A.theorem" }, candidate.Inputs);
+        Assert.Equal(new[] { "C.theorem" }, candidate.Outputs);
+        Assert.Equal(new[] { "evidence:1" }, candidate.EvidenceRefs);
+        Assert.Equal(1, candidates.EnumerationCount);
+        Assert.Equal(1, inputs.EnumerationCount);
+        Assert.Equal(1, outputs.EnumerationCount);
+        Assert.Equal(1, evidence.EnumerationCount);
+        Assert.Throws<ClaimGateException>(
+            () => index.GetCandidate("unvalidated-bypass"));
+    }
+
     private static PaperTruthIndex BuildTruthIndex() =>
         PaperTruthIndex.Build(ReadTruthPort(TruthPort()));
 
@@ -200,4 +291,30 @@ public sealed class TruthAndIntuitionIndexTests
 
     private static string Sha(char value) => "sha256:" + new string(value, 64);
     private static string Hash(char value) => "sha256:" + new string(value, 64);
+
+    private sealed class ChangingReadOnlyList<T> : IReadOnlyList<T>
+    {
+        private readonly IReadOnlyList<T> _first;
+        private readonly IReadOnlyList<T> _later;
+
+        public ChangingReadOnlyList(
+            IReadOnlyList<T> first,
+            IReadOnlyList<T> later)
+        {
+            _first = first;
+            _later = later;
+        }
+
+        public int EnumerationCount { get; private set; }
+        public int Count => _first.Count;
+        public T this[int index] => _first[index];
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            EnumerationCount++;
+            return (EnumerationCount == 1 ? _first : _later).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
 }

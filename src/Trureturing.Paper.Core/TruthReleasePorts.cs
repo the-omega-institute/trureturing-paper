@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -10,37 +11,37 @@ public static class PaperPortSchemas
 }
 
 public sealed record PaperDeclarationPort(
-    string DeclarationId,
-    string StatementId,
-    string FrozenNodeId,
-    string RepoPath,
-    string Kind,
-    IReadOnlyList<string> PrerequisiteFrozenNodeIds,
-    IReadOnlyList<string> AxiomClosure,
-    string? MdbookPath);
+    [property: JsonRequired] string DeclarationId,
+    [property: JsonRequired] string StatementId,
+    [property: JsonRequired] string FrozenNodeId,
+    [property: JsonRequired] string RepoPath,
+    [property: JsonRequired] string Kind,
+    [property: JsonRequired] IReadOnlyList<string> PrerequisiteFrozenNodeIds,
+    [property: JsonRequired] IReadOnlyList<string> AxiomClosure,
+    [property: JsonRequired] string? MdbookPath);
 
 public sealed record PaperTruthReleasePort(
-    string Schema,
-    string ReleaseDigest,
-    string SourceCommit,
-    string SourceTree,
-    IReadOnlyList<PaperDeclarationPort> Declarations);
+    [property: JsonRequired] string Schema,
+    [property: JsonRequired] string ReleaseDigest,
+    [property: JsonRequired] string SourceCommit,
+    [property: JsonRequired] string SourceTree,
+    [property: JsonRequired] IReadOnlyList<PaperDeclarationPort> Declarations);
 
 public sealed record PaperIntuitionCandidatePort(
-    string ProposalId,
-    string RelationType,
-    string Status,
-    IReadOnlyList<string> Inputs,
-    IReadOnlyList<string> Outputs,
-    IReadOnlyList<string> EvidenceRefs,
-    string Falsifier,
-    double? PredictedReachabilityGain,
-    double? PredictedPruningGain);
+    [property: JsonRequired] string ProposalId,
+    [property: JsonRequired] string RelationType,
+    [property: JsonRequired] string Status,
+    [property: JsonRequired] IReadOnlyList<string> Inputs,
+    [property: JsonRequired] IReadOnlyList<string> Outputs,
+    [property: JsonRequired] IReadOnlyList<string> EvidenceRefs,
+    [property: JsonRequired] string Falsifier,
+    [property: JsonRequired] double? PredictedReachabilityGain,
+    [property: JsonRequired] double? PredictedPruningGain);
 
 public sealed record PaperIntuitionPort(
-    string Schema,
-    string SourceTruthReleaseDigest,
-    IReadOnlyList<PaperIntuitionCandidatePort> Candidates);
+    [property: JsonRequired] string Schema,
+    [property: JsonRequired] string SourceTruthReleaseDigest,
+    [property: JsonRequired] IReadOnlyList<PaperIntuitionCandidatePort> Candidates);
 
 public static class PaperPortJson
 {
@@ -114,21 +115,8 @@ public static class PaperPortJson
 
     internal static PaperTruthReleasePort Validate(PaperTruthReleasePort port)
     {
-        if (port is null)
-        {
-            throw new ClaimGateException("truth release port must not be null.");
-        }
-
-        IReadOnlyList<PaperDeclarationPort> declarations =
-            port.Declarations ?? throw new ClaimGateException(
-                "declarations must not be null.");
-        foreach (PaperDeclarationPort? declaration in declarations)
-        {
-            if (declaration is null)
-            {
-                throw new ClaimGateException("declaration must not be null.");
-            }
-        }
+        port = Snapshot(port);
+        IReadOnlyList<PaperDeclarationPort> declarations = port.Declarations;
 
         Require(port.Schema == PaperPortSchemas.TruthReleasePort,
             $"schema must be {PaperPortSchemas.TruthReleasePort}.");
@@ -190,21 +178,8 @@ public static class PaperPortJson
 
     internal static PaperIntuitionPort Validate(PaperIntuitionPort port)
     {
-        if (port is null)
-        {
-            throw new ClaimGateException("intuition port must not be null.");
-        }
-
-        IReadOnlyList<PaperIntuitionCandidatePort> candidates =
-            port.Candidates ?? throw new ClaimGateException(
-                "candidates must not be null.");
-        foreach (PaperIntuitionCandidatePort? candidate in candidates)
-        {
-            if (candidate is null)
-            {
-                throw new ClaimGateException("intuition candidate must not be null.");
-            }
-        }
+        port = Snapshot(port);
+        IReadOnlyList<PaperIntuitionCandidatePort> candidates = port.Candidates;
 
         Require(port.Schema == PaperPortSchemas.IntuitionPort,
             $"schema must be {PaperPortSchemas.IntuitionPort}.");
@@ -231,6 +206,91 @@ public static class PaperPortJson
         }
 
         return port;
+    }
+
+    private static PaperTruthReleasePort Snapshot(PaperTruthReleasePort port)
+    {
+        if (port is null)
+        {
+            throw new ClaimGateException("truth release port must not be null.");
+        }
+
+        IReadOnlyList<PaperDeclarationPort> declarations =
+            port.Declarations ?? throw new ClaimGateException(
+                "declarations must not be null.");
+        var snapshot = ImmutableArray.CreateBuilder<PaperDeclarationPort>();
+        foreach (PaperDeclarationPort? declaration in declarations)
+        {
+            if (declaration is null)
+            {
+                throw new ClaimGateException("declaration must not be null.");
+            }
+
+            snapshot.Add(declaration with
+            {
+                PrerequisiteFrozenNodeIds = Snapshot(
+                    declaration.PrerequisiteFrozenNodeIds,
+                    $"declaration {declaration.DeclarationId} prerequisites must not be null."),
+                AxiomClosure = Snapshot(
+                    declaration.AxiomClosure,
+                    $"declaration {declaration.DeclarationId} axioms must not be null.")
+            });
+        }
+
+        return port with { Declarations = snapshot.ToImmutable() };
+    }
+
+    private static PaperIntuitionPort Snapshot(PaperIntuitionPort port)
+    {
+        if (port is null)
+        {
+            throw new ClaimGateException("intuition port must not be null.");
+        }
+
+        IReadOnlyList<PaperIntuitionCandidatePort> candidates =
+            port.Candidates ?? throw new ClaimGateException(
+                "candidates must not be null.");
+        var snapshot = ImmutableArray.CreateBuilder<PaperIntuitionCandidatePort>();
+        foreach (PaperIntuitionCandidatePort? candidate in candidates)
+        {
+            if (candidate is null)
+            {
+                throw new ClaimGateException("intuition candidate must not be null.");
+            }
+
+            snapshot.Add(candidate with
+            {
+                Inputs = Snapshot(
+                    candidate.Inputs,
+                    $"candidate {candidate.ProposalId} inputs must not be null."),
+                Outputs = Snapshot(
+                    candidate.Outputs,
+                    $"candidate {candidate.ProposalId} outputs must not be null."),
+                EvidenceRefs = Snapshot(
+                    candidate.EvidenceRefs,
+                    $"candidate {candidate.ProposalId} evidence must not be null.")
+            });
+        }
+
+        return port with { Candidates = snapshot.ToImmutable() };
+    }
+
+    private static ImmutableArray<T> Snapshot<T>(
+        IReadOnlyList<T>? values,
+        string nullMessage)
+    {
+        if (values is null)
+        {
+            throw new ClaimGateException(nullMessage);
+        }
+
+        var snapshot = ImmutableArray.CreateBuilder<T>();
+        foreach (T value in values)
+        {
+            snapshot.Add(value);
+        }
+
+        return snapshot.ToImmutable();
     }
 
     private static void RequireAcyclic(
