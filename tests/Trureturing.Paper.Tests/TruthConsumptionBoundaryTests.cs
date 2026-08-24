@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace Trureturing.Paper.Tests;
 
 public sealed class TruthConsumptionBoundaryTests
