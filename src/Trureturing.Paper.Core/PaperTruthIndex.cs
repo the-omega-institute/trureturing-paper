@@ -39,6 +39,8 @@ public sealed class PaperTruthIndex
 
     public static PaperTruthIndex Build(PaperTruthReleasePort port)
     {
+        port = PaperPortJson.Validate(port);
+
         var entries = port.Declarations.Select(declaration =>
             new PaperTruthEntry(
                 declaration.DeclarationId,
@@ -161,6 +163,12 @@ public sealed class PaperIntuitionIndex
         PaperIntuitionPort port,
         PaperTruthIndex truth)
     {
+        port = PaperPortJson.Validate(port);
+        if (truth is null)
+        {
+            throw new ClaimGateException("Intuition index requires a truth index.");
+        }
+
         if (port.SourceTruthReleaseDigest != truth.ReleaseDigest)
         {
             throw new ClaimGateException(

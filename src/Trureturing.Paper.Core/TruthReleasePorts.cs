@@ -84,15 +84,13 @@ public static class PaperPortJson
     public static PaperTruthReleasePort ReadTruthReleasePort(ReadOnlySpan<byte> bytes)
     {
         PaperTruthReleasePort port = Deserialize<PaperTruthReleasePort>(bytes);
-        Validate(port);
-        return port;
+        return Validate(port);
     }
 
     public static PaperIntuitionPort ReadIntuitionPort(ReadOnlySpan<byte> bytes)
     {
         PaperIntuitionPort port = Deserialize<PaperIntuitionPort>(bytes);
-        Validate(port);
-        return port;
+        return Validate(port);
     }
 
     public static byte[] Write<T>(T value) =>
@@ -114,26 +112,48 @@ public static class PaperPortJson
         }
     }
 
-    private static void Validate(PaperTruthReleasePort port)
+    internal static PaperTruthReleasePort Validate(PaperTruthReleasePort port)
     {
+        if (port is null)
+        {
+            throw new ClaimGateException("truth release port must not be null.");
+        }
+
+        IReadOnlyList<PaperDeclarationPort> declarations =
+            port.Declarations ?? throw new ClaimGateException(
+                "declarations must not be null.");
+        foreach (PaperDeclarationPort? declaration in declarations)
+        {
+            if (declaration is null)
+            {
+                throw new ClaimGateException("declaration must not be null.");
+            }
+        }
+
         Require(port.Schema == PaperPortSchemas.TruthReleasePort,
             $"schema must be {PaperPortSchemas.TruthReleasePort}.");
         RequireSha256(port.ReleaseDigest, "release_digest");
         RequireGitPair(port.SourceCommit, port.SourceTree);
 
         RequireUnique(
-            port.Declarations.Select(declaration => declaration.DeclarationId),
+            declarations.Select(declaration => declaration.DeclarationId),
             "declaration_id");
         RequireUnique(
-            port.Declarations.Select(declaration => declaration.StatementId),
+            declarations.Select(declaration => declaration.StatementId),
             "statement_id");
 
-        var frozenIds = port.Declarations
+        var frozenIds = declarations
             .Select(declaration => declaration.FrozenNodeId)
             .ToHashSet(StringComparer.Ordinal);
 
-        foreach (PaperDeclarationPort declaration in port.Declarations)
+        foreach (PaperDeclarationPort declaration in declarations)
         {
+            IReadOnlyList<string> prerequisites =
+                declaration.PrerequisiteFrozenNodeIds ?? throw new ClaimGateException(
+                    $"declaration {declaration.DeclarationId} prerequisites must not be null.");
+            IReadOnlyList<string> axioms =
+                declaration.AxiomClosure ?? throw new ClaimGateException(
+                    $"declaration {declaration.DeclarationId} axioms must not be null.");
             RequireNonEmpty(declaration.DeclarationId, "declaration_id");
             RequireSha256(declaration.StatementId, "statement_id");
             RequireSha256(declaration.FrozenNodeId, "frozen_node_id");
@@ -143,13 +163,13 @@ public static class PaperPortJson
             Require(DeclarationKinds.Contains(declaration.Kind),
                 $"declaration {declaration.DeclarationId} has unknown kind {declaration.Kind}.");
             RequireUnique(
-                declaration.PrerequisiteFrozenNodeIds,
+                prerequisites,
                 $"prerequisite in {declaration.DeclarationId}");
             RequireUnique(
-                declaration.AxiomClosure,
+                axioms,
                 $"axiom in {declaration.DeclarationId}");
 
-            foreach (string prerequisite in declaration.PrerequisiteFrozenNodeIds)
+            foreach (string prerequisite in prerequisites)
             {
                 RequireSha256(prerequisite, "prerequisite_frozen_node_id");
                 Require(frozenIds.Contains(prerequisite),
@@ -164,28 +184,53 @@ public static class PaperPortJson
             }
         }
 
-        RequireAcyclic(port.Declarations);
+        RequireAcyclic(declarations);
+        return port;
     }
 
-    private static void Validate(PaperIntuitionPort port)
+    internal static PaperIntuitionPort Validate(PaperIntuitionPort port)
     {
+        if (port is null)
+        {
+            throw new ClaimGateException("intuition port must not be null.");
+        }
+
+        IReadOnlyList<PaperIntuitionCandidatePort> candidates =
+            port.Candidates ?? throw new ClaimGateException(
+                "candidates must not be null.");
+        foreach (PaperIntuitionCandidatePort? candidate in candidates)
+        {
+            if (candidate is null)
+            {
+                throw new ClaimGateException("intuition candidate must not be null.");
+            }
+        }
+
         Require(port.Schema == PaperPortSchemas.IntuitionPort,
             $"schema must be {PaperPortSchemas.IntuitionPort}.");
         RequireSha256(port.SourceTruthReleaseDigest, "source_truth_release_digest");
-        RequireUnique(port.Candidates.Select(candidate => candidate.ProposalId), "proposal_id");
+        RequireUnique(candidates.Select(candidate => candidate.ProposalId), "proposal_id");
 
-        foreach (PaperIntuitionCandidatePort candidate in port.Candidates)
+        foreach (PaperIntuitionCandidatePort candidate in candidates)
         {
+            IReadOnlyList<string> inputs = candidate.Inputs ?? throw new ClaimGateException(
+                $"candidate {candidate.ProposalId} inputs must not be null.");
+            IReadOnlyList<string> outputs = candidate.Outputs ?? throw new ClaimGateException(
+                $"candidate {candidate.ProposalId} outputs must not be null.");
+            _ = candidate.EvidenceRefs ?? throw new ClaimGateException(
+                $"candidate {candidate.ProposalId} evidence must not be null.");
             RequireNonEmpty(candidate.ProposalId, "proposal_id");
             RequireNonEmpty(candidate.RelationType, "relation_type");
             Require(CandidateStatuses.Contains(candidate.Status),
                 $"candidate {candidate.ProposalId} has unknown status {candidate.Status}.");
-            Require(candidate.Inputs.Count > 0,
+            Require(inputs.Count > 0,
                 $"candidate {candidate.ProposalId} has no inputs.");
-            Require(candidate.Outputs.Count > 0,
+            Require(outputs.Count > 0,
                 $"candidate {candidate.ProposalId} has no outputs.");
             RequireNonEmpty(candidate.Falsifier, "falsifier");
         }
+
+        return port;
     }
 
     private static void RequireAcyclic(
@@ -227,29 +272,45 @@ public static class PaperPortJson
         colors[id] = 2;
     }
 
-    private static void RequireGitPair(string commit, string tree)
+    private static void RequireGitPair(string? commit, string? tree)
     {
-        Require(IsLowerHex(commit) && commit.Length is 40 or 64,
-            "source_commit must be a lowercase 40- or 64-hex Git object id.");
-        Require(IsLowerHex(tree) && tree.Length == commit.Length,
-            "source_tree must use the same Git object-id width as source_commit.");
+        if (commit is null || tree is null || !IsLowerHex(commit) ||
+            commit.Length is not (40 or 64))
+        {
+            throw new ClaimGateException(
+                "source_commit must be a lowercase 40- or 64-hex Git object id.");
+        }
+
+        if (!IsLowerHex(tree) || tree.Length != commit.Length)
+        {
+            throw new ClaimGateException(
+                "source_tree must use the same Git object-id width as source_commit.");
+        }
     }
 
-    private static void RequireSha256(string value, string field)
+    private static void RequireSha256(string? value, string field)
     {
-        Require(value.StartsWith("sha256:", StringComparison.Ordinal),
-            $"{field} must use sha256:<64hex>.");
+        if (value is null || !value.StartsWith("sha256:", StringComparison.Ordinal))
+        {
+            throw new ClaimGateException($"{field} must use sha256:<64hex>.");
+        }
+
         string hex = value["sha256:".Length..];
         Require(hex.Length == 64 && IsLowerHex(hex),
             $"{field} must use sha256:<64hex>.");
     }
 
-    private static bool IsLowerHex(string value) =>
-        value.All(character =>
+    private static bool IsLowerHex(string? value) =>
+        value is not null && value.All(character =>
             character is >= '0' and <= '9' or >= 'a' and <= 'f');
 
-    private static void RequireUnique(IEnumerable<string> values, string field)
+    private static void RequireUnique(IEnumerable<string>? values, string field)
     {
+        if (values is null)
+        {
+            throw new ClaimGateException($"{field} must not be null.");
+        }
+
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (string value in values)
         {
@@ -258,7 +319,7 @@ public static class PaperPortJson
         }
     }
 
-    private static void RequireNonEmpty(string value, string field) =>
+    private static void RequireNonEmpty(string? value, string field) =>
         Require(!string.IsNullOrWhiteSpace(value), $"{field} must be non-empty.");
 
     private static void Require(bool condition, string message)

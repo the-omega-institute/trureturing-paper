@@ -4,9 +4,9 @@ Paper consumes two different authority classes.
 
 ## `PaperTruthIndex`
 
-An upstream adapter verifies a `truth-release.v1` bundle through `Trureturing.Truth`
-and writes `paper-truth-release-port.v1`. The Paper core owns the resulting research
-index:
+A separate, planned upstream adapter will verify a `truth-release.v1` bundle through
+`Trureturing.Truth` and write `paper-truth-release-port.v1`. This repository does not
+provide that adapter. The Paper core owns the resulting research index:
 
 - declaration and statement identity;
 - exact frozen prerequisite closure;

@@ -16,6 +16,47 @@
     "release_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "source_commit": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
     "source_tree": { "type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
-    "declarations": { "type": "array" }
+    "declarations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "declaration_id",
+          "statement_id",
+          "frozen_node_id",
+          "repo_path",
+          "kind",
+          "prerequisite_frozen_node_ids",
+          "axiom_closure",
+          "mdbook_path"
+        ],
+        "properties": {
+          "declaration_id": { "type": "string", "minLength": 1 },
+          "statement_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "frozen_node_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "repo_path": { "type": "string", "pattern": "\\.lean$" },
+          "kind": {
+            "enum": ["theorem", "lemma", "definition", "example", "axiom", "opaque", "abbrev"]
+          },
+          "prerequisite_frozen_node_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+          },
+          "axiom_closure": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "mdbook_path": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "type": "null" }
+            ]
+          }
+        }
+      }
+    }
   }
 }
