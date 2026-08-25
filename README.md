@@ -102,26 +102,26 @@ identify research gaps, but they cannot be retrieved as certified declarations o
 the existing claim gate. See
 [`docs/TRUTH_AND_INTUITION_INDEXES.md`](docs/TRUTH_AND_INTUITION_INDEXES.md).
 
-## Local example: consume, assemble, publish
+## Local example: consume and assemble data
 
 The example cycle is deliberately local and deterministic. Its mock adapter validates the
 checked-in real subset in `Papers/frozen-bundle`, then emits the exact Paper-owned truth and
 Intuition port contracts. It demonstrates the consumption mechanism; it is not the upstream
 truth-release verifier.
 
-Run the complete cycle from the repository root:
+Run the complete data assembly from the repository root:
 
 ```sh
-dotnet run --project src/Trureturing.Paper.Cli -- example-cycle \
+dotnet run --project src/Trureturing.Paper.Cli -- assemble-example \
   --frozen-bundle Papers/frozen-bundle \
   --output-root .
 ```
 
-The command writes the typed ports and reproducible LaTeX under `Papers/example/`, then
-publishes the reading site to `site/index.html`. The certified theorem is selected through
-`PaperTruthIndex` and must still pass the existing frozen claim gate. Research candidates are
-read only from `PaperIntuitionIndex`, rendered as advisory, and cannot be retrieved or claimed
-as certified declarations.
+The command writes the typed ports and reproducible candidate LaTeX under `Papers/example/`.
+The certified theorem is selected through `PaperTruthIndex` and must still pass the existing
+frozen claim gate. Research candidates are read only from `PaperIntuitionIndex` and cannot be
+retrieved or claimed as certified declarations. Presentation and visualization are owned by
+`trureturing-pages`, which consumes these data artifacts.
 
 For consumption-only development, emit just the mock ports:
 
@@ -130,6 +130,3 @@ dotnet run --project src/Trureturing.Paper.Cli -- emit-local-ports \
   --frozen-bundle Papers/frozen-bundle \
   --output Papers/example
 ```
-
-On pushes to `dev`, the Pages workflow uploads `site/` and deploys it. Repository Pages
-settings remain an operator responsibility.

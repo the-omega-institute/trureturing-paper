@@ -21,7 +21,7 @@ internal static class Program
             {
                 "assemble" => Assemble(args),
                 "emit-local-ports" => EmitLocalPorts(args),
-                "example-cycle" => RunExampleCycle(args),
+                "assemble-example" => AssembleExample(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -69,11 +69,11 @@ internal static class Program
         return 0;
     }
 
-    private static int RunExampleCycle(string[] args)
+    private static int AssembleExample(string[] args)
     {
         Dictionary<string, string> values = ParseValues(
             args,
-            "example-cycle",
+            "assemble-example",
             "--frozen-bundle",
             "--output-root");
         string outputRoot = Path.GetFullPath(values["--output-root"]);
@@ -87,12 +87,11 @@ internal static class Program
             File.ReadAllBytes(Path.Combine(exampleRoot, "paper-truth-release-port.v1.json")));
         PaperIntuitionPort intuitionPort = PaperPortJson.ReadIntuitionPort(
             File.ReadAllBytes(Path.Combine(exampleRoot, "paper-intuition-port.v1.json")));
-        ExamplePaperArtifacts artifacts = ExamplePaperPublisher.Produce(
+        byte[] latex = ExamplePaperAssembler.Assemble(
             truthPort,
             intuitionPort,
             release.FrozenInputs);
-        WriteFile(Path.Combine(exampleRoot, "paper.tex"), artifacts.Latex);
-        WriteFile(Path.Combine(outputRoot, "site", "index.html"), artifacts.Html);
+        WriteFile(Path.Combine(exampleRoot, "paper.tex"), latex);
         return 0;
     }
 
@@ -148,7 +147,7 @@ internal static class Program
 Usage:
   trureturing-paper assemble --recipe <recipe.json> --frozen-bundle <directory> --output <paper.tex>
   trureturing-paper emit-local-ports --frozen-bundle <directory> --output <directory>
-  trureturing-paper example-cycle --frozen-bundle <directory> --output-root <repository-root>
+  trureturing-paper assemble-example --frozen-bundle <directory> --output-root <repository-root>
 """;
 }
 
