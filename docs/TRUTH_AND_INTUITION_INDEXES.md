@@ -25,3 +25,8 @@ release used by `PaperTruthIndex`.
 An Intuition proposal cannot be retrieved as a certified declaration. Paper may use
 it to identify a load-bearing gap or plan a research programme, while the claim gate
 continues to require certified truth for factual mathematical assertions.
+
+The candidate pipeline consumes only bridges whose Intuition status is `proved`. This is
+a selection rule, not an authority promotion: the bridge's central claim is still written
+as `conjectured` in `candidate-paper.v1`. Only an input resolved from `PaperTruthIndex` can
+produce a `certified` key claim. Missing or advisory-only inputs fail closed.

@@ -22,6 +22,7 @@ internal static class Program
                 "assemble" => Assemble(args),
                 "emit-local-ports" => EmitLocalPorts(args),
                 "assemble-example" => AssembleExample(args),
+                "propose-candidates" => ProposeCandidates(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -95,6 +96,68 @@ internal static class Program
         return 0;
     }
 
+    private static int ProposeCandidates(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "propose-candidates",
+            "--release",
+            "--intuition",
+            "--out");
+        PaperTruthReleasePort truthPort = PaperPortJson.ReadTruthReleasePort(
+            File.ReadAllBytes(values["--release"]));
+        PaperTruthIndex truth = PaperTruthIndex.Build(truthPort);
+        PaperIntuitionPort intuitionPort = PaperPortJson.ReadIntuitionPort(
+            File.ReadAllBytes(values["--intuition"]));
+        PaperIntuitionIndex intuition = PaperIntuitionIndex.Build(intuitionPort, truth);
+        string outputDirectory = Path.GetFullPath(values["--out"]);
+
+        foreach (CandidateProposalArtifacts proposal in
+            CandidatePipeline.Propose(truth, intuition))
+        {
+            byte[] paperBytes = CanonicalJson.Serialize(proposal.CandidatePaper);
+            string paperReference = CanonicalJson.Sha256Reference(paperBytes);
+            WriteCandidateArtifact(
+                outputDirectory,
+                CandidateArtifactSchemas.CandidatePaper,
+                paperReference,
+                paperBytes);
+
+            byte[] literatureBytes = CanonicalJson.Serialize(
+                proposal.LiteratureResearch);
+            WriteCandidateArtifact(
+                outputDirectory,
+                CandidateArtifactSchemas.LiteratureResearch,
+                CanonicalJson.Sha256Reference(literatureBytes),
+                literatureBytes);
+
+            var journals = new CandidateJournalArtifact(
+                CandidateArtifactSchemas.CandidateJournal,
+                paperReference,
+                proposal.CandidateVenues);
+            byte[] journalBytes = CanonicalJson.Serialize(journals);
+            WriteCandidateArtifact(
+                outputDirectory,
+                CandidateArtifactSchemas.CandidateJournal,
+                CanonicalJson.Sha256Reference(journalBytes),
+                journalBytes);
+        }
+
+        return 0;
+    }
+
+    private static void WriteCandidateArtifact(
+        string outputDirectory,
+        string schema,
+        string reference,
+        byte[] bytes)
+    {
+        string digest = reference["sha256:".Length..];
+        WriteFile(
+            Path.Combine(outputDirectory, $"{schema}.{digest}.json"),
+            bytes);
+    }
+
     private static void WritePorts(string outputDirectory, LocalDevRelease release)
     {
         string root = Path.GetFullPath(outputDirectory);
@@ -148,6 +211,7 @@ Usage:
   trureturing-paper assemble --recipe <recipe.json> --frozen-bundle <directory> --output <paper.tex>
   trureturing-paper emit-local-ports --frozen-bundle <directory> --output <directory>
   trureturing-paper assemble-example --frozen-bundle <directory> --output-root <repository-root>
+  trureturing-paper propose-candidates --release <paper-truth-release-port.v1.json> --intuition <paper-intuition-port.v1.json> --out <directory>
 """;
 }
 

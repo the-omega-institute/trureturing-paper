@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "candidate-journal.v1",
+  "title": "Candidate journal venues",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "candidate_paper_ref", "venues"],
+  "properties": {
+    "schema": { "const": "candidate-journal.v1" },
+    "candidate_paper_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "venues": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "scope_fit_rationale", "typical_topics", "fit_score_open_or_measured"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "scope_fit_rationale": { "type": "string", "minLength": 1 },
+          "typical_topics": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "fit_score_open_or_measured": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
