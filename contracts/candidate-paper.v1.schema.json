@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "candidate-paper.v1",
+  "title": "Research candidate paper",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "title", "thesis", "grounded_on", "outline", "key_claims", "abstract"],
+  "properties": {
+    "schema": { "const": "candidate-paper.v1" },
+    "title": { "type": "string", "minLength": 1 },
+    "thesis": { "type": "string", "minLength": 1 },
+    "grounded_on": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["certified_node_ids", "proved_bridge_refs"],
+      "properties": {
+        "certified_node_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "proved_bridge_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "outline": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "key_claims": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "kind", "source_ref"],
+        "properties": {
+          "claim": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["certified", "conjectured"] },
+          "source_ref": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "abstract": { "type": "string", "minLength": 1 }
+  }
+}

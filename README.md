@@ -1,8 +1,44 @@
 # trureturing-paper
 
-`trureturing-paper` is an independent paper-assembly organ. Its core turns a fixed
-`recipe.v1` plus human-blessed, frozen truth inputs into byte-reproducible LaTeX.
-It is a greenfield assembler; the retired `papergen` shell is not a dependency.
+`trureturing-paper` is the research-opportunity organ. Its primary pipeline combines a
+certified `PaperTruthIndex` with proved bridges from `PaperIntuitionIndex`, applies the
+claim gate, performs a library-before-proof novelty check, and emits content-addressed
+research-candidate data. Rendering and publication belong to `trureturing-pages`.
+
+## Candidate pipeline
+
+Run the deterministic pipeline from the repository root:
+
+```sh
+dotnet run --project src/Trureturing.Paper.Cli -- propose-candidates \
+  --release Papers/example/paper-truth-release-port.v1.json \
+  --intuition Papers/example/paper-intuition-port.v1.json \
+  --out Papers/candidates
+```
+
+For every `proved` Intuition bridge, the command requires every bridge input to resolve
+through `PaperTruthIndex`, then writes three canonical JSON contracts:
+
+- `candidate-paper.v1.<sha256>.json` contains the thesis, outline, grounding and typed
+  key claims;
+- `literature-research.v1.<sha256>.json` records the real queries, verified sources,
+  novelty assessment and rationale;
+- `candidate-journal.v1.<sha256>.json` records possible venues and links to the paper
+  candidate by its SHA-256 content identity.
+
+The filename digest is computed over the exact canonical JSON bytes. Re-running with the
+same ports produces the same paths and bytes. There is no network dependency at generation
+time: verified research metadata is reviewed into the deterministic catalog. An unknown
+central claim receives no invented citation and is explicitly reported as unverified with
+a `partial` novelty assessment.
+
+The claim gate is asymmetric by design. A certified key claim can be constructed only from
+an entry returned by `PaperTruthIndex`. A bridge from Intuition is always emitted as
+`conjectured`, even when its bridge status is `proved`; that status does not give Intuition
+the authority of the certified truth release.
+
+The output schemas live in `contracts/`. Candidate output contains data only: this
+repository has no candidate renderer, site, Pages workflow, or HTML output.
 
 ## Boundaries
 
@@ -32,7 +68,7 @@ It never reads a sibling checkout, the base frozen ledger, a base skill, or a Gi
 control plane. The architecture test `FkstOrganBoundaryTests` keeps that separation
 machine-visible.
 
-## First slice
+## Legacy assembly slice
 
 The walking skeleton proves only this path:
 
@@ -80,8 +116,8 @@ receipt are paper-domain concerns.
 ## Explicitly deferred
 
 Still deferred: migration from the manually pinned frozen bundle to the shared
-`truth-release.v1` intake, topic selection, research-loop automation, citation/evidence
-rendering, PDF production, and arXiv packaging. Supervise/daemon concurrency hardening
+`truth-release.v1` intake, general topic selection, proof automation, PDF production, and
+arXiv packaging. Supervise/daemon concurrency hardening
 (build-key dedup over the full input closure and serialized install+record) remains deferred
 until concurrent delivery becomes real.
 
@@ -117,7 +153,7 @@ dotnet run --project src/Trureturing.Paper.Cli -- assemble-example \
   --output-root .
 ```
 
-The command writes the typed ports and reproducible candidate LaTeX under `Papers/example/`.
+The legacy command writes the typed ports and reproducible example LaTeX under `Papers/example/`.
 The certified theorem is selected through `PaperTruthIndex` and must still pass the existing
 frozen claim gate. Research candidates are read only from `PaperIntuitionIndex` and cannot be
 retrieved or claimed as certified declarations. Presentation and visualization are owned by

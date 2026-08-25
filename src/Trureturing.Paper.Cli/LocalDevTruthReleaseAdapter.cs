@@ -69,7 +69,7 @@ public static class LocalDevTruthReleaseAdapter
                 new PaperIntuitionCandidatePort(
                     "advisory/trace-norm-interaction",
                     "Trace and norm compatibility under conjugation",
-                    "evidence-backed",
+                    "proved",
                     [ExamplePaperAssembler.CertifiedDeclarationId],
                     ["research/trace-norm-compatibility"],
                     ["describe:trace-invariance-under-conjugation"],

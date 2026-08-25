@@ -5,7 +5,7 @@
     {
       "proposal_id": "advisory/trace-norm-interaction",
       "relation_type": "Trace and norm compatibility under conjugation",
-      "status": "evidence-backed",
+      "status": "proved",
       "inputs": [
         "D5/S0/Carrier/TraceConjugation.trace_conj"
       ],
