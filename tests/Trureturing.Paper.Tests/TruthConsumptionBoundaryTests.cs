@@ -27,6 +27,30 @@ public sealed class TruthConsumptionBoundaryTests
     }
 
     [Fact]
+    public void RepositoryContainsNoVisualizationLayer()
+    {
+        string root = FindRoot();
+        Assert.False(Directory.Exists(Path.Combine(root, "site")));
+        Assert.False(File.Exists(Path.Combine(root, ".github", "workflows", "pages.yml")));
+        Assert.False(File.Exists(Path.Combine(
+            root,
+            "src",
+            "Trureturing.Paper.Core",
+            "ExamplePaperPublisher.cs")));
+
+        string source = string.Join(
+            "\n",
+            Directory.EnumerateFiles(
+                    Path.Combine(root, "src"),
+                    "*.cs",
+                    SearchOption.AllDirectories)
+                .Select(File.ReadAllText));
+        Assert.DoesNotContain("<!doctype html", source, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("WriteHtml", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("example-cycle", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void RepositoryHasNoAbsoluteLocalPackageFeed()
     {
         string root = FindRoot();

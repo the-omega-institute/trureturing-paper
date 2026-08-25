@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Trureturing.Paper.Tests;
 
-public sealed class ExampleProducePublishTests
+public sealed class ExampleDataArtifactTests
 {
     [Fact]
     public void LocalAdapterProducesTypedCertifiedAndAdvisoryPorts()
@@ -22,7 +22,7 @@ public sealed class ExampleProducePublishTests
         PaperIntuitionIndex intuition = PaperIntuitionIndex.Build(intuitionPort, truth);
 
         PaperTruthEntry theorem = truth.GetDeclaration(
-            ExamplePaperPublisher.CertifiedDeclarationId);
+            ExamplePaperAssembler.CertifiedDeclarationId);
         Assert.Equal(new[] { "propext" }, theorem.AxiomClosure);
         Assert.EndsWith("TraceConjugation.lean", theorem.RepoPath, StringComparison.Ordinal);
         Assert.Equal(2, intuition.Candidates.Count);
@@ -34,27 +34,24 @@ public sealed class ExampleProducePublishTests
     }
 
     [Fact]
-    public void FullExampleCycleAssemblesClaimGatedPaperAndReadingSite()
+    public void FullExampleAssemblyProducesReproducibleClaimGatedData()
     {
         string root = FindRoot();
         LocalDevRelease release = LocalDevTruthReleaseAdapter.Read(
             Path.Combine(root, "Papers", "frozen-bundle"));
-        ExamplePaperArtifacts artifacts = ExamplePaperPublisher.Produce(
+
+        byte[] latex = ExamplePaperAssembler.Assemble(
             release.TruthPort,
             release.IntuitionPort,
             release.FrozenInputs);
 
-        string latex = Encoding.UTF8.GetString(artifacts.Latex);
-        string html = Encoding.UTF8.GetString(artifacts.Html);
-        Assert.Contains("D5/S0/Carrier/TraceConjugation.trace_conj", latex, StringComparison.Ordinal);
-        Assert.Contains("Trace Invariance Under Conjugation", html, StringComparison.Ordinal);
-        Assert.Contains("Certified result", html, StringComparison.Ordinal);
-        Assert.Contains("Axiom closure</dt><dd>propext", html, StringComparison.Ordinal);
-        Assert.Contains("Research directions", html, StringComparison.Ordinal);
-        Assert.Contains("Advisory, not certified.", html, StringComparison.Ordinal);
-        Assert.Contains(release.TruthPort.ReleaseDigest, html, StringComparison.Ordinal);
-        Assert.Contains("certified declarations</dt><dd>1", html, StringComparison.Ordinal);
-        Assert.Contains("advisory candidates</dt><dd>2", html, StringComparison.Ordinal);
+        Assert.Equal(
+            File.ReadAllBytes(Path.Combine(root, "Papers", "example", "paper.tex")),
+            latex);
+        Assert.Contains(
+            ExamplePaperAssembler.CertifiedDeclarationId,
+            Encoding.UTF8.GetString(latex),
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -77,7 +74,7 @@ public sealed class ExampleProducePublishTests
     }
 
     [Fact]
-    public void PublisherRejectsPortProvenanceOrCitationDrift()
+    public void ExampleAssemblerRejectsPortProvenanceOrCitationDrift()
     {
         string root = FindRoot();
         LocalDevRelease release = LocalDevTruthReleaseAdapter.Read(
@@ -92,11 +89,11 @@ public sealed class ExampleProducePublishTests
                 declaration with { RepoPath = "D5/S0/Carrier/Wrong.lean" }).ToArray()
         };
 
-        Assert.Throws<ClaimGateException>(() => ExamplePaperPublisher.Produce(
+        Assert.Throws<ClaimGateException>(() => ExamplePaperAssembler.Assemble(
             wrongTree,
             release.IntuitionPort,
             release.FrozenInputs));
-        Assert.Throws<ClaimGateException>(() => ExamplePaperPublisher.Produce(
+        Assert.Throws<ClaimGateException>(() => ExamplePaperAssembler.Assemble(
             wrongPath,
             release.IntuitionPort,
             release.FrozenInputs));
