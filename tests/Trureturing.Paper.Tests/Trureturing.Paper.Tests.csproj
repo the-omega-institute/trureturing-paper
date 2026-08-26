@@ -17,6 +17,7 @@
   <ItemGroup>
     <None Include="../fixtures/**/*" Link="fixtures/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../fixtures-real/**/*" Link="fixtures-real/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../contracts/certified-topology.v1.schema.json" Link="contracts/certified-topology.v1.schema.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../Papers/recipes/synthetic-minimal.recipe.v1.json" Link="fixtures/synthetic-minimal.recipe.v1.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

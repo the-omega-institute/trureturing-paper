@@ -37,6 +37,14 @@ an entry returned by `PaperTruthIndex`. A bridge from Intuition is always emitte
 `conjectured`, even when its bridge status is `proved`; that status does not give Intuition
 the authority of the certified truth release.
 
+Candidate generation can additionally consume a local `certified-topology.v1` artifact with
+`--topology`, `--algorithm-profile-digest`, and `--topology-producer-commit`. Candidate-paper and
+literature records then carry exact depth, degree, ancestor/descendant, descendant-cost,
+normalized-reach, and dependency-betweenness context for their certified key nodes. The context
+is structural data only and does not enter the claim gate. Without a live publication the fields
+are explicitly unavailable; a present malformed, floating-point, unreduced, or mismatched
+artifact fails closed.
+
 The output schemas live in `contracts/`. Candidate output contains data only: this
 repository has no candidate renderer, site, Pages workflow, or HTML output.
 

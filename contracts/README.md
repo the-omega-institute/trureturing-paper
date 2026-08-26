@@ -15,3 +15,11 @@ The three candidate artifact schemas are Paper-owned output contracts:
 
 Generated artifacts use canonical JSON and SHA-256 content-addressed filenames under
 `Papers/candidates/`. They are reasoning data only; rendering belongs to Pages.
+
+The shared external `certified-topology.v1` schema is vendored byte-for-byte from
+`trureturing-fkst-packages/packages/trureturing-topology` and pinned by
+`certified-topology.v1.schema.sha256`; it remains upstream-owned.
+`CertifiedTopologyReader` implements that closed schema. Candidate-paper and literature output schemas own
+their structural-context projection: unbounded integers and reduced rational components are
+preserved as decimal strings, accompanied by all three topology binding coordinates. The
+projection is advisory and has no claim-gate authority.

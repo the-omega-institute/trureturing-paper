@@ -20,11 +20,36 @@ public sealed record CandidateKeyClaim(
     [property: JsonRequired] string Kind,
     [property: JsonRequired] string SourceRef);
 
+public sealed record CandidateExactRational(
+    [property: JsonRequired] string Numerator,
+    [property: JsonRequired] string Denominator);
+
+public sealed record CandidateTopologyNodeContext(
+    [property: JsonRequired] string NodeId,
+    [property: JsonRequired] string InDegree,
+    [property: JsonRequired] string OutDegree,
+    [property: JsonRequired] string MinDepth,
+    [property: JsonRequired] string MaxDepth,
+    [property: JsonRequired] string AncestorCount,
+    [property: JsonRequired] string DescendantCount,
+    [property: JsonRequired] string DescendantCost,
+    [property: JsonRequired] CandidateExactRational NormalizedReach,
+    [property: JsonRequired] CandidateExactRational DependencyBetweenness);
+
+public sealed record CandidateStructuralContext(
+    [property: JsonRequired] string Availability,
+    [property: JsonRequired] string TruthReleaseDigest,
+    [property: JsonRequired] string? AlgorithmProfileDigest,
+    [property: JsonRequired] string? ProducerCommit,
+    [property: JsonRequired] IReadOnlyList<CandidateTopologyNodeContext> KeyNodes,
+    [property: JsonRequired] string Advisory);
+
 public sealed record CandidatePaperArtifact(
     [property: JsonRequired] string Schema,
     [property: JsonRequired] string Title,
     [property: JsonRequired] string Thesis,
     [property: JsonRequired] CandidateGrounding GroundedOn,
+    [property: JsonRequired] CandidateStructuralContext StructuralContext,
     [property: JsonRequired] IReadOnlyList<string> Outline,
     [property: JsonRequired] IReadOnlyList<CandidateKeyClaim> KeyClaims,
     [property: JsonRequired] string Abstract);
@@ -41,6 +66,7 @@ public sealed record RelatedWork(
 public sealed record LiteratureResearchArtifact(
     [property: JsonRequired] string Schema,
     [property: JsonRequired] string Claim,
+    [property: JsonRequired] CandidateStructuralContext StructuralContext,
     [property: JsonRequired] IReadOnlyList<string> QueriesRun,
     [property: JsonRequired] IReadOnlyList<RelatedWork> RelatedWork,
     [property: JsonRequired] string NoveltyAssessment,

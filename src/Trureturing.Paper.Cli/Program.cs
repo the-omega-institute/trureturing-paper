@@ -98,22 +98,26 @@ internal static class Program
 
     private static int ProposeCandidates(string[] args)
     {
-        Dictionary<string, string> values = ParseValues(
-            args,
-            "propose-candidates",
-            "--release",
-            "--intuition",
-            "--out");
+        Dictionary<string, string> values = ParseCandidateValues(args);
         PaperTruthReleasePort truthPort = PaperPortJson.ReadTruthReleasePort(
             File.ReadAllBytes(values["--release"]));
         PaperTruthIndex truth = PaperTruthIndex.Build(truthPort);
         PaperIntuitionPort intuitionPort = PaperPortJson.ReadIntuitionPort(
             File.ReadAllBytes(values["--intuition"]));
         PaperIntuitionIndex intuition = PaperIntuitionIndex.Build(intuitionPort, truth);
+        CertifiedTopologyReadModel? topology = null;
+        if (values.TryGetValue("--topology", out string? topologyPath))
+        {
+            var binding = new CertifiedTopologyBinding(
+                truth.ReleaseDigest,
+                values["--algorithm-profile-digest"],
+                values["--topology-producer-commit"]);
+            topology = CertifiedTopologyReader.LoadFile(topologyPath, binding).Topology;
+        }
         string outputDirectory = Path.GetFullPath(values["--out"]);
 
         foreach (CandidateProposalArtifacts proposal in
-            CandidatePipeline.Propose(truth, intuition))
+            CandidatePipeline.Propose(truth, intuition, topology))
         {
             byte[] paperBytes = CanonicalJson.Serialize(proposal.CandidatePaper);
             string paperReference = CanonicalJson.Sha256Reference(paperBytes);
@@ -144,6 +148,41 @@ internal static class Program
         }
 
         return 0;
+    }
+
+    private static Dictionary<string, string> ParseCandidateValues(string[] args)
+    {
+        if (args.Length is not (7 or 13) ||
+            !string.Equals(args[0], "propose-candidates", StringComparison.Ordinal))
+        {
+            throw new ArgumentException(Usage);
+        }
+
+        var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        for (int index = 1; index < args.Length; index += 2)
+        {
+            if (!values.TryAdd(args[index], args[index + 1]))
+            {
+                throw new ArgumentException($"Duplicate CLI option '{args[index]}'.");
+            }
+        }
+
+        string[] required = ["--release", "--intuition", "--out"];
+        string[] topology =
+        [
+            "--topology",
+            "--algorithm-profile-digest",
+            "--topology-producer-commit"
+        ];
+        bool hasTopologyGroup = topology.All(values.ContainsKey);
+        if (required.Any(option => !values.ContainsKey(option)) ||
+            (values.Count != required.Length &&
+                !(values.Count == required.Length + topology.Length && hasTopologyGroup)))
+        {
+            throw new ArgumentException("CLI options are incomplete or unknown.\n" + Usage);
+        }
+
+        return values;
     }
 
     private static void WriteCandidateArtifact(
@@ -211,7 +250,7 @@ Usage:
   trureturing-paper assemble --recipe <recipe.json> --frozen-bundle <directory> --output <paper.tex>
   trureturing-paper emit-local-ports --frozen-bundle <directory> --output <directory>
   trureturing-paper assemble-example --frozen-bundle <directory> --output-root <repository-root>
-  trureturing-paper propose-candidates --release <paper-truth-release-port.v1.json> --intuition <paper-intuition-port.v1.json> --out <directory>
+  trureturing-paper propose-candidates --release <paper-truth-release-port.v1.json> --intuition <paper-intuition-port.v1.json> --out <directory> [--topology <certified-topology.v1.json> --algorithm-profile-digest <sha256> --topology-producer-commit <git-sha>]
 """;
 }
 
