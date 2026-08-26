@@ -7,7 +7,8 @@ public static class CandidatePipeline
 
     public static IReadOnlyList<CandidateProposalArtifacts> Propose(
         PaperTruthIndex truth,
-        PaperIntuitionIndex intuition)
+        PaperIntuitionIndex intuition,
+        CertifiedTopologyReadModel? topology = null)
     {
         ArgumentNullException.ThrowIfNull(truth);
         ArgumentNullException.ThrowIfNull(intuition);
@@ -23,13 +24,14 @@ public static class CandidatePipeline
         return intuition.Candidates
             .Where(candidate => candidate.Status == "proved")
             .OrderBy(candidate => candidate.ProposalId, StringComparer.Ordinal)
-            .Select(candidate => ProposeOne(truth, candidate))
+            .Select(candidate => ProposeOne(truth, candidate, topology))
             .ToArray();
     }
 
     private static CandidateProposalArtifacts ProposeOne(
         PaperTruthIndex truth,
-        PaperIntuitionEntry bridge)
+        PaperIntuitionEntry bridge,
+        CertifiedTopologyReadModel? topology)
     {
         PaperTruthEntry[] certified = bridge.Inputs
             .Distinct(StringComparer.Ordinal)
@@ -55,6 +57,10 @@ public static class CandidatePipeline
             bridge.RelationType,
             "conjectured",
             bridgeRef);
+        CandidateStructuralContext structuralContext = StructuralContext(
+            truth,
+            certified,
+            topology);
 
         var paper = new CandidatePaperArtifact(
             CandidateArtifactSchemas.CandidatePaper,
@@ -67,6 +73,7 @@ public static class CandidatePipeline
                     .Distinct(StringComparer.Ordinal)
                     .ToArray(),
                 [bridgeRef]),
+            structuralContext,
             [
                 "Certified foundations and provenance",
                 "Statement of the candidate bridge",
@@ -84,17 +91,20 @@ public static class CandidatePipeline
 
         return new CandidateProposalArtifacts(
             paper,
-            LiteratureFor(bridge.RelationType),
+            LiteratureFor(bridge.RelationType, structuralContext),
             CandidateVenues());
     }
 
-    private static LiteratureResearchArtifact LiteratureFor(string claim)
+    private static LiteratureResearchArtifact LiteratureFor(
+        string claim,
+        CandidateStructuralContext structuralContext)
     {
         if (!string.Equals(claim, TraceNormRelation, StringComparison.Ordinal))
         {
             return new LiteratureResearchArtifact(
                 CandidateArtifactSchemas.LiteratureResearch,
                 claim,
+                structuralContext,
                 [
                     $"Crossref bibliographic query: {claim}",
                     $"arXiv all-fields query: {claim}"
@@ -108,6 +118,7 @@ public static class CandidatePipeline
         return new LiteratureResearchArtifact(
             CandidateArtifactSchemas.LiteratureResearch,
             claim,
+            structuralContext,
             [
                 "Crossref title query: The invariant theory of n x n matrices",
                 "Crossref title query: Algebraic invariants for a set of matrices",
@@ -155,6 +166,69 @@ public static class CandidatePipeline
             "candidate must state a narrower system-specific theorem or a new synthesis; it " +
             "must not present trace/norm conjugation compatibility itself as novel.");
     }
+
+    private static CandidateStructuralContext StructuralContext(
+        PaperTruthIndex truth,
+        IReadOnlyList<PaperTruthEntry> certified,
+        CertifiedTopologyReadModel? topology)
+    {
+        const string advisory =
+            "Certified structural context only; it does not certify candidate claims " +
+            "and does not alter the Paper claim gate.";
+        if (topology is null)
+        {
+            return new CandidateStructuralContext(
+                "unavailable",
+                truth.ReleaseDigest,
+                null,
+                null,
+                [],
+                advisory);
+        }
+
+        if (!StringComparer.Ordinal.Equals(
+                topology.Binding.TruthReleaseDigest,
+                truth.ReleaseDigest))
+        {
+            throw new InvalidDataException(
+                "Certified topology is bound to a different Paper truth release.");
+        }
+
+        if (topology.CycleCertificate.Status != "acyclic" ||
+            topology.DanglingReferenceCertificate.Status != "complete")
+        {
+            throw new InvalidDataException(
+                "Paper structural context requires acyclic and complete topology certificates.");
+        }
+
+        CandidateTopologyNodeContext[] nodes = certified
+            .Select(entry => topology.GetNode(entry.FrozenNodeId))
+            .OrderBy(node => node.NodeId, StringComparer.Ordinal)
+            .Select(node => new CandidateTopologyNodeContext(
+                node.NodeId,
+                node.InDegree.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.OutDegree.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.MinDepth.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.MaxDepth.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.AncestorCount.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.DescendantCount.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                node.DescendantCost.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                Rational(node.NormalizedReach),
+                Rational(node.DependencyBetweenness)))
+            .ToArray();
+        return new CandidateStructuralContext(
+            "certified",
+            topology.Binding.TruthReleaseDigest,
+            topology.Binding.AlgorithmProfileDigest,
+            topology.Binding.ProducerCommit,
+            nodes,
+            advisory);
+    }
+
+    private static CandidateExactRational Rational(
+        ExactNonNegativeRational value) => new(
+        value.Numerator.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        value.Denominator.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
     private static IReadOnlyList<CandidateVenue> CandidateVenues() =>
     [

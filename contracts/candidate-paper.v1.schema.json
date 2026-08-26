@@ -4,7 +4,7 @@
   "title": "Research candidate paper",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "title", "thesis", "grounded_on", "outline", "key_claims", "abstract"],
+  "required": ["schema", "title", "thesis", "grounded_on", "structural_context", "outline", "key_claims", "abstract"],
   "properties": {
     "schema": { "const": "candidate-paper.v1" },
     "title": { "type": "string", "minLength": 1 },
@@ -28,6 +28,48 @@
         }
       }
     },
+    "structural_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["availability", "truth_release_digest", "algorithm_profile_digest", "producer_commit", "key_nodes", "advisory"],
+      "properties": {
+        "availability": { "enum": ["certified", "unavailable"] },
+        "truth_release_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "algorithm_profile_digest": {
+          "anyOf": [
+            { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+            { "type": "null" }
+          ]
+        },
+        "producer_commit": {
+          "anyOf": [
+            { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            { "type": "null" }
+          ]
+        },
+        "key_nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["node_id", "in_degree", "out_degree", "min_depth", "max_depth", "ancestor_count", "descendant_count", "descendant_cost", "normalized_reach", "dependency_betweenness"],
+            "properties": {
+              "node_id": { "type": "string", "minLength": 1 },
+              "in_degree": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+              "out_degree": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+              "min_depth": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+              "max_depth": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+              "ancestor_count": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+              "descendant_count": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+              "descendant_cost": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+              "normalized_reach": { "$ref": "#/$defs/exactRational" },
+              "dependency_betweenness": { "$ref": "#/$defs/exactRational" }
+            }
+          }
+        },
+        "advisory": { "type": "string", "minLength": 1 }
+      }
+    },
     "outline": {
       "type": "array",
       "minItems": 1,
@@ -48,5 +90,16 @@
       }
     },
     "abstract": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "exactRational": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+        "denominator": { "type": "string", "pattern": "^[1-9][0-9]*$" }
+      }
+    }
   }
 }

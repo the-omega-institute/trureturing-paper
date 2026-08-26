@@ -26,6 +26,9 @@ public sealed class CandidatePipelineTests
             proposal.LiteratureResearch.RelatedWork,
             work => Assert.Equal("verified", work.VerificationStatus));
         Assert.NotEmpty(proposal.CandidateVenues);
+        Assert.Equal(
+            "unavailable",
+            proposal.CandidatePaper.StructuralContext.Availability);
     }
 
     [Fact]
