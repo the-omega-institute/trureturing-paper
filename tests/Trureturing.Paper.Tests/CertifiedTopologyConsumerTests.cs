@@ -98,6 +98,20 @@ public sealed class CertifiedTopologyConsumerTests
     }
 
     [Fact]
+    public void ConsumerRejectsWrongSchemaVersion()
+    {
+        string valid = Encoding.UTF8.GetString(FixtureBytes());
+        byte[] wrongVersion = Encoding.UTF8.GetBytes(valid.Replace(
+            "\"schema_version\": \"certified-topology.v1\"",
+            "\"schema_version\": \"certified-topology.v2\"",
+            StringComparison.Ordinal));
+
+        Assert.Throws<InvalidDataException>(() => CertifiedTopologyReader.Read(
+            wrongVersion,
+            Binding(ReadExampleIndexes().Truth.ReleaseDigest)));
+    }
+
+    [Fact]
     public void MissingPublicationDegradesButExistingInvalidFileFailsClosed()
     {
         string root = Path.Combine(
