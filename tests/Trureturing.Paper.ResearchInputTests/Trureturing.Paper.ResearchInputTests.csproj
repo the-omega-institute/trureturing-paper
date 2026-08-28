@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Trureturing.Paper.ResearchInputTests</RootNamespace>
+    <AssemblyName>Trureturing.Paper.ResearchInputTests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Trureturing.Paper.Core/Trureturing.Paper.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../fixtures/certified-topology.v1.json" Link="fixtures/certified-topology.v1.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

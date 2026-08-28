@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Trureturing.Paper.ResearchInput.Cli</RootNamespace>
+    <AssemblyName>Trureturing.Paper.ResearchInput.Cli</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Trureturing.Paper.Core/Trureturing.Paper.Core.csproj" />
+  </ItemGroup>
+</Project>
