@@ -34,12 +34,12 @@ static byte[] Topology() => File.ReadAllBytes(Path.Combine(
 static string Digest(ReadOnlySpan<byte> bytes) =>
     "sha256:" + Convert.ToHexStringLower(SHA256.HashData(bytes));
 
-static string ReleaseDigest =>
+static string ReleaseDigest() =>
     "sha256:1fde9beb7d1999d06c042d24b57e18caea67612f209d725b5eb931addccb0e46";
 
 static PaperTopologyPublication TopologyPublication(byte[] topology) => new(
     PaperResearchInputSchemas.TopologyPublication,
-    ReleaseDigest,
+    ReleaseDigest(),
     Digest(topology),
     new string('1', 40),
     new string('2', 40),
@@ -54,7 +54,7 @@ static byte[] TopologyReceiptBytes(
         PaperResearchInputSchemas.IntuitionTopologyReceipt,
         "sha256:" + new string('3', 64),
         Digest(topology),
-        releaseDigest ?? ReleaseDigest,
+        releaseDigest ?? ReleaseDigest(),
         Digest(topology),
         new string('1', 40),
         new string('2', 40),
@@ -106,7 +106,7 @@ static void JoinsExactRelease()
 
     Assert.Equal("ready", joined.Status);
     Assert.True(joined.ResearchInputRef is not null);
-    Assert.Equal(ReleaseDigest, joined.TruthReleaseDigest);
+    Assert.Equal(ReleaseDigest(), joined.TruthReleaseDigest);
     Assert.Equal(topologyRegistration.TopologyDigest, joined.TopologyDigest);
 
     var store = new PaperResearchInputStore(temp.Path);
