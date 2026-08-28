@@ -23,3 +23,15 @@ jobs:
 
       - name: Test (Release, including real blessed-snapshot acceptance)
         run: dotnet test Trureturing.Paper.slnx -c Release --no-build --no-restore
+
+      - name: Build the research-input CLI
+        run: >-
+          dotnet build
+          tools/Trureturing.Paper.ResearchInput.Cli/Trureturing.Paper.ResearchInput.Cli.csproj
+          -c Release
+
+      - name: Exact-release research-input tests
+        run: >-
+          dotnet run
+          --project tests/Trureturing.Paper.ResearchInputTests
+          -c Release
