@@ -24,50 +24,78 @@ public sealed class FkstOrganBoundaryTests
     [Fact]
     public void Host_package_is_repository_local_and_framework_agnostic()
     {
-        var repositoryRoot = FindRepositoryRoot();
-        var packageRoot = Path.Combine(
+        string repositoryRoot = FindRepositoryRoot();
+        string packageRoot = Path.Combine(
             repositoryRoot,
             ".fkst",
             "local-packages",
             "trureturing-paper");
-        var luaFiles = Directory.GetFiles(packageRoot, "*.lua", SearchOption.AllDirectories);
+        string[] luaFiles = Directory.GetFiles(
+            packageRoot,
+            "*.lua",
+            SearchOption.AllDirectories);
 
         Assert.NotEmpty(luaFiles);
-        var source = string.Join(
+        string source = string.Join(
             "\n",
             luaFiles.Order(StringComparer.Ordinal)
                 .Select(path => StripFullLineComments(File.ReadAllText(path))));
 
-        foreach (var token in ForbiddenCrossOrganTokens)
+        foreach (string token in ForbiddenCrossOrganTokens)
         {
             Assert.False(
                 source.Contains(token, StringComparison.OrdinalIgnoreCase),
-                $"The repository-local FKST package must not reference cross-organ/framework detail '{token}'.");
+                $"The repository-local FKST package must not reference " +
+                $"cross-organ/framework detail '{token}'.");
         }
 
-        Assert.Single(Regex.Matches(source, @"\bexec_argv\s*\(").Cast<Match>());
-        var act = StripFullLineComments(File.ReadAllText(Path.Combine(
+        string actPath = Path.Combine(
             packageRoot,
             "departments",
             "act",
-            "main.lua")));
+            "main.lua");
+        string researchCorePath = Path.Combine(packageRoot, "research_core.lua");
+        string act = StripFullLineComments(File.ReadAllText(actPath));
+        string researchCore = StripFullLineComments(
+            File.ReadAllText(researchCorePath));
+
+        Assert.Single(ExecCalls(act));
+        Assert.Equal(2, ExecCalls(researchCore).Count);
         Assert.Contains(
             "\"dotnet\", \"run\", \"--project\", pth.cli_project",
             act,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "local argv = { \"dotnet\", paths.cli }",
+            researchCore,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "argv = { \"mkdir\", \"-p\", path }",
+            researchCore,
+            StringComparison.Ordinal);
+
+        foreach (string path in luaFiles.Where(path =>
+                     !string.Equals(path, actPath, StringComparison.Ordinal)
+                     && !string.Equals(
+                         path,
+                         researchCorePath,
+                         StringComparison.Ordinal)))
+        {
+            Assert.Empty(ExecCalls(StripFullLineComments(File.ReadAllText(path))));
+        }
     }
 
     [Fact]
     public void Core_logic_has_no_host_authority_calls()
     {
-        var core = StripFullLineComments(File.ReadAllText(Path.Combine(
+        string core = StripFullLineComments(File.ReadAllText(Path.Combine(
             FindRepositoryRoot(),
             ".fkst",
             "local-packages",
             "trureturing-paper",
             "core.lua")));
 
-        foreach (var token in new[]
+        foreach (string token in new[]
         {
             "file.read",
             "file.write",
@@ -82,24 +110,32 @@ public sealed class FkstOrganBoundaryTests
         }
     }
 
+    private static MatchCollection ExecCalls(string source) =>
+        Regex.Matches(source, @"\bexec_argv\s*\(");
+
     private static string FindRepositoryRoot()
     {
-        foreach (var start in new[]
+        foreach (DirectoryInfo start in new[]
         {
             new DirectoryInfo(Environment.CurrentDirectory),
             new DirectoryInfo(AppContext.BaseDirectory),
         })
         {
-            for (var current = start; current is not null; current = current.Parent)
+            for (DirectoryInfo? current = start;
+                 current is not null;
+                 current = current.Parent)
             {
-                if (File.Exists(Path.Combine(current.FullName, "Trureturing.Paper.slnx")))
+                if (File.Exists(Path.Combine(
+                        current.FullName,
+                        "Trureturing.Paper.slnx")))
                 {
                     return current.FullName;
                 }
             }
         }
 
-        throw new DirectoryNotFoundException("Could not locate the trureturing-paper repository root.");
+        throw new DirectoryNotFoundException(
+            "Could not locate the trureturing-paper repository root.");
     }
 
     private static string StripFullLineComments(string source) =>
