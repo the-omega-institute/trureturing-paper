@@ -35,3 +35,6 @@ jobs:
           dotnet run
           --project tests/Trureturing.Paper.ResearchInputTests
           -c Release
+
+      - name: Build and test the C research pipeline
+        run: make -C tools/research_pipeline test

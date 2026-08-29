@@ -1,0 +1,26 @@
+# Directives are interpreted relative to the trureturing-paper repository root.
+@root=.
+@state=.fkst-pipeline/state
+@event_log=.fkst-pipeline/events.jsonl
+@run_log_dir=.fkst-pipeline/runs
+@max_transitions=128
+# id<TAB>pass_next<TAB>fail_next<TAB>timeout_seconds<TAB>max_retries<TAB>command<TAB>required_outputs
+inventory	claim_ledger	STOP	300	0	./tools/research_pipeline/scripts/inventory.sh	.fkst-pipeline/artifacts/inventory.md
+claim_ledger	novelty_gap	intuition	60	0	test -s Papers/research/claim-manifest.tsv	Papers/research/claim-manifest.tsv
+novelty_gap	candidate_theorem	intuition	60	0	${SELF} gate novelty Papers/research/novelty-ledger.tsv	Papers/research/novelty-ledger.tsv
+intuition	candidate_theorem	STOP	3600	1	./tools/research_pipeline/scripts/run_intuition.sh	.fkst-pipeline/artifacts/intuition.md;Papers/research/candidate-theorem.md
+candidate_theorem	lean_writeback	intuition	60	0	test -s Papers/research/candidate-theorem.md	Papers/research/candidate-theorem.md
+lean_writeback	lean_verify	intuition	3600	1	./tools/research_pipeline/scripts/run_lean_writeback.sh	.fkst-pipeline/artifacts/lean-writeback.json
+lean_verify	manuscript_sync	intuition	3600	1	./tools/research_pipeline/scripts/run_lean_verify.sh	.fkst-pipeline/artifacts/lean-verify.json
+manuscript_sync	journal_fit	lean_writeback	300	0	test -n "${FKST_FORMALIZATION_ROOT:-}" && ${SELF} gate claims "$FKST_FORMALIZATION_ROOT" Papers/research/claim-manifest.tsv	Papers/research/claim-manifest.tsv
+journal_fit	journal_render	intuition	300	0	${SELF} gate journals Papers/research/journal-candidates.tsv	Papers/research/journal-candidates.tsv
+journal_render	cover_letter_render	journal_fit	900	1	./tools/research_pipeline/scripts/render_manuscript.sh	.fkst-pipeline/artifacts/manuscript.pdf
+cover_letter_render	review_round_1	journal_render	900	1	./tools/research_pipeline/scripts/render_cover_letter.sh && ${SELF} gate pdf .fkst-pipeline/artifacts/cover-letter.pdf	.fkst-pipeline/artifacts/cover-letter.pdf
+review_round_1	revision_1	STOP	7200	0	./tools/research_pipeline/scripts/run_sshx_review.sh 1	Papers/research/reviews/round-1.tsv
+revision_1	review_round_2	review_round_1	7200	0	./tools/research_pipeline/scripts/apply_revision.sh 1	Papers/research/revisions/round-1.json
+review_round_2	revision_2	STOP	7200	0	./tools/research_pipeline/scripts/run_sshx_review.sh 2	Papers/research/reviews/round-2.tsv
+revision_2	review_round_3	review_round_2	7200	0	./tools/research_pipeline/scripts/apply_revision.sh 2	Papers/research/revisions/round-2.json
+review_round_3	revision_3	STOP	7200	0	./tools/research_pipeline/scripts/run_sshx_review.sh 3	Papers/research/reviews/round-3.tsv
+revision_3	journal_rescreen	review_round_3	7200	0	./tools/research_pipeline/scripts/apply_revision.sh 3	Papers/research/revisions/round-3.json
+journal_rescreen	release_gate	intuition	300	0	${SELF} gate journals Papers/research/journal-candidates.tsv	Papers/research/journal-candidates.tsv
+release_gate	DONE	intuition	300	0	test -n "${FKST_FORMALIZATION_ROOT:-}" && ${SELF} gate claims "$FKST_FORMALIZATION_ROOT" Papers/research/claim-manifest.tsv && ${SELF} gate novelty Papers/research/novelty-ledger.tsv && ${SELF} gate journals Papers/research/journal-candidates.tsv && ${SELF} gate reviews Papers/research/reviews/round-1.tsv Papers/research/reviews/round-2.tsv Papers/research/reviews/round-3.tsv && ${SELF} gate receipts .fkst-pipeline/artifacts/lean-writeback.json .fkst-pipeline/artifacts/lean-verify.json && ${SELF} gate clean-text Papers/research/claim-manifest.tsv Papers/research/novelty-ledger.tsv Papers/research/journal-candidates.tsv "${FKST_MANUSCRIPT_TEX:-Papers/draft/main.tex}" Papers/draft/sections/*.tex "${FKST_COVER_LETTER_TEX:-Papers/draft/cover_letter.tex}" && ${SELF} gate pdf .fkst-pipeline/artifacts/manuscript.pdf && ${SELF} gate pdf .fkst-pipeline/artifacts/cover-letter.pdf	.fkst-pipeline/artifacts/manuscript.pdf;.fkst-pipeline/artifacts/cover-letter.pdf;.fkst-pipeline/artifacts/lean-writeback.json;.fkst-pipeline/artifacts/lean-verify.json

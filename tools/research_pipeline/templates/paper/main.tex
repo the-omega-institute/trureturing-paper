@@ -1,0 +1,36 @@
+\documentclass[11pt]{article}
+\input{profiles/generic}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\title{[Paper title from the verified claim ledger]}
+\author{[Author names and affiliations]}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+State the problem, exact gap, main theorem, formal verification boundary, and mathematical consequence. Every theorem-level assertion must map to the claim manifest.
+\end{abstract}
+\input{sections/01-introduction}
+\input{sections/02-prior-work-gap}
+\input{sections/03-setting}
+\input{sections/04-main-results}
+\input{sections/05-proof-architecture}
+\input{sections/06-formalization}
+\input{sections/07-boundaries-counterexamples}
+\input{sections/08-discussion}
+\input{sections/09-reproducibility}
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
