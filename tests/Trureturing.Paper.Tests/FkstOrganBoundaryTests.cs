@@ -66,7 +66,15 @@ public sealed class FkstOrganBoundaryTests
             act,
             StringComparison.Ordinal);
         Assert.Contains(
-            "local argv = { \"dotnet\", paths.cli }",
+            "local argv = { \"dotnet\", executable }",
+            researchCore,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Trureturing.Paper.ResearchInput.Cli.dll",
+            researchCore,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Trureturing.Paper.ResearchSelection.Cli.dll",
             researchCore,
             StringComparison.Ordinal);
         Assert.Contains(
