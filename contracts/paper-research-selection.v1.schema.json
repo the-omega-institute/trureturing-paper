@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-research-selection.v1.schema.json",
+  "title": "Paper research selection v1",
+  "description": "A content-addressed owner or policy selection of one paper claim for bounded formalization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "selection_id", "selection_content"],
+  "properties": {
+    "schema": { "const": "paper-research-selection.v1" },
+    "selection_id": { "$ref": "#/$defs/digest" },
+    "selection_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "truth_release_digest",
+        "topology_publication_digest",
+        "paper_research_input_ref",
+        "intuition_proposal_ref",
+        "candidate_paper_ref",
+        "literature_research_ref",
+        "target",
+        "claim_boundary",
+        "falsifier",
+        "expected_contribution",
+        "verification_budget_ref",
+        "selected_by",
+        "selected_at",
+        "next_truth_release_at"
+      ],
+      "properties": {
+        "truth_release_digest": { "$ref": "#/$defs/digest" },
+        "topology_publication_digest": { "$ref": "#/$defs/digest" },
+        "paper_research_input_ref": { "$ref": "#/$defs/digest" },
+        "intuition_proposal_ref": { "$ref": "#/$defs/digest" },
+        "candidate_paper_ref": { "$ref": "#/$defs/digest" },
+        "literature_research_ref": { "$ref": "#/$defs/digest" },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lemma_statement", "lemma_gid_intent"],
+          "properties": {
+            "lemma_statement": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 16384
+            },
+            "lemma_gid_intent": { "$ref": "#/$defs/gid" }
+          }
+        },
+        "claim_boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "falsifier": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "expected_contribution": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "verification_budget_ref": { "$ref": "#/$defs/digest" },
+        "selected_by": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "selected_at": { "type": "string", "format": "date-time" },
+        "next_truth_release_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    }
+  }
+}

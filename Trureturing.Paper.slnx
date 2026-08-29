@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="src/Trureturing.Paper.Core/Trureturing.Paper.Core.csproj" />
   <Project Path="src/Trureturing.Paper.Cli/Trureturing.Paper.Cli.csproj" />
+  <Project Path="src/Trureturing.Paper.ResearchSelection.Cli/Trureturing.Paper.ResearchSelection.Cli.csproj" />
   <Project Path="tests/Trureturing.Paper.Tests/Trureturing.Paper.Tests.csproj" />
 </Solution>

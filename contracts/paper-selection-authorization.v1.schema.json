@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-selection-authorization.v1.schema.json",
+  "title": "Paper selection authorization v1",
+  "description": "A one-shot human or policy authorization to turn one selection content artifact into a Paper selection and Formalize request.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "authorization_id",
+    "selection_content_path",
+    "approved_by",
+    "approved_at",
+    "approval"
+  ],
+  "properties": {
+    "schema": { "const": "paper-selection-authorization.v1" },
+    "authorization_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selection_content_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approved_by": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approval": { "const": "submit-once" }
+  }
+}
