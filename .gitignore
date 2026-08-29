@@ -5,3 +5,6 @@ obj/
 # fkst lifecycle: regenerable assembly output (the publications ledger is a
 # durable §6 host fact and is NOT ignored).
 Papers/paper.tex
+
+# C-first research pipeline: local state, logs, receipts, and generated PDFs
+.fkst-pipeline/

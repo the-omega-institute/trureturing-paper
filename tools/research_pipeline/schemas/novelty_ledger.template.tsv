@@ -1,0 +1,3 @@
+prior_id	source_checked_at	prior_statement	hypotheses_delta	conclusion_delta	method_delta	counterexample_or_boundary	significance	novelty_status
+PRIOR-001	REQUIRED	REQUIRED	REQUIRED	REQUIRED	REQUIRED	REQUIRED	REQUIRED	pending
+PRIOR-002	REQUIRED	REQUIRED	REQUIRED	REQUIRED	REQUIRED	REQUIRED	REQUIRED	pending

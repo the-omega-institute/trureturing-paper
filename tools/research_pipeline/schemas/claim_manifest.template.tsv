@@ -1,0 +1,2 @@
+claim_id	latex_label	lean_declaration	lean_file	declaration_kind	proof_status	evidence_hash	exposition_status
+CLAIM-001	thm:main	REQUIRED	REQUIRED	theorem	pending	REQUIRED_64_HEX_SHA256	formal
