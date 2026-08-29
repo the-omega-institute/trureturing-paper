@@ -250,7 +250,7 @@ public static class PaperResearchSelectionJson
         ReadOnlySpan<byte> bytes)
     {
         using JsonDocument document = JsonDocument.Parse(
-            bytes,
+            bytes.ToArray(),
             new JsonDocumentOptions
             {
                 AllowTrailingCommas = false,
@@ -270,7 +270,7 @@ public static class PaperResearchSelectionJson
     public static PaperResearchSelection ReadSelection(ReadOnlySpan<byte> bytes)
     {
         using JsonDocument document = JsonDocument.Parse(
-            bytes,
+            bytes.ToArray(),
             new JsonDocumentOptions
             {
                 AllowTrailingCommas = false,
