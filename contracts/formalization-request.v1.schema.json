@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/formalize/formalization-request.v1.schema.json",
+  "title": "Formalization request v1",
+  "description": "A content-addressed, idempotent research request for one formalization target. It carries no repository commands.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "request_id", "request_content"],
+  "properties": {
+    "schema_version": { "const": "formalization-request.v1" },
+    "request_id": { "$ref": "#/$defs/digest" },
+    "request_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "truth_release_digest",
+        "topology_publication_digest",
+        "originating_service",
+        "target",
+        "issued_at",
+        "next_truth_release_at",
+        "expires_at"
+      ],
+      "properties": {
+        "truth_release_digest": { "$ref": "#/$defs/digest" },
+        "topology_publication_digest": { "$ref": "#/$defs/digest" },
+        "originating_service": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["service", "identity", "config_digest"],
+          "properties": {
+            "service": { "enum": ["intuition", "paper"] },
+            "identity": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "config_digest": { "$ref": "#/$defs/digest" }
+          }
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lemma_statement", "lemma_gid_intent"],
+          "properties": {
+            "lemma_statement": { "type": "string", "minLength": 1, "maxLength": 16384 },
+            "lemma_gid_intent": { "$ref": "#/$defs/gid" }
+          }
+        },
+        "issued_at": { "type": "string", "format": "date-time" },
+        "next_truth_release_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    }
+  }
+}
