@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-iteration.v1.schema.json",
+  "title": "Paper theory iteration v1",
+  "description": "A content-addressed record of one substantive abstract-theory iteration, including changed claims, proof spine, novelty boundary, counterexample findings, and anti-fake progress evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "iteration_id", "iteration_content"],
+  "properties": {
+    "schema": { "const": "paper-theory-iteration.v1" },
+    "iteration_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "iteration_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "theory_program_ref",
+        "scope_ref",
+        "inventory_ref",
+        "deepening_request_ref",
+        "prior_theorem_package_refs",
+        "paper_id",
+        "round",
+        "changed_claim_ids",
+        "new_claim_ids",
+        "strengthened_claim_ids",
+        "retired_claim_ids",
+        "proof_spine",
+        "novel_increment",
+        "prior_work_boundary",
+        "counterexample_findings",
+        "split_candidate_claim_ids",
+        "merge_candidate_paper_ids",
+        "progress_evidence",
+        "created_at"
+      ],
+      "properties": {
+        "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scope_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "inventory_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "deepening_request_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "prior_theorem_package_refs": {
+          "type": "array",
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "round": { "type": "integer", "minimum": 1 },
+        "changed_claim_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimId" }
+        },
+        "new_claim_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimId" }
+        },
+        "strengthened_claim_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimId" }
+        },
+        "retired_claim_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimId" }
+        },
+        "proof_spine": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "novel_increment": { "type": "string", "minLength": 80, "maxLength": 32768 },
+        "prior_work_boundary": { "type": "string", "minLength": 40, "maxLength": 32768 },
+        "counterexample_findings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "split_candidate_claim_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimId" }
+        },
+        "merge_candidate_paper_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        },
+        "progress_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "new_theorem_like_claims",
+            "strengthened_theorem_like_claims",
+            "dependency_edges_added",
+            "proof_obligations_closed",
+            "counterexamples_resolved",
+            "abstraction_changed",
+            "novelty_boundary_changed"
+          ],
+          "properties": {
+            "new_theorem_like_claims": { "type": "integer", "minimum": 0 },
+            "strengthened_theorem_like_claims": { "type": "integer", "minimum": 0 },
+            "dependency_edges_added": { "type": "integer", "minimum": 0 },
+            "proof_obligations_closed": { "type": "integer", "minimum": 0 },
+            "counterexamples_resolved": { "type": "integer", "minimum": 0 },
+            "abstraction_changed": { "type": "boolean" },
+            "novelty_boundary_changed": { "type": "boolean" }
+          }
+        },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "claimId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+    }
+  }
+}
