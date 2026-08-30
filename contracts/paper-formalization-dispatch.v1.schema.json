@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-formalization-dispatch.v1.schema.json",
+  "title": "Paper formalization dispatch v1",
+  "description": "A content-addressed Paper record binding one governed selection and canonical Formalize request to an exact truth release before cross-package dispatch.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "formalization_request_ref",
+    "selection_ref",
+    "request_blob_ref",
+    "selection_blob_ref",
+    "source_repo",
+    "source_commit",
+    "source_tree",
+    "truth_release_digest",
+    "paper_id",
+    "research_candidate_id",
+    "gid"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-formalization-dispatch.v1"
+    },
+    "formalization_request_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "selection_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "request_blob_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "selection_blob_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "source_repo": {
+      "const": "the-omega-institute/trureturing"
+    },
+    "source_commit": {
+      "$ref": "#/$defs/git_sha1"
+    },
+    "source_tree": {
+      "$ref": "#/$defs/git_sha1"
+    },
+    "truth_release_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "paper_id": {
+      "$ref": "#/$defs/nonempty_text"
+    },
+    "research_candidate_id": {
+      "$ref": "#/$defs/nonempty_text"
+    },
+    "gid": {
+      "$ref": "#/$defs/gid"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "git_sha1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    },
+    "nonempty_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192
+    }
+  }
+}
