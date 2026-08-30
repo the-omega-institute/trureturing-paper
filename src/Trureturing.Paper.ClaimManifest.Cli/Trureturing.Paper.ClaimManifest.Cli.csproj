@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Trureturing.Paper.ClaimManifest.Cli</RootNamespace>
+    <AssemblyName>Trureturing.Paper.ClaimManifest.Cli</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Trureturing.Paper.Core/Trureturing.Paper.Core.csproj" />
+  </ItemGroup>
+</Project>
