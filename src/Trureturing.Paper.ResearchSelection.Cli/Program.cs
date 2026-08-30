@@ -19,7 +19,8 @@ internal static class Program
             or UnauthorizedAccessException
             or JsonException
             or ArgumentException
-            or InvalidDataException)
+            or InvalidDataException
+            or InvalidOperationException)
         {
             Console.Error.WriteLine(exception.Message);
             return 2;
@@ -32,19 +33,29 @@ internal static class Program
             args,
             "select",
             "--content",
+            "--research-input-root",
             "--selection-out",
             "--request-out");
 
         PaperResearchSelectionContent content =
             PaperResearchSelectionJson.ReadContent(
                 File.ReadAllBytes(values["--content"]));
+        var store = new PaperResearchInputStore(
+            values["--research-input-root"]);
+        PaperResearchInput researchInput =
+            store.Get<PaperResearchInput>(content.PaperResearchInputRef);
+        PaperResearchInputValidation.Validate(researchInput);
+
         PaperResearchSelection selection =
             PaperResearchSelectionService.Create(content);
         FormalizationRequest request =
-            PaperResearchSelectionService.BuildFormalizationRequest(selection);
+            PaperResearchSelectionService.BuildFormalizationRequest(
+                selection,
+                researchInput);
 
         byte[] selectionBytes = PaperResearchSelectionJson.Write(selection);
-        byte[] requestBytes = PaperResearchSelectionJson.Write(request);
+        byte[] requestBytes =
+            PaperResearchSelectionJson.Write(request);
         string selectionPath = WriteFile(
             values["--selection-out"],
             selectionBytes);
@@ -56,6 +67,9 @@ internal static class Program
             "paper-formalization-handoff.v1",
             selection.SelectionId,
             request.RequestId,
+            request.TruthRelease.ReleaseDigest,
+            request.TruthRelease.SourceCommit,
+            request.TruthRelease.SourceTree,
             selectionPath,
             requestPath));
         Console.WriteLine(System.Text.Encoding.UTF8.GetString(result));
@@ -115,11 +129,14 @@ internal static class Program
         string Schema,
         string SelectionRef,
         string FormalizationRequestRef,
+        string TruthReleaseDigest,
+        string SourceCommit,
+        string SourceTree,
         string SelectionPath,
         string FormalizationRequestPath);
 
     private const string Usage = """
 Usage:
-  trureturing-paper-research-selection select --content <paper-selection-content.json> --selection-out <paper-research-selection.v1.json> --request-out <formalization-request.v1.json>
+  trureturing-paper-research-selection select --content <paper-selection-content.json> --research-input-root <content-addressed-paper-research-input-root> --selection-out <paper-research-selection.v1.json> --request-out <formalization-request.v1.json>
 """;
 }

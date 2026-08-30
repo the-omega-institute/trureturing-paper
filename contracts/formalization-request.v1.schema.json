@@ -1,62 +1,60 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.trureturing.org/formalize/formalization-request.v1.schema.json",
-  "title": "Formalization request v1",
-  "description": "A content-addressed, idempotent research request for one formalization target. It carries no repository commands.",
+  "$id": "formalization-request.v1",
+  "title": "formalization-request.v1 — paper → formalize",
+  "description": "Emitted by paper research when a load-bearing theorem is missing from the shared truth, consumed by the formalize appliance's run-one. It MUST bind an exact truth_release: the same request against a different base could be a different problem. It requests a candidate proof only; the appliance never declares truth.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "request_id", "request_content"],
+  "required": ["schema", "request_id", "truth_release", "paper_context", "target", "reuse_api", "failure_semantics"],
   "properties": {
-    "schema_version": { "const": "formalization-request.v1" },
-    "request_id": { "$ref": "#/$defs/digest" },
-    "request_content": {
+    "schema": { "const": "formalization-request.v1" },
+    "request_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "content digest of the request (excluding this field)" },
+    "truth_release": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "truth_release_digest",
-        "topology_publication_digest",
-        "originating_service",
-        "target",
-        "issued_at",
-        "next_truth_release_at",
-        "expires_at"
-      ],
+      "description": "the exact release this request is posed against; run-one works on this base commit",
+      "required": ["source_repo", "source_commit", "source_tree", "release_digest"],
       "properties": {
-        "truth_release_digest": { "$ref": "#/$defs/digest" },
-        "topology_publication_digest": { "$ref": "#/$defs/digest" },
-        "originating_service": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["service", "identity", "config_digest"],
-          "properties": {
-            "service": { "enum": ["intuition", "paper"] },
-            "identity": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "config_digest": { "$ref": "#/$defs/digest" }
-          }
-        },
-        "target": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["lemma_statement", "lemma_gid_intent"],
-          "properties": {
-            "lemma_statement": { "type": "string", "minLength": 1, "maxLength": 16384 },
-            "lemma_gid_intent": { "$ref": "#/$defs/gid" }
-          }
-        },
-        "issued_at": { "type": "string", "format": "date-time" },
-        "next_truth_release_at": { "type": "string", "format": "date-time" },
-        "expires_at": { "type": "string", "format": "date-time" }
+        "source_repo": { "type": "string" },
+        "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "source_tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "release_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "truth-release.v1 sha256sums_digest" }
       }
-    }
-  },
-  "$defs": {
-    "digest": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
     },
-    "gid": {
-      "type": "string",
-      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    "paper_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paper_id", "research_candidate_id", "role_in_argument", "why_load_bearing"],
+      "properties": {
+        "paper_id": { "type": "string" },
+        "research_candidate_id": { "type": "string", "description": "the research-candidate.v1 this obligation came from" },
+        "role_in_argument": { "type": "string" },
+        "why_load_bearing": { "type": "string" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statement", "known_dependencies", "allowed_assumptions"],
+      "properties": {
+        "preferred_gid": { "type": ["string", "null"], "description": "a GID suggestion; the appliance may choose the canonical address" },
+        "statement": { "type": "string", "description": "the theorem to prove" },
+        "desired_generality": { "type": ["string", "null"] },
+        "known_dependencies": { "type": "array", "items": { "type": "string" } },
+        "allowed_assumptions": { "type": "array", "items": { "type": "string" } },
+        "forbidden_weakenings": { "type": ["array", "null"], "items": { "type": "string" } }
+      }
+    },
+    "reuse_api": { "type": "array", "items": { "type": "string" }, "description": "reuse-before-build surface (先库后证): existing mathlib / base API to prefer" },
+    "failure_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "the appliance returns a typed outcome, not just accepted/failed; some failures are themselves paper-relevant results",
+      "required": ["counterexample_is_useful", "missing_prerequisite_is_reportable"],
+      "properties": {
+        "counterexample_is_useful": { "type": "boolean" },
+        "missing_prerequisite_is_reportable": { "type": "boolean" }
+      }
     }
   }
 }

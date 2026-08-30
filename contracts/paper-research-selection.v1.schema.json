@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.trureturing.org/paper/paper-research-selection.v1.schema.json",
   "title": "Paper research selection v1",
-  "description": "A content-addressed owner or policy selection of one paper claim for bounded formalization.",
+  "description": "A content-addressed owner or policy selection of one paper claim for bounded formalization. The selected claim remains bound to one exact Paper research input.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "selection_id", "selection_content"],
@@ -14,15 +14,19 @@
       "additionalProperties": false,
       "required": [
         "truth_release_digest",
-        "topology_publication_digest",
+        "topology_digest",
         "paper_research_input_ref",
         "intuition_proposal_ref",
         "candidate_paper_ref",
         "literature_research_ref",
+        "paper_id",
+        "role_in_argument",
         "target",
         "claim_boundary",
         "falsifier",
         "expected_contribution",
+        "reuse_api",
+        "failure_semantics",
         "verification_budget_ref",
         "selected_by",
         "selected_at",
@@ -30,22 +34,53 @@
       ],
       "properties": {
         "truth_release_digest": { "$ref": "#/$defs/digest" },
-        "topology_publication_digest": { "$ref": "#/$defs/digest" },
+        "topology_digest": { "$ref": "#/$defs/digest" },
         "paper_research_input_ref": { "$ref": "#/$defs/digest" },
         "intuition_proposal_ref": { "$ref": "#/$defs/digest" },
         "candidate_paper_ref": { "$ref": "#/$defs/digest" },
         "literature_research_ref": { "$ref": "#/$defs/digest" },
+        "paper_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "role_in_argument": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
         "target": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["lemma_statement", "lemma_gid_intent"],
+          "required": [
+            "lemma_statement",
+            "lemma_gid_intent",
+            "known_dependencies",
+            "allowed_assumptions",
+            "forbidden_weakenings"
+          ],
           "properties": {
             "lemma_statement": {
               "type": "string",
               "minLength": 1,
               "maxLength": 16384
             },
-            "lemma_gid_intent": { "$ref": "#/$defs/gid" }
+            "lemma_gid_intent": { "$ref": "#/$defs/gid" },
+            "known_dependencies": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/nonempty_text" }
+            },
+            "allowed_assumptions": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/nonempty_text" }
+            },
+            "forbidden_weakenings": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/nonempty_text" }
+            }
           }
         },
         "claim_boundary": {
@@ -62,6 +97,23 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 8192
+        },
+        "reuse_api": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonempty_text" }
+        },
+        "failure_semantics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "counterexample_is_useful",
+            "missing_prerequisite_is_reportable"
+          ],
+          "properties": {
+            "counterexample_is_useful": { "type": "boolean" },
+            "missing_prerequisite_is_reportable": { "type": "boolean" }
+          }
         },
         "verification_budget_ref": { "$ref": "#/$defs/digest" },
         "selected_by": {
@@ -82,6 +134,11 @@
     "gid": {
       "type": "string",
       "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    },
+    "nonempty_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192
     }
   }
 }
