@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-inventory.v1.schema.json",
+  "title": "Paper theory inventory v1",
+  "description": "A content-addressed A1 inventory of definitions, theorem-like claims, dependencies, gaps, variants, and counterexample obligations for one paper.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "inventory_id", "inventory_content"],
+  "properties": {
+    "schema": { "const": "paper-theory-inventory.v1" },
+    "inventory_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "inventory_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "theory_program_ref",
+        "scope_ref",
+        "inventory_request_ref",
+        "paper_id",
+        "items",
+        "main_theorem_claim_ids",
+        "missing_interfaces",
+        "stronger_variants",
+        "weaker_variants",
+        "counterexample_obligations",
+        "created_at"
+      ],
+      "properties": {
+        "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scope_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "inventory_request_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "items": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["claim_id", "title", "kind", "status", "statement", "dependencies", "role_in_argument", "required_action"],
+            "properties": {
+              "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+              "title": { "type": "string", "minLength": 1, "maxLength": 1024 },
+              "kind": { "enum": ["definition", "lemma", "proposition", "theorem", "corollary", "conjecture", "counterexample", "proof-interface"] },
+              "status": { "enum": ["certified-foundation", "proposed", "missing", "weak", "proof-gap", "supporting", "out-of-scope"] },
+              "statement": { "type": "string", "minLength": 1, "maxLength": 32768 },
+              "dependencies": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" } },
+              "role_in_argument": { "type": "string", "minLength": 1, "maxLength": 8192 },
+              "required_action": { "type": "string", "minLength": 1, "maxLength": 8192 }
+            }
+          }
+        },
+        "main_theorem_claim_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" } },
+        "missing_interfaces": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 8192 } },
+        "stronger_variants": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 8192 } },
+        "weaker_variants": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 8192 } },
+        "counterexample_obligations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 8192 } },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
