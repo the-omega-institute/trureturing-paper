@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-program.v1.schema.json",
+  "title": "Paper theory program v1",
+  "description": "A content-addressed per-paper theory program derived from one member of a candidate batch without changing its exact research evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "theory_program_id", "program_content"],
+  "properties": {
+    "schema": { "const": "paper-theory-program.v1" },
+    "theory_program_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "program_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_batch_ref",
+        "truth_release_digest",
+        "topology_digest",
+        "paper_research_input_ref",
+        "paper_id",
+        "candidate_paper_ref",
+        "literature_research_ref",
+        "intuition_proposal_ref",
+        "created_at"
+      ],
+      "properties": {
+        "candidate_batch_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "truth_release_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "topology_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "paper_research_input_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "candidate_paper_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "literature_research_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "intuition_proposal_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
