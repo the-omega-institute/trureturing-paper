@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-certification-mismatch.v1",
+  "title": "paper-certification-mismatch.v1",
+  "description": "Release-scoped evidence that a particular later release cannot certify the pending Paper claim. The wait remains open for future releases.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "certification_wait_ref",
+    "release_ref",
+    "formalization_request_ref",
+    "gid",
+    "reason",
+    "expected",
+    "observed",
+    "claim_status"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-certification-mismatch.v1"
+    },
+    "certification_wait_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "release_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "formalization_request_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "release-lineage-mismatch",
+        "request-mismatch",
+        "requested-statement-mismatch",
+        "statement-correspondence-mismatch",
+        "declaration-kind-ineligible",
+        "axiom-policy-mismatch"
+      ]
+    },
+    "expected": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "observed": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "claim_status": {
+      "const": "pending-certification"
+    }
+  }
+}

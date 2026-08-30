@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-certification-evaluation.v1",
+  "title": "paper-certification-evaluation.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "certification_wait_ref",
+    "release_ref",
+    "base_truth_release_digest",
+    "observed_release_digest",
+    "gid",
+    "outcome",
+    "reason",
+    "claim_status",
+    "certified_claim_ref",
+    "mismatch_ref"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-certification-evaluation.v1"
+    },
+    "certification_wait_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "release_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "base_truth_release_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observed_release_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "still-pending",
+        "mismatch",
+        "certified"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "same-release",
+        "declaration-absent",
+        "release-lineage-mismatch",
+        "request-mismatch",
+        "requested-statement-mismatch",
+        "statement-correspondence-mismatch",
+        "declaration-kind-ineligible",
+        "axiom-policy-mismatch",
+        "exact-certification"
+      ]
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": [
+        "pending-certification",
+        "certified"
+      ]
+    },
+    "certified_claim_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "mismatch_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

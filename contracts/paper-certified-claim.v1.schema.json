@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-certified-claim.v1",
+  "title": "paper-certified-claim.v1",
+  "description": "Paper evidence that one previously pending Formalize candidate is present in a later certified truth release with exact request-statement correspondence and an allowed axiom closure.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "certification_wait_ref",
+    "decision_ref",
+    "formalization_result_ref",
+    "dispatch_ref",
+    "formalization_request_ref",
+    "selection_ref",
+    "paper_research_input_ref",
+    "intuition_proposal_ref",
+    "candidate_paper_ref",
+    "literature_research_ref",
+    "verification_budget_ref",
+    "certifying_release_ref",
+    "certifying_release_digest",
+    "source_repo",
+    "source_commit",
+    "source_tree",
+    "paper_id",
+    "research_candidate_id",
+    "gid",
+    "lean_declaration",
+    "declaration_kind",
+    "expected_statement",
+    "requested_statement_digest",
+    "statement_id",
+    "statement_correspondence",
+    "axiom_closure",
+    "claim_status"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-certified-claim.v1"
+    },
+    "certification_wait_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "decision_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "formalization_result_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "dispatch_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "formalization_request_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selection_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "paper_research_input_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "intuition_proposal_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "candidate_paper_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "literature_research_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "verification_budget_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "certifying_release_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "certifying_release_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_repo": {
+      "const": "the-omega-institute/trureturing"
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "source_tree": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "paper_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "research_candidate_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    },
+    "lean_declaration": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "declaration_kind": {
+      "const": "theorem"
+    },
+    "expected_statement": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "requested_statement_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "statement_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "statement_correspondence": {
+      "const": "exact"
+    },
+    "axiom_closure": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Classical.choice",
+          "Quot.sound",
+          "propext"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "claim_status": {
+      "const": "certified"
+    }
+  }
+}
