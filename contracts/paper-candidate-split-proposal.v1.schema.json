@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-candidate-split-proposal.v1.schema.json",
+  "title": "Paper candidate split proposal v1",
+  "description": "A content-addressed proposal to extract an independently coherent theorem chain from a source paper program into a distinct paper candidate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "proposal_id", "proposal_content"],
+  "properties": {
+    "schema": { "const": "paper-candidate-split-proposal.v1" },
+    "proposal_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "proposal_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_theory_program_ref",
+        "source_theorem_package_ref",
+        "source_paper_id",
+        "proposed_paper_id",
+        "extracted_claim_ids",
+        "independent_research_question",
+        "independent_proof_spine",
+        "scope_mismatch",
+        "publication_rationale",
+        "overlap_risk",
+        "proposed_at"
+      ],
+      "properties": {
+        "source_theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "source_theorem_package_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "source_paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "proposed_paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "extracted_claim_ids": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" }
+        },
+        "independent_research_question": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "independent_proof_spine": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "scope_mismatch": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "publication_rationale": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "overlap_risk": { "type": "string", "minLength": 1, "maxLength": 16384 },
+        "proposed_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
