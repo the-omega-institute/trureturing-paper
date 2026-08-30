@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-audit.v1.schema.json",
+  "title": "Paper theory audit v1",
+  "description": "A content-addressed clean-room audit whose aggregate metrics are the coordinate-wise minimum of at least two independent opinions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "audit_id", "audit_content"],
+  "properties": {
+    "schema": { "const": "paper-theory-audit.v1" },
+    "audit_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "audit_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "theory_program_ref",
+        "scope_ref",
+        "inventory_ref",
+        "theorem_package_ref",
+        "audit_request_ref",
+        "paper_id",
+        "opinions",
+        "aggregate_metrics",
+        "verdict",
+        "passed",
+        "blocker_ledger",
+        "created_at"
+      ],
+      "properties": {
+        "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scope_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "inventory_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "theorem_package_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "audit_request_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "opinions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reviewer_run_ref",
+              "review_session_ref",
+              "reviewer_role",
+              "context_mode",
+              "evidence_refs",
+              "metrics",
+              "verdict",
+              "blockers",
+              "required_revisions",
+              "novelty_evidence",
+              "proof_audit",
+              "overlap_findings",
+              "reviewed_at"
+            ],
+            "properties": {
+              "reviewer_run_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+              "review_session_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+              "reviewer_role": { "enum": ["mathematical-referee", "novelty-referee", "scope-referee", "formalization-referee"] },
+              "context_mode": { "const": "fresh-theory-review" },
+              "evidence_refs": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "uniqueItems": true,
+                "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+              },
+              "metrics": { "$ref": "#/$defs/metrics" },
+              "verdict": { "enum": ["pass", "deepen", "split", "merge", "park", "archive"] },
+              "blockers": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+              },
+              "required_revisions": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+              },
+              "novelty_evidence": { "type": "string", "minLength": 80, "maxLength": 32768 },
+              "proof_audit": {
+                "type": "array",
+                "minItems": 2,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+              },
+              "overlap_findings": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+              },
+              "reviewed_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "aggregate_metrics": { "$ref": "#/$defs/metrics" },
+        "verdict": { "enum": ["pass", "deepen", "split", "merge", "park", "archive"] },
+        "passed": { "type": "boolean" },
+        "blocker_ledger": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "abstraction_quality",
+        "theorem_depth",
+        "logical_closure",
+        "proof_plausibility",
+        "novelty",
+        "significance",
+        "formalization_readiness",
+        "journal_floor",
+        "overlap_hygiene"
+      ],
+      "properties": {
+        "abstraction_quality": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "theorem_depth": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "logical_closure": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "proof_plausibility": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "novelty": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "significance": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "formalization_readiness": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "journal_floor": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "overlap_hygiene": { "type": "integer", "minimum": 0, "maximum": 10 }
+      }
+    }
+  }
+}
