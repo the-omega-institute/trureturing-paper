@@ -15,6 +15,7 @@ internal static class Program
                 "select" => Select(args),
                 "prepare-dispatch" => PrepareDispatch(args),
                 "record-result" => RecordResult(args),
+                "classify-result" => ClassifyResult(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -201,6 +202,42 @@ internal static class Program
         return 0;
     }
 
+    private static int ClassifyResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "classify-result",
+            "--root",
+            "--result-ref",
+            "--cursor");
+
+        PaperFormalizationOutcomeRegistration registration =
+            PaperFormalizationOutcomeService.Classify(
+                values["--root"],
+                values["--result-ref"],
+                values["--cursor"]);
+
+        WriteResult(new OutcomeCliResult(
+            "paper-formalization-outcome-classified.v1",
+            registration.DecisionRef,
+            registration.ResultRef,
+            registration.DispatchRef,
+            registration.FormalizationRequestRef,
+            registration.SelectionRef,
+            registration.PaperResearchInputRef,
+            registration.IntuitionProposalRef,
+            registration.CandidatePaperRef,
+            registration.LiteratureResearchRef,
+            registration.VerificationBudgetRef,
+            registration.Route,
+            registration.OutcomeClass,
+            registration.ClaimStatus,
+            registration.CertificationWaitRef,
+            registration.CursorPath,
+            registration.Replayed));
+        return 0;
+    }
+
     private static Dictionary<string, string> ParseValues(
         string[] args,
         string verb,
@@ -294,10 +331,30 @@ internal static class Program
         string CursorPath,
         bool Replayed);
 
+    private sealed record OutcomeCliResult(
+        string Schema,
+        string DecisionRef,
+        string ResultRef,
+        string DispatchRef,
+        string FormalizationRequestRef,
+        string SelectionRef,
+        string PaperResearchInputRef,
+        string IntuitionProposalRef,
+        string CandidatePaperRef,
+        string LiteratureResearchRef,
+        string VerificationBudgetRef,
+        string Route,
+        string OutcomeClass,
+        string ClaimStatus,
+        string? CertificationWaitRef,
+        string CursorPath,
+        bool Replayed);
+
     private const string Usage = """
 Usage:
   trureturing-paper-research-selection select --content <paper-selection-content.json> --research-input-root <content-addressed-paper-research-input-root> --selection-out <paper-research-selection.v1.json> --request-out <formalization-request.v1.json>
   trureturing-paper-research-selection prepare-dispatch --selection <paper-research-selection.v1.json> --request <formalization-request.v1.json> --root <content-addressed-paper-research-input-root> --selection-ref <sha256> --request-ref <sha256> --cursor <paper-formalization-dispatch-cursor.v1.json>
   trureturing-paper-research-selection record-result --root <content-addressed-paper-research-input-root> --dispatch-cursor <paper-formalization-dispatch-cursor.v1.json> --result-cursor <paper-formalization-result-cursor.v1.json> --id <sha256> --formalization-request-ref <sha256> --observed-request-id <sha256-or-empty> --selection-ref <sha256> --source-repo <text-or-empty> --source-commit <git-sha-or-empty> --source-tree <git-sha-or-empty> --truth-release-digest <sha256-or-empty> --paper-id <text-or-empty> --research-candidate-id <text-or-empty> --gid <gid-or-empty> --status <accepted|abstained> --rounds <positive-int> --verdict <text> --error-class <class-or-empty> --dedup-key <text>
+  trureturing-paper-research-selection classify-result --root <content-addressed-paper-research-input-root> --result-ref <sha256> --cursor <paper-formalization-decision-cursor.v1.json>
 """;
 }

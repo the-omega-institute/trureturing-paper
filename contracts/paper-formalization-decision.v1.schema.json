@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-formalization-decision.v1.schema.json",
+  "title": "Paper formalization decision v1",
+  "description": "A content-addressed Paper-owned classification of one recorded Formalize result. It routes follow-up research and never upgrades a candidate to shared truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "result_ref",
+    "dispatch_ref",
+    "formalization_request_ref",
+    "selection_ref",
+    "paper_research_input_ref",
+    "intuition_proposal_ref",
+    "candidate_paper_ref",
+    "literature_research_ref",
+    "verification_budget_ref",
+    "source_repo",
+    "source_commit",
+    "source_tree",
+    "truth_release_digest",
+    "paper_id",
+    "research_candidate_id",
+    "gid",
+    "result_status",
+    "binding_status",
+    "verdict_token",
+    "verdict",
+    "outcome_class",
+    "route",
+    "claim_status",
+    "rationale"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-formalization-decision.v1"
+    },
+    "result_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "dispatch_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "formalization_request_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "selection_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "paper_research_input_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "intuition_proposal_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "candidate_paper_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "literature_research_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "verification_budget_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "source_repo": {
+      "const": "the-omega-institute/trureturing"
+    },
+    "source_commit": {
+      "$ref": "#/$defs/git_sha1"
+    },
+    "source_tree": {
+      "$ref": "#/$defs/git_sha1"
+    },
+    "truth_release_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "paper_id": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "research_candidate_id": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "gid": {
+      "$ref": "#/$defs/gid"
+    },
+    "result_status": {
+      "enum": [
+        "accepted",
+        "abstained"
+      ]
+    },
+    "binding_status": {
+      "enum": [
+        "verified",
+        "rejected-before-context"
+      ]
+    },
+    "verdict_token": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Z0-9_]+$"
+    },
+    "verdict": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "outcome_class": {
+      "enum": [
+        "candidate-produced",
+        "counterexample",
+        "statement-inconsistent",
+        "missing-prerequisite",
+        "generality-too-strong",
+        "already-implied-by-library",
+        "candidate-invalid",
+        "proof-search-exhausted",
+        "infrastructure-blocked",
+        "request-rejected",
+        "unclassified"
+      ]
+    },
+    "route": {
+      "enum": [
+        "await-certification",
+        "intuition-research",
+        "sublemma-research",
+        "novelty-reassessment",
+        "proof-strategy-revision",
+        "blocked"
+      ]
+    },
+    "claim_status": {
+      "enum": [
+        "pending-certification",
+        "ineligible"
+      ]
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "route": {
+            "const": "await-certification"
+          }
+        },
+        "required": [
+          "route"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result_status": {
+            "const": "accepted"
+          },
+          "binding_status": {
+            "const": "verified"
+          },
+          "outcome_class": {
+            "const": "candidate-produced"
+          },
+          "claim_status": {
+            "const": "pending-certification"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "not": {
+          "properties": {
+            "route": {
+              "const": "await-certification"
+            }
+          },
+          "required": [
+            "route"
+          ]
+        }
+      },
+      "then": {
+        "properties": {
+          "claim_status": {
+            "const": "ineligible"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_status": {
+            "const": "accepted"
+          }
+        },
+        "required": [
+          "result_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "route": {
+            "const": "await-certification"
+          },
+          "binding_status": {
+            "const": "verified"
+          },
+          "outcome_class": {
+            "const": "candidate-produced"
+          },
+          "claim_status": {
+            "const": "pending-certification"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "binding_status": {
+            "const": "rejected-before-context"
+          }
+        },
+        "required": [
+          "binding_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result_status": {
+            "const": "abstained"
+          },
+          "route": {
+            "const": "blocked"
+          },
+          "outcome_class": {
+            "const": "request-rejected"
+          },
+          "claim_status": {
+            "const": "ineligible"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "git_sha1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    },
+    "nonempty": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192
+    }
+  }
+}

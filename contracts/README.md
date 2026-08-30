@@ -33,3 +33,16 @@ then binds the canonical request to the exact truth release commit, tree, and di
 `paper-research-selection.v1` remains Paper-owned governance evidence and carries the
 candidate, literature, boundary, falsifier, proof constraints, and authorization context
 that precede the cross-organ request.
+
+The Paper-owned formalization lifecycle contracts keep candidate production separate
+from claim certification:
+
+- `paper-formalization-dispatch.v1` freezes the request and selection bytes before
+  cross-package dispatch;
+- `paper-formalization-result.v1` records a request-correlated Formalize outcome;
+- `paper-formalization-decision.v1` classifies that result into a closed Paper route;
+- `paper-certification-wait.v1` records the exact statement a later truth release must
+  certify.
+
+A certification wait has status `pending-certification`. It is evidence of an accepted
+candidate and is never sufficient for the manuscript claim gate.
