@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-candidate-scorecard.v1.schema.json",
+  "title": "Paper candidate scorecard v1",
+  "description": "A calibrated, content-addressed paper scorecard derived from the conservative aggregate of a fresh independent theory audit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scorecard_id", "scorecard_content"],
+  "properties": {
+    "schema": { "const": "paper-candidate-scorecard.v1" },
+    "scorecard_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "scorecard_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "theory_program_ref",
+        "theorem_package_ref",
+        "theory_audit_ref",
+        "paper_id",
+        "metrics",
+        "composite_score",
+        "promotion_eligible",
+        "recommended_action",
+        "risks",
+        "created_at"
+      ],
+      "properties": {
+        "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "theorem_package_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "theory_audit_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "abstraction_quality",
+            "theorem_depth",
+            "logical_closure",
+            "proof_plausibility",
+            "novelty",
+            "significance",
+            "formalization_readiness",
+            "journal_floor",
+            "overlap_hygiene"
+          ],
+          "properties": {
+            "abstraction_quality": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "theorem_depth": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "logical_closure": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "proof_plausibility": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "novelty": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "significance": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "formalization_readiness": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "journal_floor": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "overlap_hygiene": { "type": "integer", "minimum": 0, "maximum": 10 }
+          }
+        },
+        "composite_score": { "type": "integer", "minimum": 0, "maximum": 130 },
+        "promotion_eligible": { "type": "boolean" },
+        "recommended_action": { "enum": ["promote", "continue-deepening", "split", "merge", "park", "archive"] },
+        "risks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
