@@ -16,6 +16,8 @@ internal static class Program
           admit-deepening-result --repository-root <path> --task-ref <sha256:...>
           stage-audit-tasks --repository-root <path> --dispatch <path>
           admit-audit-opinion --repository-root <path> --task-ref <sha256:...>
+          stage-portfolio-judgment-task --repository-root <path> --dispatch <path>
+          admit-portfolio-judgment-result --repository-root <path> --task-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
@@ -33,6 +35,8 @@ internal static class Program
                 "admit-deepening-result" => AdmitDeepeningResult(args),
                 "stage-audit-tasks" => StageAuditTasks(args),
                 "admit-audit-opinion" => AdmitAuditOpinion(args),
+                "stage-portfolio-judgment-task" => StagePortfolioJudgmentTask(args),
+                "admit-portfolio-judgment-result" => AdmitPortfolioJudgmentResult(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -183,6 +187,36 @@ internal static class Program
             "--task-ref");
         PaperTheoryAuditAgentResultAdmitted result =
             PaperTheoryAuditAgentService.AdmitOpinion(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StagePortfolioJudgmentTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-portfolio-judgment-task",
+            "--repository-root",
+            "--dispatch");
+        PaperPortfolioJudgmentAgentTaskStaged result =
+            PaperPortfolioJudgmentAgentService.StageTask(
+                values["--repository-root"],
+                values["--dispatch"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitPortfolioJudgmentResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-portfolio-judgment-result",
+            "--repository-root",
+            "--task-ref");
+        PaperPortfolioJudgmentAgentResultAdmitted result =
+            PaperPortfolioJudgmentAgentService.AdmitResult(
                 values["--repository-root"],
                 values["--task-ref"]);
         WriteResult(result);
