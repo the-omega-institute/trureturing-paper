@@ -14,6 +14,8 @@ internal static class Program
           admit-foundation-result --repository-root <path> --task-ref <sha256:...>
           stage-deepening-task --repository-root <path> --dispatch <path>
           admit-deepening-result --repository-root <path> --task-ref <sha256:...>
+          stage-audit-tasks --repository-root <path> --dispatch <path>
+          admit-audit-opinion --repository-root <path> --task-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
@@ -29,6 +31,8 @@ internal static class Program
                 "admit-foundation-result" => AdmitFoundationResult(args),
                 "stage-deepening-task" => StageDeepeningTask(args),
                 "admit-deepening-result" => AdmitDeepeningResult(args),
+                "stage-audit-tasks" => StageAuditTasks(args),
+                "admit-audit-opinion" => AdmitAuditOpinion(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -149,6 +153,36 @@ internal static class Program
             "--task-ref");
         PaperTheoryDeepeningAgentResultAdmitted result =
             PaperTheoryDeepeningAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageAuditTasks(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-audit-tasks",
+            "--repository-root",
+            "--dispatch");
+        PaperTheoryAuditAgentTasksStaged result =
+            PaperTheoryAuditAgentService.StageTasks(
+                values["--repository-root"],
+                values["--dispatch"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitAuditOpinion(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-audit-opinion",
+            "--repository-root",
+            "--task-ref");
+        PaperTheoryAuditAgentResultAdmitted result =
+            PaperTheoryAuditAgentService.AdmitOpinion(
                 values["--repository-root"],
                 values["--task-ref"]);
         WriteResult(result);
