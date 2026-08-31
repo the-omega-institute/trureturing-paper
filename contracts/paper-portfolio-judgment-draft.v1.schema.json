@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-portfolio-judgment-draft.v1.schema.json",
+  "title": "Paper portfolio judgment draft v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "portfolio_ref", "candidate_batch_ref", "cycle_number", "compared_scorecard_refs", "ordered_papers", "pairwise_relations", "portfolio_rationale", "created_at"],
+  "properties": {
+    "schema": { "const": "paper-portfolio-judgment-draft.v1" },
+    "portfolio_ref": { "$ref": "#/$defs/digest" },
+    "candidate_batch_ref": { "$ref": "#/$defs/digest" },
+    "cycle_number": { "type": "integer", "minimum": 1 },
+    "compared_scorecard_refs": { "type": "array", "minItems": 2, "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/digest" } },
+    "ordered_papers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rank", "paper_id", "scorecard_ref", "recommended_action", "comparative_advantage", "principal_risk", "rationale"],
+        "properties": {
+          "rank": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "paper_id": { "$ref": "#/$defs/paper_id" },
+          "scorecard_ref": { "$ref": "#/$defs/digest" },
+          "recommended_action": { "enum": ["promote", "hold", "continue-deepening", "split", "merge", "park", "archive"] },
+          "comparative_advantage": { "type": "string", "minLength": 40, "maxLength": 16384 },
+          "principal_risk": { "type": "string", "minLength": 20, "maxLength": 16384 },
+          "rationale": { "type": "string", "minLength": 40, "maxLength": 16384 }
+        }
+      }
+    },
+    "pairwise_relations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/relation" }
+    },
+    "portfolio_rationale": { "type": "string", "minLength": 120, "maxLength": 65536 },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left_paper_id", "right_paper_id", "relation", "preferred_owner_paper_id", "evidence_refs", "theorem_interaction", "novelty_interaction"],
+      "properties": {
+        "left_paper_id": { "$ref": "#/$defs/paper_id" },
+        "right_paper_id": { "$ref": "#/$defs/paper_id" },
+        "relation": { "enum": ["distinct", "complementary", "overlapping", "duplicate"] },
+        "preferred_owner_paper_id": { "type": "string", "maxLength": 128 },
+        "evidence_refs": { "type": "array", "minItems": 2, "maxItems": 16, "uniqueItems": true, "items": { "$ref": "#/$defs/digest" } },
+        "theorem_interaction": { "type": "string", "minLength": 60, "maxLength": 32768 },
+        "novelty_interaction": { "type": "string", "minLength": 60, "maxLength": 32768 }
+      }
+    }
+  }
+}
