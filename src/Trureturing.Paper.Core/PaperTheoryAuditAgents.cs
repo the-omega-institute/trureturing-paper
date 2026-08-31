@@ -44,7 +44,7 @@ public static class PaperTheoryAuditAgentService
         ["pass", "deepen", "split", "merge", "park", "archive"],
         StringComparer.Ordinal);
     private static readonly HashSet<string> AllowedEvidenceRoots = new(
-        ["artifacts", "Papers", "work", "contracts", "docs", "src", "tools", "tests"],
+        ["artifacts", "Papers", "work", "inbox", "contracts", "docs", "src", "tools", "tests"],
         StringComparer.Ordinal);
 
     public static PaperTheoryAuditAgentTasksStaged StageTasks(
