@@ -22,6 +22,8 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
+
           path = Path('src/Trureturing.Paper.Core/PaperPortfolioJudgmentAgents.cs')
           text = path.read_text()
           for name in (
@@ -32,12 +34,19 @@ jobs:
               text = text.replace(
                   f'internal sealed record {name}(',
                   f'public sealed record {name}(')
-          old = '''        if (!string.Equals(cursor.ResultRef, ByteReference(CanonicalJson.Serialize(result)), StringComparison.Ordinal)
-            || !string.Equals(cursor.Status, result.Status, StringComparison.Ordinal)'''
-          new = '''        if (!string.Equals(cursor.Status, result.Status, StringComparison.Ordinal)'''
-          if old not in text:
+
+          pattern = re.compile(
+              r'if \(!string\.Equals\(cursor\.ResultRef,\s*'
+              r'ByteReference\(CanonicalJson\.Serialize\(result\)\),\s*'
+              r'StringComparison\.Ordinal\)\s*\|\|\s*'
+              r'!string\.Equals\(cursor\.Status,\s*result\.Status,\s*'
+              r'StringComparison\.Ordinal\)')
+          replacement = (
+              'if (!string.Equals(cursor.Status, result.Status, '
+              'StringComparison.Ordinal)')
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
               raise SystemExit('result-ref correction target not found')
-          text = text.replace(old, new)
           path.write_text(text)
           PY
           git config user.name github-actions[bot]
