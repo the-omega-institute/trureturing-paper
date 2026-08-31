@@ -23,3 +23,26 @@ The shared external `certified-topology.v1` schema is vendored byte-for-byte fro
 their structural-context projection: unbounded integers and reduced rational components are
 preserved as decimal strings, accompanied by all three topology binding coordinates. The
 projection is advisory and has no claim-gate authority.
+
+`formalization-request.v1.schema.json` is vendored byte-for-byte from
+`trureturing-fkst-packages/contracts/formalization-request.v1.schema.json` at
+commit `6008d6a98ca2c4f00a4e88e82c4b64b88262fda1` and pinned by
+`formalization-request.v1.schema.sha256`. Paper resolves the selected
+`paper_research_input_ref` from its content-addressed store before emitting this request,
+then binds the canonical request to the exact truth release commit, tree, and digest.
+`paper-research-selection.v1` remains Paper-owned governance evidence and carries the
+candidate, literature, boundary, falsifier, proof constraints, and authorization context
+that precede the cross-organ request.
+
+The Paper-owned formalization lifecycle contracts keep candidate production separate
+from claim certification:
+
+- `paper-formalization-dispatch.v1` freezes the request and selection bytes before
+  cross-package dispatch;
+- `paper-formalization-result.v1` records a request-correlated Formalize outcome;
+- `paper-formalization-decision.v1` classifies that result into a closed Paper route;
+- `paper-certification-wait.v1` records the exact statement a later truth release must
+  certify.
+
+A certification wait has status `pending-certification`. It is evidence of an accepted
+candidate and is never sufficient for the manuscript claim gate.

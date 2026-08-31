@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-research-portfolio.v1.schema.json",
+  "title": "Paper research portfolio v1",
+  "description": "A content-addressed portfolio of independent paper theory programs. Scheduling occurs across papers and never grants two leases to the same paper in one cycle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "portfolio_id", "portfolio_content"],
+  "properties": {
+    "schema": { "const": "paper-research-portfolio.v1" },
+    "portfolio_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "portfolio_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_batch_ref",
+        "truth_release_digest",
+        "topology_digest",
+        "paper_research_input_ref",
+        "policy",
+        "next_cycle_number",
+        "candidate_states",
+        "updated_at"
+      ],
+      "properties": {
+        "candidate_batch_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "truth_release_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "topology_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "paper_research_input_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["batch_capacity", "max_parallel_papers", "per_paper_lease_limit", "refill_low_watermark"],
+          "properties": {
+            "batch_capacity": { "type": "integer", "minimum": 2, "maximum": 32 },
+            "max_parallel_papers": { "type": "integer", "minimum": 2, "maximum": 32 },
+            "per_paper_lease_limit": { "const": 1 },
+            "refill_low_watermark": { "type": "integer", "minimum": 0, "maximum": 31 }
+          }
+        },
+        "next_cycle_number": { "type": "integer", "minimum": 1 },
+        "candidate_states": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "paper_id",
+              "theory_program_ref",
+              "phase",
+              "priority",
+              "completed_cycles",
+              "consecutive_no_progress_cycles",
+              "last_progress_at",
+              "status_reason"
+            ],
+            "properties": {
+              "schema": { "const": "paper-candidate-state.v1" },
+              "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+              "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+              "phase": {
+                "enum": [
+                  "scope-pending",
+                  "inventory-pending",
+                  "theory-deepening",
+                  "audit-pending",
+                  "frontier-pending",
+                  "formalizing",
+                  "certification-pending",
+                  "manuscript-pending",
+                  "parked",
+                  "archived",
+                  "done"
+                ]
+              },
+              "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "completed_cycles": { "type": "integer", "minimum": 0 },
+              "consecutive_no_progress_cycles": { "type": "integer", "minimum": 0 },
+              "last_progress_at": { "type": "string", "format": "date-time" },
+              "status_reason": { "type": "string", "minLength": 1, "maxLength": 4096 }
+            }
+          }
+        },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

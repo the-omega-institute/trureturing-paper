@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-certification-wait.v1.schema.json",
+  "title": "Paper certification wait v1",
+  "description": "A Paper-owned pending claim obligation created only from an accepted, request-bound Formalize result. It records what a future truth release must certify and does not itself assert truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "decision_ref",
+    "result_ref",
+    "dispatch_ref",
+    "formalization_request_ref",
+    "selection_ref",
+    "request_blob_ref",
+    "selection_blob_ref",
+    "paper_research_input_ref",
+    "intuition_proposal_ref",
+    "candidate_paper_ref",
+    "literature_research_ref",
+    "verification_budget_ref",
+    "source_repo",
+    "source_commit",
+    "source_tree",
+    "base_truth_release_digest",
+    "paper_id",
+    "research_candidate_id",
+    "gid",
+    "expected_statement",
+    "desired_generality",
+    "known_dependencies",
+    "allowed_assumptions",
+    "forbidden_weakenings",
+    "claim_status"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-certification-wait.v1"
+    },
+    "decision_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "result_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "dispatch_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "formalization_request_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "selection_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "request_blob_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "selection_blob_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "paper_research_input_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "intuition_proposal_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "candidate_paper_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "literature_research_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "verification_budget_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "source_repo": {
+      "const": "the-omega-institute/trureturing"
+    },
+    "source_commit": {
+      "$ref": "#/$defs/git_sha1"
+    },
+    "source_tree": {
+      "$ref": "#/$defs/git_sha1"
+    },
+    "base_truth_release_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "paper_id": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "research_candidate_id": {
+      "$ref": "#/$defs/nonempty"
+    },
+    "gid": {
+      "$ref": "#/$defs/gid"
+    },
+    "expected_statement": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "desired_generality": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 8192
+    },
+    "known_dependencies": {
+      "$ref": "#/$defs/text_array"
+    },
+    "allowed_assumptions": {
+      "$ref": "#/$defs/text_array"
+    },
+    "forbidden_weakenings": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/text_array"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "claim_status": {
+      "const": "pending-certification"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "git_sha1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    },
+    "nonempty": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192
+    },
+    "text_array": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192
+      }
+    }
+  }
+}

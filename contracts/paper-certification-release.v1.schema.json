@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-certification-release.v1",
+  "title": "paper-certification-release.v1",
+  "description": "Paper-owned, read-only projection of one verified later Base truth release. It is produced by a deployment adapter after truth-release integrity and provenance verification. It does not write Base or create truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "release_digest",
+    "bundle_ref",
+    "publication_ref",
+    "source_repo",
+    "source_commit",
+    "source_tree",
+    "ancestor_release_digests",
+    "declarations",
+    "producer"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-certification-release.v1"
+    },
+    "release_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "bundle_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "publication_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_repo": {
+      "const": "the-omega-institute/trureturing"
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "source_tree": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "ancestor_release_digests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      },
+      "uniqueItems": true
+    },
+    "declarations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "gid",
+          "lean_declaration",
+          "kind",
+          "formalization_request_ref",
+          "requested_statement_digest",
+          "statement_id",
+          "statement_correspondence",
+          "axiom_closure"
+        ],
+        "properties": {
+          "gid": {
+            "type": "string",
+            "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+          },
+          "lean_declaration": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "axiom",
+              "constructor",
+              "def",
+              "inductive",
+              "opaque",
+              "quotient",
+              "recursor",
+              "theorem"
+            ]
+          },
+          "formalization_request_ref": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "requested_statement_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "statement_id": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "statement_correspondence": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "mismatch"
+            ]
+          },
+          "axiom_closure": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "service",
+        "commit"
+      ],
+      "properties": {
+        "service": {
+          "const": "trureturing-paper-truth-release-adapter"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-formalization-result.v1.schema.json",
+  "title": "Paper formalization result v1",
+  "description": "A content-addressed Paper intake record for one request-correlated Formalize terminal result. Accepted results require complete verified dispatch context.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "dispatch_ref",
+    "binding_status",
+    "id",
+    "formalization_request_ref",
+    "observed_request_id",
+    "selection_ref",
+    "source_repo",
+    "source_commit",
+    "source_tree",
+    "truth_release_digest",
+    "paper_id",
+    "research_candidate_id",
+    "gid",
+    "status",
+    "rounds",
+    "verdict",
+    "error_class",
+    "upstream_dedup_key"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-formalization-result.v1"
+    },
+    "dispatch_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "binding_status": {
+      "enum": [
+        "verified",
+        "rejected-before-context"
+      ]
+    },
+    "id": {
+      "$ref": "#/$defs/digest"
+    },
+    "formalization_request_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "observed_request_id": {
+      "$ref": "#/$defs/optional_digest"
+    },
+    "selection_ref": {
+      "$ref": "#/$defs/digest"
+    },
+    "source_repo": {
+      "$ref": "#/$defs/optional_text"
+    },
+    "source_commit": {
+      "$ref": "#/$defs/optional_git_sha1"
+    },
+    "source_tree": {
+      "$ref": "#/$defs/optional_git_sha1"
+    },
+    "truth_release_digest": {
+      "$ref": "#/$defs/optional_digest"
+    },
+    "paper_id": {
+      "$ref": "#/$defs/optional_text"
+    },
+    "research_candidate_id": {
+      "$ref": "#/$defs/optional_text"
+    },
+    "gid": {
+      "$ref": "#/$defs/optional_gid"
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "abstained"
+      ]
+    },
+    "rounds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verdict": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "error_class": {
+      "enum": [
+        "",
+        "quota-exhausted",
+        "auth-degraded",
+        "provider-unavailable",
+        "provider-throttle"
+      ]
+    },
+    "upstream_dedup_key": {
+      "type": "string",
+      "pattern": "^tru-formalize-result:v2:sha256:[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "accepted"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "binding_status": {
+            "const": "verified"
+          },
+          "observed_request_id": {
+            "$ref": "#/$defs/digest"
+          },
+          "source_repo": {
+            "const": "the-omega-institute/trureturing"
+          },
+          "source_commit": {
+            "$ref": "#/$defs/git_sha1"
+          },
+          "source_tree": {
+            "$ref": "#/$defs/git_sha1"
+          },
+          "truth_release_digest": {
+            "$ref": "#/$defs/digest"
+          },
+          "paper_id": {
+            "$ref": "#/$defs/nonempty_text"
+          },
+          "research_candidate_id": {
+            "$ref": "#/$defs/nonempty_text"
+          },
+          "gid": {
+            "$ref": "#/$defs/gid"
+          },
+          "error_class": {
+            "const": ""
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "git_sha1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "gid": {
+      "type": "string",
+      "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+    },
+    "nonempty_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8192
+    },
+    "optional_text": {
+      "type": "string",
+      "maxLength": 8192
+    },
+    "optional_digest": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/digest"
+        }
+      ]
+    },
+    "optional_git_sha1": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/git_sha1"
+        }
+      ]
+    },
+    "optional_gid": {
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "$ref": "#/$defs/gid"
+        }
+      ]
+    }
+  }
+}

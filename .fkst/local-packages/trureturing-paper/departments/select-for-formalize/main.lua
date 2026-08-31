@@ -43,6 +43,7 @@ function pipeline(event)
     "--content", research.required(
       authorization.selection_content_path,
       "selection_content_path"),
+    "--research-input-root", paths.store,
     "--selection-out", selection_path,
     "--request-out", request_path,
   }, paths.selection_cli)
@@ -56,6 +57,11 @@ function pipeline(event)
     approved_at = authorization.approved_at,
     selection_ref = result.selection_ref,
     formalization_request_ref = result.formalization_request_ref,
+    truth_release_digest = research.required(
+      result.truth_release_digest,
+      "truth_release_digest"),
+    source_commit = research.required(result.source_commit, "source_commit"),
+    source_tree = research.required(result.source_tree, "source_tree"),
     selection_path = result.selection_path,
     request_path = result.formalization_request_path,
     dedup_key = "paper-formalization-request:v1:" ..

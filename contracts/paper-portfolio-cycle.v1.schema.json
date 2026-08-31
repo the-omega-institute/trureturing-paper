@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-portfolio-cycle.v1.schema.json",
+  "title": "Paper portfolio cycle v1",
+  "description": "A deterministic parallel-paper scheduling plan. Every lease targets a distinct paper theory program and each worker slot is assigned to one paper.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cycle_id", "cycle_content"],
+  "properties": {
+    "schema": { "const": "paper-portfolio-cycle.v1" },
+    "cycle_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "cycle_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "portfolio_ref",
+        "candidate_batch_ref",
+        "cycle_number",
+        "execution_mode",
+        "runnable_paper_count",
+        "granted_parallelism",
+        "leases",
+        "planned_at"
+      ],
+      "properties": {
+        "portfolio_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "candidate_batch_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "cycle_number": { "type": "integer", "minimum": 1 },
+        "execution_mode": { "const": "parallel-paper-batch" },
+        "runnable_paper_count": { "type": "integer", "minimum": 0, "maximum": 32 },
+        "granted_parallelism": { "type": "integer", "minimum": 0, "maximum": 32 },
+        "leases": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "lease_id",
+              "worker_slot",
+              "paper_id",
+              "theory_program_ref",
+              "phase",
+              "scheduling_score",
+              "leased_at"
+            ],
+            "properties": {
+              "lease_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+              "worker_slot": { "type": "integer", "minimum": 1, "maximum": 32 },
+              "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+              "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+              "phase": {
+                "enum": [
+                  "scope-pending",
+                  "inventory-pending",
+                  "theory-deepening",
+                  "audit-pending",
+                  "frontier-pending",
+                  "formalizing",
+                  "certification-pending",
+                  "manuscript-pending"
+                ]
+              },
+              "scheduling_score": { "type": "integer", "minimum": -50, "maximum": 130 },
+              "leased_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "planned_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

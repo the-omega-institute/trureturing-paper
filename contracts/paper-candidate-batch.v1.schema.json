@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-candidate-batch.v1.schema.json",
+  "title": "Paper candidate batch v1",
+  "description": "A content-addressed batch of distinct paper candidates bound to one exact research input. The batch is the unit from which parallel paper programs are created.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "batch_id",
+    "batch_content"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-candidate-batch.v1"
+    },
+    "batch_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "batch_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "truth_release_digest",
+        "topology_digest",
+        "paper_research_input_ref",
+        "policy",
+        "candidates"
+      ],
+      "properties": {
+        "truth_release_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "topology_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "paper_research_input_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "batch_capacity",
+            "max_parallel_papers",
+            "per_paper_lease_limit",
+            "refill_low_watermark"
+          ],
+          "properties": {
+            "batch_capacity": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 32
+            },
+            "max_parallel_papers": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 32
+            },
+            "per_paper_lease_limit": {
+              "const": 1
+            },
+            "refill_low_watermark": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            }
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "paper_id",
+              "candidate_paper_ref",
+              "literature_research_ref",
+              "intuition_proposal_ref",
+              "initial_priority",
+              "registered_at"
+            ],
+            "properties": {
+              "paper_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "candidate_paper_ref": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "literature_research_ref": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "intuition_proposal_ref": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "initial_priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "registered_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
