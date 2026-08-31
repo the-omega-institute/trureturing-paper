@@ -105,9 +105,11 @@ theorem-frontier parallelism:
 
 `with_lock` serializes duplicate invocations for the same task ref. It does not serialize different papers or independent theorem claims. FKST engine backpressure remains the authority for global and per-Department process concurrency.
 
-## Build integration
+## Build and regression integration
 
 `Trureturing.Paper.Agent.Cli` is part of `Trureturing.Paper.slnx`, so the ordinary warnings-as-errors build compiles the same validator binary that the FKST Departments invoke. `research_core.paths()` resolves that repository-local binary through the `agent_cli` field. A missing build artifact fails closed before a Codex result can be recorded.
+
+The ordinary Paper test assembly covers task registration, exact evidence materialization, output admission, route enforcement, immutable replay, result-envelope parsing, symbolic-link rejection, and the direct FKST Codex SDK wiring. These tests execute alongside the stacked portfolio, theory, audit, and frontier regression suite.
 
 ## Non-goals of this PR
 
