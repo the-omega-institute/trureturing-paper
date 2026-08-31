@@ -139,7 +139,7 @@ public sealed class PaperAgentRuntimeTests
         InvalidDataException error = Assert.Throws<InvalidDataException>(
             () => PaperAgentRuntimeService.Validate(task));
 
-        Assert.Contains("agent_role", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("AgentRole", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

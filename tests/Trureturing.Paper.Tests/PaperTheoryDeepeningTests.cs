@@ -52,7 +52,7 @@ public sealed class PaperTheoryDeepeningTests
                 request,
                 content));
 
-        Assert.Contains("fake extension", error.Message, StringComparison.Ordinal);
+        Assert.Contains("progress evidence counters", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
