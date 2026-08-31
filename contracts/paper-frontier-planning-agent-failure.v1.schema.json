@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-planning-agent-failure.v1.schema.json",
+  "title": "Paper frontier planning agent failure v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "task_ref", "result_ref", "paper_id", "theory_program_ref",
+    "portfolio_task_ref", "status", "blocker_code", "summary", "next_route",
+    "dedup_key"
+  ],
+  "properties": {
+    "schema": { "const": "paper-frontier-planning-agent-failure.v1" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "result_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "$ref": "#/$defs/paperId" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_task_ref": {
+      "type": "string",
+      "pattern": "^(?:|sha256:[0-9a-f]{64})$"
+    },
+    "status": { "enum": ["no-progress", "blocked"] },
+    "blocker_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,127}$" },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 16384 },
+    "next_route": { "const": "frontier-planning" },
+    "dedup_key": { "type": "string", "minLength": 1, "maxLength": 1024 }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paperId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" }
+  }
+}
