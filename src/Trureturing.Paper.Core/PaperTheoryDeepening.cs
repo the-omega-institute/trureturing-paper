@@ -718,7 +718,7 @@ public static class PaperTheoryDeepeningService
     private static void ValidateContract(PaperCodexPhaseContract contract)
     {
         ArgumentNullException.ThrowIfNull(contract);
-        RequireDigestList(contract.ExactInputRefs, "exact_input_refs", 3, 4);
+        RequireDigestList(contract.ExactInputRefs, "exact_input_refs", 7, 8);
         RequireTextList(contract.PermittedArtifactFamilies, "permitted_artifact_families", 512, 1);
         RequireTextList(contract.ScientificTasks, "scientific_tasks", 8192, 1);
         RequireTextList(contract.ForbiddenShortcuts, "forbidden_shortcuts", 8192, 1);
