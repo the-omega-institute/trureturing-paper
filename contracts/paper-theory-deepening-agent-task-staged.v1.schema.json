@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-deepening-agent-task-staged.v1.schema.json",
+  "title": "Paper theory deepening agent task staged v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "dispatch_ref", "task_ref", "task_path", "paper_id",
+    "theory_program_ref", "request_ref", "round", "phase", "agent_role",
+    "context_mode", "replayed"
+  ],
+  "properties": {
+    "schema": { "const": "paper-theory-deepening-agent-task-staged.v1" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "task_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "paper_id": { "$ref": "#/$defs/paper_id" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "request_ref": { "$ref": "#/$defs/digest" },
+    "round": { "type": "integer", "minimum": 1 },
+    "phase": { "const": "theory-deepening" },
+    "agent_role": { "const": "paper-theory-developer" },
+    "context_mode": { "const": "contextual-theory-execution" },
+    "replayed": { "type": "boolean" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" }
+  }
+}
