@@ -499,7 +499,7 @@ public static class PaperAgentRuntimeService
             result.NextRoute,
             result.BlockerCode,
             runId,
-            provenance,
+            provenance!,
             result.CompletedAt);
         Validate(cursor, task, taskRef);
         byte[] cursorBytes = CanonicalJson.Serialize(cursor);

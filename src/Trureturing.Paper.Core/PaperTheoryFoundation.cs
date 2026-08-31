@@ -509,7 +509,7 @@ public static class PaperTheoryFoundationService
         RequireTextList(content.MainTheoremClaimIds, "main_theorem_claim_ids", 256, 1);
         foreach (string mainId in content.MainTheoremClaimIds)
         {
-            if (!byId.TryGetValue(mainId, out PaperTheoryClaimInventoryItem item)
+            if (!byId.TryGetValue(mainId, out PaperTheoryClaimInventoryItem? item)
                 || !string.Equals(item.Kind, "theorem", StringComparison.Ordinal))
             {
                 throw new InvalidDataException(
