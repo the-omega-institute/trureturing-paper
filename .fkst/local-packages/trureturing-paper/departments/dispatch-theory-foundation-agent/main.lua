@@ -20,11 +20,19 @@ function pipeline(event)
   local payload = event.payload or {}
   local dispatch_path = text(payload.dispatch_path)
   local expected_kind = text(payload.kind)
+  local paper_id = text(payload.paper_id)
+  local theory_program_ref = payload.theory_program_ref
+  local request_ref = payload.request_ref
   if dispatch_path == "" then
     error("dispatch-theory-foundation-agent: dispatch_path is required")
   end
   if expected_kind ~= "scope" and expected_kind ~= "inventory" then
     error("dispatch-theory-foundation-agent: kind must be scope or inventory")
+  end
+  if paper_id == ""
+      or not agent.is_sha256(theory_program_ref)
+      or not agent.is_sha256(request_ref) then
+    error("dispatch-theory-foundation-agent: exact paper, program, and request identity is required")
   end
 
   local root = agent.repository_root()
@@ -43,14 +51,13 @@ function pipeline(event)
       or not agent.is_sha256(staged.request_ref) then
     error("dispatch-theory-foundation-agent: Agent CLI returned an invalid staged task")
   end
-  if payload.paper_id ~= nil and payload.paper_id ~= staged.paper_id then
+  if paper_id ~= staged.paper_id then
     error("dispatch-theory-foundation-agent: paper identity changed")
   end
-  if payload.theory_program_ref ~= nil
-      and payload.theory_program_ref ~= staged.theory_program_ref then
+  if theory_program_ref ~= staged.theory_program_ref then
     error("dispatch-theory-foundation-agent: theory program changed")
   end
-  if payload.request_ref ~= nil and payload.request_ref ~= staged.request_ref then
+  if request_ref ~= staged.request_ref then
     error("dispatch-theory-foundation-agent: domain request changed")
   end
 
