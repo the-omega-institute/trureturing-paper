@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-foundation-ready.v1.schema.json",
+  "title": "Paper theory foundation ready v1",
+  "description": "A typed FKST event pointing to one admitted A0 scope or A1 inventory artifact without impersonating the domain artifact itself.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "kind",
+    "task_ref",
+    "result_ref",
+    "dispatch_ref",
+    "request_ref",
+    "paper_id",
+    "theory_program_ref",
+    "domain_schema",
+    "domain_ref",
+    "domain_content_path",
+    "envelope_ref",
+    "envelope_path",
+    "next_route",
+    "run_id",
+    "provenance",
+    "admitted_at",
+    "replayed",
+    "dedup_key"
+  ],
+  "properties": {
+    "schema": { "const": "paper-theory-foundation-ready.v1" },
+    "kind": { "enum": ["scope", "inventory"] },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "result_ref": { "$ref": "#/$defs/digest" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "request_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "domain_schema": { "enum": ["paper-theory-scope.v1", "paper-theory-inventory.v1"] },
+    "domain_ref": { "$ref": "#/$defs/digest" },
+    "domain_content_path": { "$ref": "#/$defs/repository_path" },
+    "envelope_ref": { "$ref": "#/$defs/digest" },
+    "envelope_path": { "$ref": "#/$defs/repository_path" },
+    "next_route": { "enum": ["theory-inventory", "theory-deepening"] },
+    "run_id": { "type": "string", "maxLength": 512 },
+    "provenance": { "enum": ["produced", "adopted"] },
+    "admitted_at": { "type": "string", "format": "date-time" },
+    "replayed": { "type": "boolean" },
+    "dedup_key": { "type": "string", "minLength": 1, "maxLength": 512 }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "repository_path": {
+      "type": "string",
+      "pattern": "^(artifacts|Papers|work|contracts|docs|src|tools|tests)/[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$",
+      "maxLength": 4096
+    }
+  }
+}
