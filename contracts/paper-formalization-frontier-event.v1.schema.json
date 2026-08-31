@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-formalization-frontier-event.v1.schema.json",
+  "title": "Paper formalization frontier event v1",
+  "description": "A content-addressed event that binds one frontier claim node to an artifact in the governed selection, canonical request, Formalize transport, outcome, certification, or manifest chain.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "event_id", "event_content"],
+  "properties": {
+    "schema": { "const": "paper-formalization-frontier-event.v1" },
+    "event_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "event_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frontier_ref",
+        "node_id",
+        "claim_id",
+        "artifact_family",
+        "artifact_schema",
+        "artifact_ref",
+        "predecessor_event_ref",
+        "outcome_disposition",
+        "certified_truth_release_digest",
+        "detail",
+        "recorded_at"
+      ],
+      "properties": {
+        "frontier_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "node_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+        "artifact_family": {
+          "enum": [
+            "governed-selection",
+            "canonical-formalization-request",
+            "formalize-transport",
+            "formalization-outcome",
+            "truth-release-certification",
+            "certified-claim-manifest"
+          ]
+        },
+        "artifact_schema": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "artifact_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "predecessor_event_ref": {
+          "oneOf": [
+            { "const": "" },
+            { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+          ]
+        },
+        "outcome_disposition": {
+          "enum": ["", "candidate-produced", "counterexample", "missing-prerequisite", "already-known", "proof-search-exhausted"]
+        },
+        "certified_truth_release_digest": {
+          "oneOf": [
+            { "const": "" },
+            { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+          ]
+        },
+        "detail": { "type": "string", "minLength": 1, "maxLength": 16384 },
+        "recorded_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

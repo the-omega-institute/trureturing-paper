@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-formalization-frontier-state.v1.schema.json",
+  "title": "Paper formalization frontier state v1",
+  "description": "A content-addressed reduction of frontier lifecycle events across every claim node. Independent nodes may advance in one event batch, while canonical requests wait for certified dependencies.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "state_id", "state_content"],
+  "properties": {
+    "schema": { "const": "paper-formalization-frontier-state.v1" },
+    "state_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "state_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frontier_ref", "version", "node_states", "applied_event_refs", "updated_at"],
+      "properties": {
+        "frontier_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "version": { "type": "integer", "minimum": 0 },
+        "node_states": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node_id",
+              "claim_id",
+              "status",
+              "latest_event_ref",
+              "outcome_disposition",
+              "certified_truth_release_digest",
+              "updated_at"
+            ],
+            "properties": {
+              "node_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+              "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+              "status": {
+                "enum": [
+                  "selection-pending",
+                  "selection-recorded",
+                  "request-recorded",
+                  "transport-recorded",
+                  "certification-pending",
+                  "certified",
+                  "manifested",
+                  "theory-revision-required",
+                  "frontier-revision-required",
+                  "novelty-reaudit-required",
+                  "proof-architecture-revision"
+                ]
+              },
+              "latest_event_ref": {
+                "oneOf": [
+                  { "const": "" },
+                  { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+                ]
+              },
+              "outcome_disposition": {
+                "enum": ["", "candidate-produced", "counterexample", "missing-prerequisite", "already-known", "proof-search-exhausted"]
+              },
+              "certified_truth_release_digest": {
+                "oneOf": [
+                  { "const": "" },
+                  { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+                ]
+              },
+              "updated_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "applied_event_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

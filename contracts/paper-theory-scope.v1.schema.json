@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-scope.v1.schema.json",
+  "title": "Paper theory scope v1",
+  "description": "A content-addressed A0 scope contract that fixes the abstraction target, theorem obligations, split boundary, and counterexample duties for one paper.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scope_id", "scope_content"],
+  "properties": {
+    "schema": { "const": "paper-theory-scope.v1" },
+    "scope_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "scope_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "theory_program_ref",
+        "scope_request_ref",
+        "paper_id",
+        "research_question",
+        "abstraction_target",
+        "publication_floor",
+        "in_scope_obligations",
+        "supporting_only",
+        "out_of_scope",
+        "split_policy",
+        "counterexample_obligations",
+        "created_at"
+      ],
+      "properties": {
+        "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scope_request_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "research_question": { "type": "string", "minLength": 1, "maxLength": 16384 },
+        "abstraction_target": { "type": "string", "minLength": 1, "maxLength": 16384 },
+        "publication_floor": { "type": "string", "minLength": 1, "maxLength": 8192 },
+        "in_scope_obligations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 16384 } },
+        "supporting_only": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 8192 } },
+        "out_of_scope": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 8192 } },
+        "split_policy": { "type": "string", "minLength": 1, "maxLength": 8192 },
+        "counterexample_obligations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 8192 } },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

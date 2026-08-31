@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theorem-package.v1.schema.json",
+  "title": "Paper theorem package v1",
+  "description": "A versioned, content-addressed multi-theorem DAG produced by A2. Audit-candidate maturity requires a complete informal proof spine, a main theorem, a corollary, and a sharpness result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "theorem_package_id", "theorem_package_content"],
+  "properties": {
+    "schema": { "const": "paper-theorem-package.v1" },
+    "theorem_package_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "theorem_package_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "theory_program_ref",
+        "scope_ref",
+        "inventory_ref",
+        "iteration_ref",
+        "paper_id",
+        "package_version",
+        "maturity",
+        "claims",
+        "main_theorem_claim_ids",
+        "corollary_claim_ids",
+        "sharpness_claim_ids",
+        "open_proof_obligations",
+        "known_results_to_cite",
+        "novelty_summary",
+        "publication_significance",
+        "created_at"
+      ],
+      "properties": {
+        "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scope_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "inventory_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "iteration_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "package_version": { "type": "integer", "minimum": 1 },
+        "maturity": { "enum": ["developing", "audit-candidate"] },
+        "claims": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "claim_id",
+              "title",
+              "kind",
+              "statement",
+              "dependencies",
+              "proof_status",
+              "proof_outline",
+              "novelty_status",
+              "load_bearing"
+            ],
+            "properties": {
+              "claim_id": { "$ref": "#/$defs/claimId" },
+              "title": { "type": "string", "minLength": 1, "maxLength": 1024 },
+              "kind": {
+                "enum": [
+                  "definition",
+                  "lemma",
+                  "proposition",
+                  "theorem",
+                  "corollary",
+                  "counterexample",
+                  "proof-interface"
+                ]
+              },
+              "statement": { "type": "string", "minLength": 1, "maxLength": 32768 },
+              "dependencies": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "$ref": "#/$defs/claimId" }
+              },
+              "proof_status": {
+                "enum": [
+                  "certified-foundation",
+                  "informal-complete",
+                  "informal-gap",
+                  "disproved"
+                ]
+              },
+              "proof_outline": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+              },
+              "novelty_status": {
+                "enum": ["new", "strengthened", "known-tool", "negative-boundary"]
+              },
+              "load_bearing": { "type": "boolean" }
+            }
+          }
+        },
+        "main_theorem_claim_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimId" }
+        },
+        "corollary_claim_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimId" }
+        },
+        "sharpness_claim_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimId" }
+        },
+        "open_proof_obligations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "known_results_to_cite": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "novelty_summary": { "type": "string", "minLength": 80, "maxLength": 32768 },
+        "publication_significance": { "type": "string", "minLength": 80, "maxLength": 32768 },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "claimId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+    }
+  }
+}

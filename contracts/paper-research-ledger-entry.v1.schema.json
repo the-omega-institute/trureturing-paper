@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-research-ledger-entry.v1.schema.json",
+  "title": "Paper research ledger entry v1",
+  "description": "A content-addressed record of a reusable discovery produced during paper theory development, including split, merge, stronger-route, counterexample, and prior-work-boundary findings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "entry_id", "entry_content"],
+  "properties": {
+    "schema": { "const": "paper-research-ledger-entry.v1" },
+    "entry_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "entry_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_theory_program_ref",
+        "source_theorem_package_ref",
+        "source_paper_id",
+        "discovery_kind",
+        "related_refs",
+        "summary",
+        "why_recorded",
+        "promotion_status",
+        "recorded_at"
+      ],
+      "properties": {
+        "source_theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "source_theorem_package_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "source_paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "discovery_kind": {
+          "enum": [
+            "split-candidate",
+            "merge-candidate",
+            "stronger-route",
+            "counterexample",
+            "prior-work-boundary"
+          ]
+        },
+        "related_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "summary": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "why_recorded": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "promotion_status": { "enum": ["candidate-seed", "promoted", "parked", "consumed"] },
+        "recorded_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
