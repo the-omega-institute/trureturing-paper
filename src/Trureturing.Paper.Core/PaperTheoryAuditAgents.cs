@@ -116,7 +116,7 @@ public static class PaperTheoryAuditAgentService
             dispatch.RequestedAt);
         var plan = new PaperTheoryAuditReviewPlan(
             PaperTheoryAuditAgentSchemas.ReviewPlan,
-            Reference(planContent),
+            ContentReference(planContent),
             planContent);
         Validate(plan);
         PaperTheoryAuditStoredArtifact storedPlan = StoreDomain(
@@ -493,7 +493,7 @@ public static class PaperTheoryAuditAgentService
             draft.ProofAudit,
             draft.OverlapFindings,
             draft.ReviewedAt);
-        string opinionId = Reference(opinion);
+        string opinionId = ContentReference(opinion);
         var opinionArtifact = new PaperTheoryAuditOpinionArtifact(
             PaperTheoryAuditAgentSchemas.Opinion,
             opinionId,
@@ -1558,7 +1558,7 @@ public static class PaperTheoryAuditAgentService
         return Reference(bytes);
     }
 
-    private static string Reference<T>(T value) =>
+    private static string ContentReference<T>(T value) =>
         CanonicalJson.Sha256Reference(CanonicalJson.Serialize(value));
 
     private static string Reference(ReadOnlySpan<byte> bytes) =>
@@ -1573,7 +1573,7 @@ public static class PaperTheoryAuditAgentService
     private static void RequireIdentity<T>(string reference, T content, string name)
     {
         RequireDigest(reference, name);
-        if (!string.Equals(reference, Reference(content), StringComparison.Ordinal))
+        if (!string.Equals(reference, ContentReference(content), StringComparison.Ordinal))
         {
             throw new InvalidDataException($"{name} does not address canonical content bytes.");
         }
