@@ -553,7 +553,7 @@ public static class PaperTheoryDeepeningService
         RequireClaimIdList(content.SharpnessClaimIds, "sharpness_claim_ids", 0);
         foreach (string id in content.MainTheoremClaimIds)
         {
-            if (!byId.TryGetValue(id, out PaperTheoremPackageClaim claim)
+            if (!byId.TryGetValue(id, out PaperTheoremPackageClaim? claim)
                 || !string.Equals(claim.Kind, "theorem", StringComparison.Ordinal)
                 || !claim.LoadBearing)
             {
@@ -626,7 +626,7 @@ public static class PaperTheoryDeepeningService
     {
         foreach (string id in ids)
         {
-            if (!byId.TryGetValue(id, out PaperTheoremPackageClaim claim)
+            if (!byId.TryGetValue(id, out PaperTheoremPackageClaim? claim)
                 || !string.Equals(claim.Kind, kind, StringComparison.Ordinal))
             {
                 throw new InvalidDataException(
