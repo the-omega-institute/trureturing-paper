@@ -171,9 +171,9 @@ public sealed class PaperTheoryDeepeningAgentTests
                 run.Staged.TaskRef));
 
         Assert.Contains(
-            "fake extension",
+            "repository-computed theorem-package delta",
             error.Message,
-            StringComparison.OrdinalIgnoreCase);
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public sealed class PaperTheoryDeepeningAgentTests
                 repository.Root,
                 path));
 
-        Assert.Contains("inventory", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("between four and sixty-four", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
