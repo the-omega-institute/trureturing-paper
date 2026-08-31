@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-formalization-frontier-draft.v1.schema.json",
+  "title": "Paper formalization frontier draft v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "dispatch_ref", "paper_id", "theory_program_ref",
+    "theorem_package_ref", "theory_audit_ref", "scorecard_ref",
+    "portfolio_decision_ref", "node_specs", "planning_rationale",
+    "risk_ledger", "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-formalization-frontier-draft.v1" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "$ref": "#/$defs/paperId" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "theorem_package_ref": { "$ref": "#/$defs/digest" },
+    "theory_audit_ref": { "$ref": "#/$defs/digest" },
+    "scorecard_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_decision_ref": { "$ref": "#/$defs/digest" },
+    "node_specs": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nodeSpec" }
+    },
+    "planning_rationale": { "type": "string", "minLength": 80, "maxLength": 65536 },
+    "risk_ledger": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paperId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "claimId": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+    "nodeSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_id", "formalization_kind", "priority", "target_lean_package",
+        "target_lean_module", "formal_statement", "acceptance_criterion"
+      ],
+      "properties": {
+        "claim_id": { "$ref": "#/$defs/claimId" },
+        "formalization_kind": {
+          "enum": [
+            "definition", "prerequisite", "structural", "main-theorem",
+            "sharpness", "corollary", "counterexample", "proof-interface"
+          ]
+        },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "target_lean_package": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "target_lean_module": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "formal_statement": { "type": "string", "minLength": 20, "maxLength": 32768 },
+        "acceptance_criterion": { "type": "string", "minLength": 20, "maxLength": 32768 }
+      }
+    }
+  }
+}
