@@ -10,6 +10,8 @@ internal static class Program
           register-task --repository-root <path> --task <path>
           prepare-run --repository-root <path> --task-ref <sha256:...>
           record-result --repository-root <path> --task-ref <sha256:...> --stdout <path> --run-id <id-or-empty> --provenance <produced|adopted>
+          stage-foundation-task --repository-root <path> --dispatch <path>
+          admit-foundation-result --repository-root <path> --task-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
@@ -21,6 +23,8 @@ internal static class Program
                 "register-task" => RegisterTask(args),
                 "prepare-run" => PrepareRun(args),
                 "record-result" => RecordResult(args),
+                "stage-foundation-task" => StageFoundationTask(args),
+                "admit-foundation-result" => AdmitFoundationResult(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -83,6 +87,36 @@ internal static class Program
                 values["--stdout"],
                 values["--run-id"],
                 values["--provenance"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageFoundationTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-foundation-task",
+            "--repository-root",
+            "--dispatch");
+        PaperTheoryFoundationAgentTaskStaged result =
+            PaperTheoryFoundationAgentService.StageTask(
+                values["--repository-root"],
+                values["--dispatch"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitFoundationResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-foundation-result",
+            "--repository-root",
+            "--task-ref");
+        PaperTheoryFoundationAgentResultAdmitted result =
+            PaperTheoryFoundationAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
         WriteResult(result);
         return 0;
     }
