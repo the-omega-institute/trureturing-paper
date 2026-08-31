@@ -18,6 +18,8 @@ internal static class Program
           admit-audit-opinion --repository-root <path> --task-ref <sha256:...>
           stage-portfolio-judgment-task --repository-root <path> --dispatch <path>
           admit-portfolio-judgment-result --repository-root <path> --task-ref <sha256:...>
+          stage-frontier-planning-task --repository-root <path> --portfolio-task-ref <sha256:...> --paper-id <id>
+          admit-frontier-planning-result --repository-root <path> --task-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
@@ -37,6 +39,8 @@ internal static class Program
                 "admit-audit-opinion" => AdmitAuditOpinion(args),
                 "stage-portfolio-judgment-task" => StagePortfolioJudgmentTask(args),
                 "admit-portfolio-judgment-result" => AdmitPortfolioJudgmentResult(args),
+                "stage-frontier-planning-task" => StageFrontierPlanningTask(args),
+                "admit-frontier-planning-result" => AdmitFrontierPlanningResult(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -217,6 +221,38 @@ internal static class Program
             "--task-ref");
         PaperPortfolioJudgmentAgentResultAdmitted result =
             PaperPortfolioJudgmentAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageFrontierPlanningTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-frontier-planning-task",
+            "--repository-root",
+            "--portfolio-task-ref",
+            "--paper-id");
+        PaperFrontierPlanningAgentTaskStaged result =
+            PaperFrontierPlanningAgentService.StageTask(
+                values["--repository-root"],
+                values["--portfolio-task-ref"],
+                values["--paper-id"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitFrontierPlanningResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-frontier-planning-result",
+            "--repository-root",
+            "--task-ref");
+        PaperFrontierPlanningAgentResultAdmitted result =
+            PaperFrontierPlanningAgentService.AdmitResult(
                 values["--repository-root"],
                 values["--task-ref"]);
         WriteResult(result);
