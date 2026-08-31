@@ -22,6 +22,13 @@ local queues = {
   ["theory-inventory:blocked"] = "paper_theory_inventory_blocked",
 }
 
+local expected_routes = {
+  ["theory-scope:no-progress"] = "theory-scope",
+  ["theory-scope:blocked"] = "blocked",
+  ["theory-inventory:no-progress"] = "theory-inventory",
+  ["theory-inventory:blocked"] = "blocked",
+}
+
 function pipeline(event)
   local payload = event.payload or {}
   if payload.phase ~= "theory-scope" and payload.phase ~= "theory-inventory" then
@@ -35,9 +42,13 @@ function pipeline(event)
       or not agent.is_sha256(payload.theory_program_ref) then
     error("route-theory-foundation-agent-failure: result identity must be content-addressed")
   end
-  local queue = queues[payload.phase .. ":" .. payload.status]
+  local key = payload.phase .. ":" .. payload.status
+  local queue = queues[key]
   if not queue then
     error("route-theory-foundation-agent-failure: no domain route for result")
+  end
+  if payload.next_route ~= expected_routes[key] then
+    error("route-theory-foundation-agent-failure: status selected an invalid domain route")
   end
 
   raise(queue, {
