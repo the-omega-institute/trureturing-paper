@@ -229,7 +229,7 @@ public sealed class PaperPortfolioJudgmentAgentTests
         PaperPortfolioPairwiseRelationDraft first = complete.PairwiseRelations[0] with
         {
             EvidenceRefs =
-            [fixture.Context.Papers.Single(paper => paper.Coordinates.PaperId == "paper-c").Coordinates.CandidatePaperRef]
+            [complete.PairwiseRelations[0].EvidenceRefs[0], fixture.Context.Papers.Single(paper => paper.Coordinates.PaperId == "paper-c").Coordinates.CandidatePaperRef]
         };
         PaperPortfolioJudgmentDraft leaked = complete with
         {
