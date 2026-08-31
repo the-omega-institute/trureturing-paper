@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-audit-review-plan.v1.schema.json",
+  "title": "Paper theory audit review plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "plan_id", "plan_content"],
+  "properties": {
+    "schema": { "const": "paper-theory-audit-review-plan.v1" },
+    "plan_id": { "$ref": "#/$defs/digest" },
+    "plan_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dispatch_ref", "paper_id", "theory_program_ref", "audit_request_ref", "theorem_package_ref", "theory_author_run_ref", "context_input_refs", "reviewers", "created_at"],
+      "properties": {
+        "dispatch_ref": { "$ref": "#/$defs/digest" },
+        "paper_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "theory_program_ref": { "$ref": "#/$defs/digest" },
+        "audit_request_ref": { "$ref": "#/$defs/digest" },
+        "theorem_package_ref": { "$ref": "#/$defs/digest" },
+        "theory_author_run_ref": { "$ref": "#/$defs/digest" },
+        "context_input_refs": { "type": "array", "minItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/digest" } },
+        "reviewers": { "type": "array", "minItems": 2, "maxItems": 4, "uniqueItems": true, "items": { "$ref": "#/$defs/planned" } },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "planned": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot", "reviewer_role", "focus", "attempt", "task_ref", "task_path"],
+      "properties": {
+        "slot": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "reviewer_role": { "enum": ["mathematical-referee", "novelty-referee", "scope-referee", "formalization-referee"] },
+        "focus": { "type": "string", "minLength": 40, "maxLength": 8192 },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "task_ref": { "$ref": "#/$defs/digest" },
+        "task_path": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    }
+  }
+}
