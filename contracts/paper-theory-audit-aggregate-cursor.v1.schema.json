@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-audit-aggregate-cursor.v1.schema.json",
+  "title": "Paper theory audit aggregate cursor v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "plan_ref", "audit_request_ref", "paper_id", "theory_program_ref", "opinion_refs", "reviewer_run_refs", "review_session_refs", "audit", "scorecard", "verdict", "passed", "promotion_eligible", "next_route", "aggregated_at"],
+  "properties": {
+    "schema": { "const": "paper-theory-audit-aggregate-cursor.v1" },
+    "plan_ref": { "$ref": "#/$defs/digest" },
+    "audit_request_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "opinion_refs": { "$ref": "#/$defs/digests" },
+    "reviewer_run_refs": { "$ref": "#/$defs/digests" },
+    "review_session_refs": { "$ref": "#/$defs/digests" },
+    "audit": { "type": "object" },
+    "scorecard": { "type": "object" },
+    "verdict": { "enum": ["pass", "deepen", "split", "merge", "park", "archive"] },
+    "passed": { "type": "boolean" },
+    "promotion_eligible": { "type": "boolean" },
+    "next_route": { "enum": ["portfolio-judgment", "theory-deepening", "portfolio-split", "portfolio-merge", "parked", "archived"] },
+    "aggregated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "digests": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/digest" } }
+  }
+}

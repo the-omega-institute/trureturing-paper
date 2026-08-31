@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-audit-agent-tasks-staged.v1.schema.json",
+  "title": "Paper theory audit agent tasks staged v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "dispatch_ref", "review_plan", "paper_id", "theory_program_ref", "audit_request_ref", "theorem_package_ref", "reviewers", "replayed"],
+  "properties": {
+    "schema": { "const": "paper-theory-audit-agent-tasks-staged.v1" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "review_plan": { "$ref": "#/$defs/artifact" },
+    "paper_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "audit_request_ref": { "$ref": "#/$defs/digest" },
+    "theorem_package_ref": { "$ref": "#/$defs/digest" },
+    "reviewers": { "type": "array", "minItems": 2, "maxItems": 4, "uniqueItems": true, "items": { "type": "object" } },
+    "replayed": { "type": "boolean" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "content_path", "envelope_ref", "envelope_path"],
+      "properties": {
+        "schema": { "type": "string" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "content_path": { "type": "string", "minLength": 1 },
+        "envelope_ref": { "$ref": "#/$defs/digest" },
+        "envelope_path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
