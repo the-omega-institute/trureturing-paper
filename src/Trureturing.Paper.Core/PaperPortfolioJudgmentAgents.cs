@@ -870,8 +870,9 @@ public static class PaperPortfolioJudgmentAgentService
                 "Portfolio decision changed its portfolio comparison coordinates.");
         }
         var scorecards = context.Papers.ToDictionary(
-            paper => paper.Scorecard.ScorecardId,
-            StringComparer.Ordinal);
+  paper => paper.Scorecard.ScorecardId,
+  paper => paper.Scorecard,
+  StringComparer.Ordinal);
         int promotions = 0;
         foreach (PaperPortfolioPaperDecision item in decision.DecisionContent.Decisions)
         {
