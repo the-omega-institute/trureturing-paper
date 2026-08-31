@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-portfolio-judgment-agent-task-staged.v1.schema.json",
+  "title": "Paper portfolio judgment agent task staged v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "dispatch_ref", "task_ref", "task_path", "portfolio_ref", "candidate_batch_ref", "cycle_number", "compared_paper_count", "phase", "agent_role", "context_mode", "replayed"],
+  "properties": {
+    "schema": { "const": "paper-portfolio-judgment-agent-task-staged.v1" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "task_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "portfolio_ref": { "$ref": "#/$defs/digest" },
+    "candidate_batch_ref": { "$ref": "#/$defs/digest" },
+    "cycle_number": { "type": "integer", "minimum": 1 },
+    "compared_paper_count": { "type": "integer", "minimum": 2, "maximum": 5 },
+    "phase": { "const": "portfolio-judgment" },
+    "agent_role": { "const": "paper-portfolio-judge" },
+    "context_mode": { "const": "cross-paper-comparison" },
+    "replayed": { "type": "boolean" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
