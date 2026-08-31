@@ -16,14 +16,25 @@ local ready_queues = {
   inventory = "paper_theory_inventory_ready",
 }
 
+local function text(value)
+  if type(value) == "string" then return value end
+  return ""
+end
+
 function pipeline(event)
   local payload = event.payload or {}
   if payload.phase ~= "theory-scope" and payload.phase ~= "theory-inventory" then
     return
   end
   local task_ref = payload.task_ref
-  if not agent.is_sha256(task_ref) then
-    error("admit-theory-foundation-agent: task_ref must be sha256")
+  local result_ref = payload.result_ref
+  local paper_id = text(payload.paper_id)
+  local theory_program_ref = payload.theory_program_ref
+  if not agent.is_sha256(task_ref)
+      or not agent.is_sha256(result_ref)
+      or paper_id == ""
+      or not agent.is_sha256(theory_program_ref) then
+    error("admit-theory-foundation-agent: exact completed task identity is required")
   end
 
   local root = agent.repository_root()
@@ -44,14 +55,13 @@ function pipeline(event)
       or not agent.is_sha256(admitted.envelope_ref) then
     error("admit-theory-foundation-agent: Agent CLI returned an invalid admission")
   end
-  if payload.result_ref ~= nil and payload.result_ref ~= admitted.result_ref then
+  if result_ref ~= admitted.result_ref then
     error("admit-theory-foundation-agent: result identity changed")
   end
-  if payload.paper_id ~= nil and payload.paper_id ~= admitted.paper_id then
+  if paper_id ~= admitted.paper_id then
     error("admit-theory-foundation-agent: paper identity changed")
   end
-  if payload.theory_program_ref ~= nil
-      and payload.theory_program_ref ~= admitted.theory_program_ref then
+  if theory_program_ref ~= admitted.theory_program_ref then
     error("admit-theory-foundation-agent: theory program changed")
   end
 
