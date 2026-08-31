@@ -59,14 +59,16 @@ function pipeline(event)
   if not queue then
     error("admit-theory-foundation-agent: unsupported admitted kind")
   end
-  local body = {
-    schema = admitted.domain_schema,
+  raise(queue, {
+    schema = "paper-theory-foundation-ready.v1",
+    kind = admitted.kind,
     task_ref = admitted.task_ref,
     result_ref = admitted.result_ref,
     dispatch_ref = admitted.dispatch_ref,
     request_ref = admitted.request_ref,
     paper_id = admitted.paper_id,
     theory_program_ref = admitted.theory_program_ref,
+    domain_schema = admitted.domain_schema,
     domain_ref = admitted.domain_ref,
     domain_content_path = admitted.domain_content_path,
     envelope_ref = admitted.envelope_ref,
@@ -77,15 +79,7 @@ function pipeline(event)
     admitted_at = admitted.admitted_at,
     replayed = admitted.replayed == true,
     dedup_key = "paper-theory-foundation-ready:v1:" .. admitted.task_ref,
-  }
-  if admitted.kind == "scope" then
-    body.scope_ref = admitted.domain_ref
-    body.scope_content_path = admitted.domain_content_path
-  else
-    body.inventory_ref = admitted.domain_ref
-    body.inventory_content_path = admitted.domain_content_path
-  end
-  raise(queue, body)
+  })
 end
 
 return M
