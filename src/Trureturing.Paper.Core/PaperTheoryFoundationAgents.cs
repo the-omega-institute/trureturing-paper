@@ -120,15 +120,14 @@ internal sealed record PaperTheoryFoundationStoredDomain(
     string DomainRef,
     string DomainContentPath,
     string EnvelopeRef,
-    string EnvelopePath,
-    string CreatedAt);
+    string EnvelopePath);
 
 public static class PaperTheoryFoundationAgentService
 {
     public const string ScopeKind = "scope";
     public const string InventoryKind = "inventory";
 
-    private const int MaximumDispatchBytes = 2 * 1024 * 1024;
+    private const int MaximumControlBytes = 2 * 1024 * 1024;
     private const int MaximumArtifactBytes = 32 * 1024 * 1024;
 
     private static readonly Regex DigestPattern = new(
@@ -155,8 +154,8 @@ public static class PaperTheoryFoundationAgentService
         string fullDispatchPath = RequireDispatchPath(root, dispatchPath);
         byte[] dispatchBytes = ReadBoundedFile(
             fullDispatchPath,
-            MaximumDispatchBytes,
-            "Theory-foundation agent dispatch");
+            MaximumControlBytes,
+            "Theory-foundation dispatch");
         string dispatchRef = Reference(dispatchBytes);
         PaperTheoryFoundationAgentDispatch dispatch =
             PaperResearchInputJson.DeserializeStrict<PaperTheoryFoundationAgentDispatch>(
@@ -166,8 +165,7 @@ public static class PaperTheoryFoundationAgentService
         string immutableDispatchPath = ArtifactPath(
             root,
             "dispatches",
-            dispatchRef,
-            ".json");
+            dispatchRef);
         _ = PutImmutable(immutableDispatchPath, dispatchBytes);
         string dispatchRelativePath = RelativePath(root, immutableDispatchPath);
 
@@ -186,23 +184,24 @@ public static class PaperTheoryFoundationAgentService
                 dispatchRelativePath,
                 LoadInventoryContext(root, dispatch)),
             _ => throw new InvalidDataException(
-                $"Unsupported theory-foundation dispatch kind {dispatch.Kind}.")
+                $"Unsupported theory-foundation kind {dispatch.Kind}.")
         };
         PaperAgentRuntimeService.Validate(task);
+
         byte[] taskBytes = CanonicalJson.Serialize(task);
         string taskRef = Reference(taskBytes);
-        string taskPath = Path.Combine(
+        string stagedPath = Path.Combine(
             root,
             "inbox",
             "agent-tasks",
             $"theory-foundation-{Hex(taskRef)}.json");
-        bool replayed = PutImmutable(taskPath, taskBytes);
+        bool replayed = PutImmutable(stagedPath, taskBytes);
         PaperAgentProfile profile = PaperAgentRuntimeService.GetProfile(task.Phase);
         return new PaperTheoryFoundationAgentTaskStaged(
             PaperTheoryFoundationAgentSchemas.TaskStaged,
             dispatchRef,
             taskRef,
-            taskPath,
+            stagedPath,
             dispatch.Kind,
             dispatch.PaperId,
             dispatch.TheoryProgramRef,
@@ -223,7 +222,7 @@ public static class PaperTheoryFoundationAgentService
         if (task.Phase is not "theory-scope" and not "theory-inventory")
         {
             throw new InvalidDataException(
-                "Only A0 scope or A1 inventory tasks can enter the foundation admission bridge.");
+                "Only A0 scope or A1 inventory tasks can enter this admission bridge.");
         }
 
         PaperAgentTaskCursor agentCursor = ReadAgentCursor(root, task, taskRef);
@@ -232,11 +231,11 @@ public static class PaperTheoryFoundationAgentService
             task,
             taskRef,
             agentCursor.ResultRef);
-        ValidateAgentCursorResult(agentCursor, result);
+        RequireCursorMatchesResult(agentCursor, result);
         if (!string.Equals(result.Status, "completed", StringComparison.Ordinal))
         {
             throw new InvalidDataException(
-                "Only completed foundation-agent results can be admitted as domain artifacts.");
+                "Only completed foundation-agent results can be admitted.");
         }
 
         PaperAgentInputArtifact dispatchInput = task.ExactInputs
@@ -252,7 +251,12 @@ public static class PaperTheoryFoundationAgentService
             PaperResearchInputJson.DeserializeStrict<PaperTheoryFoundationAgentDispatch>(
                 dispatchBytes);
         Validate(dispatch);
-        ValidateTaskBinding(task, dispatch, dispatchRef, dispatchInput.RepositoryRelativePath);
+        ValidateTaskBinding(
+            root,
+            task,
+            dispatch,
+            dispatchRef,
+            dispatchInput.RepositoryRelativePath);
 
         string expectedNextRoute = ExpectedNextRoute(dispatch.Kind);
         if (!string.Equals(result.NextRoute, expectedNextRoute, StringComparison.Ordinal))
@@ -261,42 +265,45 @@ public static class PaperTheoryFoundationAgentService
                 $"A completed {dispatch.Kind} result must advance to {expectedNextRoute}.");
         }
 
-        string admissionCursorPath = AdmissionCursorPath(root, taskRef);
-        if (File.Exists(admissionCursorPath))
+        string cursorPath = AdmissionCursorPath(root, taskRef);
+        if (File.Exists(cursorPath))
         {
             return ReplayAdmission(
                 root,
-                ReadAdmissionCursor(admissionCursorPath),
-                task,
+                ReadAdmissionCursor(cursorPath),
+                taskRef,
                 agentCursor,
                 dispatch,
                 dispatchRef);
         }
 
-        PaperAgentStoredOutput output = agentCursor.Outputs.SingleOrDefault()
-            ?? throw new InvalidDataException(
-                "Completed foundation-agent result must contain exactly one output.");
+        if (agentCursor.Outputs.Count != 1)
+        {
+            throw new InvalidDataException(
+                "A completed foundation-agent result must contain exactly one output.");
+        }
+        PaperAgentStoredOutput output = agentCursor.Outputs[0];
         string expectedDraftSchema = ExpectedDraftSchema(dispatch.Kind);
         if (!string.Equals(output.Schema, expectedDraftSchema, StringComparison.Ordinal))
         {
             throw new InvalidDataException(
-                "Foundation-agent output does not use the expected draft schema.");
+                "Foundation-agent output has the wrong draft schema.");
         }
-        byte[] outputBytes = ReadAgentOutput(root, output.ArtifactRef);
+        byte[] draftBytes = ReadAgentOutput(root, output.ArtifactRef);
         PaperTheoryFoundationStoredDomain stored = dispatch.Kind switch
         {
             ScopeKind => AdmitScope(
                 root,
                 dispatch,
                 LoadScopeContext(root, dispatch),
-                outputBytes),
+                draftBytes),
             InventoryKind => AdmitInventory(
                 root,
                 dispatch,
                 LoadInventoryContext(root, dispatch),
-                outputBytes),
+                draftBytes),
             _ => throw new InvalidDataException(
-                $"Unsupported theory-foundation dispatch kind {dispatch.Kind}.")
+                $"Unsupported theory-foundation kind {dispatch.Kind}.")
         };
 
         var cursor = new PaperTheoryFoundationAgentAdmissionCursor(
@@ -319,21 +326,20 @@ public static class PaperTheoryFoundationAgentService
             result.CompletedAt);
         Validate(cursor);
         byte[] cursorBytes = CanonicalJson.Serialize(cursor);
+        Directory.CreateDirectory(Path.GetDirectoryName(cursorPath)!);
         try
         {
             PaperResearchInputStore.WriteAtomic(
-                admissionCursorPath,
+                cursorPath,
                 cursorBytes,
                 overwrite: false);
         }
-        catch (IOException) when (File.Exists(admissionCursorPath))
+        catch (IOException) when (File.Exists(cursorPath))
         {
-            PaperTheoryFoundationAgentAdmissionCursor existing =
-                ReadAdmissionCursor(admissionCursorPath);
             return ReplayAdmission(
                 root,
-                existing,
-                task,
+                ReadAdmissionCursor(cursorPath),
+                taskRef,
                 agentCursor,
                 dispatch,
                 dispatchRef);
@@ -399,12 +405,17 @@ public static class PaperTheoryFoundationAgentService
         RequireDigest(cursor.DispatchRef, nameof(cursor.DispatchRef));
         if (cursor.Kind is not ScopeKind and not InventoryKind)
         {
-            throw new InvalidDataException("Foundation admission cursor kind is invalid.");
+            throw new InvalidDataException("Foundation admission kind is invalid.");
         }
         RequirePaperId(cursor.PaperId);
         RequireDigest(cursor.TheoryProgramRef, nameof(cursor.TheoryProgramRef));
         RequireDigest(cursor.RequestRef, nameof(cursor.RequestRef));
-        RequireSchema(cursor.DomainSchema, nameof(cursor.DomainSchema));
+        RequireExact(
+            cursor.DomainSchema,
+            cursor.Kind == ScopeKind
+                ? PaperTheoryFoundationSchemas.Scope
+                : PaperTheoryFoundationSchemas.Inventory,
+            nameof(cursor.DomainSchema));
         RequireDigest(cursor.DomainRef, nameof(cursor.DomainRef));
         RequireRepositoryRelativePath(cursor.DomainContentPath, nameof(cursor.DomainContentPath));
         RequireDigest(cursor.EnvelopeRef, nameof(cursor.EnvelopeRef));
@@ -427,7 +438,7 @@ public static class PaperTheoryFoundationAgentService
     {
         ValidateInputSources(root, dispatch.ExactInputs);
         PaperAgentProfile profile = PaperAgentRuntimeService.GetProfile("theory-scope");
-        PaperAgentTask task = new(
+        return new PaperAgentTask(
             PaperAgentSchemas.Task,
             dispatch.PaperId,
             dispatch.TheoryProgramRef,
@@ -442,8 +453,6 @@ public static class PaperTheoryFoundationAgentService
             BuildScopeInstruction(context.Request),
             TaskForbiddenShortcuts(context.Request.RequestContent.Contract),
             dispatch.RequestedAt);
-        PaperAgentRuntimeService.Validate(task);
-        return task;
     }
 
     private static PaperAgentTask BuildInventoryTask(
@@ -455,7 +464,7 @@ public static class PaperTheoryFoundationAgentService
     {
         ValidateInputSources(root, dispatch.ExactInputs);
         PaperAgentProfile profile = PaperAgentRuntimeService.GetProfile("theory-inventory");
-        PaperAgentTask task = new(
+        return new PaperAgentTask(
             PaperAgentSchemas.Task,
             dispatch.PaperId,
             dispatch.TheoryProgramRef,
@@ -470,8 +479,6 @@ public static class PaperTheoryFoundationAgentService
             BuildInventoryInstruction(context.Request),
             TaskForbiddenShortcuts(context.Request.RequestContent.Contract),
             dispatch.RequestedAt);
-        PaperAgentRuntimeService.Validate(task);
-        return task;
     }
 
     private static PaperAgentInputArtifact[] TaskInputs(
@@ -489,7 +496,7 @@ public static class PaperTheoryFoundationAgentService
 
     private static string[] TaskForbiddenShortcuts(PaperCodexPhaseContract contract) =>
         contract.ForbiddenShortcuts
-            .Append("Do not compute or invent the final domain artifact identifier; the repository validator owns canonical identity.")
+            .Append("Do not compute or invent the final domain artifact identifier; repository validation owns canonical identity.")
             .Append("Do not emit a final scope or inventory envelope; write only the declared draft schema.")
             .Distinct(StringComparer.Ordinal)
             .ToArray();
@@ -500,11 +507,11 @@ public static class PaperTheoryFoundationAgentService
         var builder = new StringBuilder();
         builder.AppendLine("Execute the A0 paper-theory scope phase from the exact supplied evidence.");
         builder.AppendLine("Write exactly one paper-theory-scope-draft.v1 object to outputs/scope-draft.json.");
-        builder.AppendLine($"Bind theory_program_ref to {content.TheoryProgramRef}.");
-        builder.AppendLine($"Bind scope_request_ref to {request.RequestId}.");
-        builder.AppendLine($"Bind paper_id to {content.PaperId}.");
-        builder.AppendLine("The draft fields are research_question, abstraction_target, publication_floor, in_scope_obligations, supporting_only, out_of_scope, split_policy, counterexample_obligations, and created_at.");
-        builder.AppendLine("The repository will construct and hash the final paper-theory-scope.v1 envelope after full domain validation.");
+        builder.AppendLine($"Use theory_program_ref={content.TheoryProgramRef}.");
+        builder.AppendLine($"Use scope_request_ref={request.RequestId}.");
+        builder.AppendLine($"Use paper_id={content.PaperId}.");
+        builder.AppendLine("Supply research_question, abstraction_target, publication_floor, in_scope_obligations, supporting_only, out_of_scope, split_policy, counterexample_obligations, and created_at.");
+        builder.AppendLine("The repository will construct and hash the final paper-theory-scope.v1 artifact after full domain validation.");
         AppendContract(builder, content.Contract);
         return builder.ToString();
     }
@@ -515,12 +522,12 @@ public static class PaperTheoryFoundationAgentService
         var builder = new StringBuilder();
         builder.AppendLine("Execute the A1 paper-theory inventory phase from the exact approved scope and evidence.");
         builder.AppendLine("Write exactly one paper-theory-inventory-draft.v1 object to outputs/inventory-draft.json.");
-        builder.AppendLine($"Bind theory_program_ref to {content.TheoryProgramRef}.");
-        builder.AppendLine($"Bind scope_ref to {content.ScopeRef}.");
-        builder.AppendLine($"Bind inventory_request_ref to {request.RequestId}.");
-        builder.AppendLine($"Bind paper_id to {content.PaperId}.");
-        builder.AppendLine("Inventory every claim as a structured item with claim_id, title, kind, status, statement, dependencies, role_in_argument, and required_action.");
-        builder.AppendLine("The repository will construct and hash the final paper-theory-inventory.v1 envelope after validating the complete acyclic theorem DAG.");
+        builder.AppendLine($"Use theory_program_ref={content.TheoryProgramRef}.");
+        builder.AppendLine($"Use scope_ref={content.ScopeRef}.");
+        builder.AppendLine($"Use inventory_request_ref={request.RequestId}.");
+        builder.AppendLine($"Use paper_id={content.PaperId}.");
+        builder.AppendLine("Each item must contain claim_id, title, kind, status, statement, dependencies, role_in_argument, and required_action.");
+        builder.AppendLine("The repository will construct and hash the final paper-theory-inventory.v1 artifact after validating the complete acyclic theorem DAG.");
         AppendContract(builder, content.Contract);
         return builder.ToString();
     }
@@ -551,20 +558,7 @@ public static class PaperTheoryFoundationAgentService
         PaperTheoryFoundationAgentDispatch dispatch)
     {
         ValidateInputSources(root, dispatch.ExactInputs);
-        PaperAgentInputArtifact programInput = RequiredInput(
-            dispatch.ExactInputs,
-            PaperPortfolioSchemas.TheoryProgram,
-            dispatch.TheoryProgramRef,
-            "theory program");
-        PaperTheoryProgramContent programContent =
-            PaperResearchInputJson.DeserializeStrict<PaperTheoryProgramContent>(
-                ReadExactInput(root, programInput));
-        var program = new PaperTheoryProgram(
-            PaperPortfolioSchemas.TheoryProgram,
-            dispatch.TheoryProgramRef,
-            programContent);
-        PaperPortfolioService.Validate(program);
-
+        PaperTheoryProgram program = ReadProgram(root, dispatch);
         PaperAgentInputArtifact requestInput = RequiredInput(
             dispatch.ExactInputs,
             PaperTheoryFoundationSchemas.ScopeRequest,
@@ -595,20 +589,7 @@ public static class PaperTheoryFoundationAgentService
         PaperTheoryFoundationAgentDispatch dispatch)
     {
         ValidateInputSources(root, dispatch.ExactInputs);
-        PaperAgentInputArtifact programInput = RequiredInput(
-            dispatch.ExactInputs,
-            PaperPortfolioSchemas.TheoryProgram,
-            dispatch.TheoryProgramRef,
-            "theory program");
-        PaperTheoryProgramContent programContent =
-            PaperResearchInputJson.DeserializeStrict<PaperTheoryProgramContent>(
-                ReadExactInput(root, programInput));
-        var program = new PaperTheoryProgram(
-            PaperPortfolioSchemas.TheoryProgram,
-            dispatch.TheoryProgramRef,
-            programContent);
-        PaperPortfolioService.Validate(program);
-
+        PaperTheoryProgram program = ReadProgram(root, dispatch);
         PaperAgentInputArtifact requestInput = RequiredInput(
             dispatch.ExactInputs,
             PaperTheoryFoundationSchemas.InventoryRequest,
@@ -645,6 +626,26 @@ public static class PaperTheoryFoundationAgentService
             dispatch.ExactInputs,
             request.RequestContent.Contract.ExactInputRefs.Append(request.RequestId));
         return new PaperTheoryInventoryAgentContext(program, scope, request);
+    }
+
+    private static PaperTheoryProgram ReadProgram(
+        string root,
+        PaperTheoryFoundationAgentDispatch dispatch)
+    {
+        PaperAgentInputArtifact programInput = RequiredInput(
+            dispatch.ExactInputs,
+            PaperPortfolioSchemas.TheoryProgram,
+            dispatch.TheoryProgramRef,
+            "theory program");
+        PaperTheoryProgramContent content =
+            PaperResearchInputJson.DeserializeStrict<PaperTheoryProgramContent>(
+                ReadExactInput(root, programInput));
+        var program = new PaperTheoryProgram(
+            PaperPortfolioSchemas.TheoryProgram,
+            dispatch.TheoryProgramRef,
+            content);
+        PaperPortfolioService.Validate(program);
+        return program;
     }
 
     private static PaperTheoryFoundationStoredDomain AdmitScope(
@@ -687,7 +688,13 @@ public static class PaperTheoryFoundationAgentService
             context.Program,
             context.Request,
             content);
-        return StoreScope(root, scope);
+        return StoreDomain(
+            root,
+            "scopes",
+            scope.Schema,
+            scope.ScopeId,
+            scope.ScopeContent,
+            scope);
     }
 
     private static PaperTheoryFoundationStoredDomain AdmitInventory(
@@ -731,68 +738,86 @@ public static class PaperTheoryFoundationAgentService
             context.Scope,
             context.Request,
             content);
-        return StoreInventory(root, inventory);
-    }
-
-    private static PaperTheoryFoundationStoredDomain StoreScope(
-        string root,
-        PaperTheoryScope scope)
-    {
-        byte[] contentBytes = CanonicalJson.Serialize(scope.ScopeContent);
-        if (!string.Equals(Reference(contentBytes), scope.ScopeId, StringComparison.Ordinal))
-        {
-            throw new InvalidDataException("Canonical scope content does not match scope_id.");
-        }
-        string contentPath = ArtifactPath(root, "scopes", scope.ScopeId, ".json");
-        _ = PutImmutable(contentPath, contentBytes);
-        byte[] envelopeBytes = CanonicalJson.Serialize(scope);
-        string envelopeRef = Reference(envelopeBytes);
-        string envelopePath = ArtifactPath(root, "envelopes", envelopeRef, ".json");
-        _ = PutImmutable(envelopePath, envelopeBytes);
-        return new PaperTheoryFoundationStoredDomain(
-            scope.Schema,
-            scope.ScopeId,
-            RelativePath(root, contentPath),
-            envelopeRef,
-            RelativePath(root, envelopePath),
-            scope.ScopeContent.CreatedAt);
-    }
-
-    private static PaperTheoryFoundationStoredDomain StoreInventory(
-        string root,
-        PaperTheoryInventory inventory)
-    {
-        byte[] contentBytes = CanonicalJson.Serialize(inventory.InventoryContent);
-        if (!string.Equals(Reference(contentBytes), inventory.InventoryId, StringComparison.Ordinal))
-        {
-            throw new InvalidDataException(
-                "Canonical inventory content does not match inventory_id.");
-        }
-        string contentPath = ArtifactPath(root, "inventories", inventory.InventoryId, ".json");
-        _ = PutImmutable(contentPath, contentBytes);
-        byte[] envelopeBytes = CanonicalJson.Serialize(inventory);
-        string envelopeRef = Reference(envelopeBytes);
-        string envelopePath = ArtifactPath(root, "envelopes", envelopeRef, ".json");
-        _ = PutImmutable(envelopePath, envelopeBytes);
-        return new PaperTheoryFoundationStoredDomain(
+        return StoreDomain(
+            root,
+            "inventories",
             inventory.Schema,
             inventory.InventoryId,
+            inventory.InventoryContent,
+            inventory);
+    }
+
+    private static PaperTheoryFoundationStoredDomain StoreDomain<TContent, TEnvelope>(
+        string root,
+        string family,
+        string domainSchema,
+        string domainRef,
+        TContent content,
+        TEnvelope envelope)
+    {
+        byte[] contentBytes = CanonicalJson.Serialize(content);
+        if (!string.Equals(Reference(contentBytes), domainRef, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                "Canonical foundation content does not match its domain identifier.");
+        }
+        string contentPath = ArtifactPath(root, family, domainRef);
+        _ = PutImmutable(contentPath, contentBytes);
+        byte[] envelopeBytes = CanonicalJson.Serialize(envelope);
+        string envelopeRef = Reference(envelopeBytes);
+        string envelopePath = ArtifactPath(root, "envelopes", envelopeRef);
+        _ = PutImmutable(envelopePath, envelopeBytes);
+        return new PaperTheoryFoundationStoredDomain(
+            domainSchema,
+            domainRef,
             RelativePath(root, contentPath),
             envelopeRef,
-            RelativePath(root, envelopePath),
-            inventory.InventoryContent.CreatedAt);
+            RelativePath(root, envelopePath));
+    }
+
+    private static void ValidateTaskBinding(
+        string root,
+        PaperAgentTask task,
+        PaperTheoryFoundationAgentDispatch dispatch,
+        string dispatchRef,
+        string dispatchRelativePath)
+    {
+        PaperAgentTask expected = dispatch.Kind switch
+        {
+            ScopeKind => BuildScopeTask(
+                root,
+                dispatch,
+                dispatchRef,
+                dispatchRelativePath,
+                LoadScopeContext(root, dispatch)),
+            InventoryKind => BuildInventoryTask(
+                root,
+                dispatch,
+                dispatchRef,
+                dispatchRelativePath,
+                LoadInventoryContext(root, dispatch)),
+            _ => throw new InvalidDataException(
+                $"Unsupported theory-foundation kind {dispatch.Kind}.")
+        };
+        byte[] actualBytes = CanonicalJson.Serialize(task);
+        byte[] expectedBytes = CanonicalJson.Serialize(expected);
+        if (!actualBytes.AsSpan().SequenceEqual(expectedBytes))
+        {
+            throw new InvalidDataException(
+                "Foundation-agent task changed its dispatch-owned contract.");
+        }
     }
 
     private static PaperTheoryFoundationAgentResultAdmitted ReplayAdmission(
         string root,
         PaperTheoryFoundationAgentAdmissionCursor cursor,
-        PaperAgentTask task,
+        string taskRef,
         PaperAgentTaskCursor agentCursor,
         PaperTheoryFoundationAgentDispatch dispatch,
         string dispatchRef)
     {
         Validate(cursor);
-        if (!string.Equals(cursor.TaskRef, task is null ? string.Empty : agentCursor.TaskRef, StringComparison.Ordinal)
+        if (!string.Equals(cursor.TaskRef, taskRef, StringComparison.Ordinal)
             || !string.Equals(cursor.ResultRef, agentCursor.ResultRef, StringComparison.Ordinal)
             || !string.Equals(cursor.DispatchRef, dispatchRef, StringComparison.Ordinal)
             || !string.Equals(cursor.Kind, dispatch.Kind, StringComparison.Ordinal)
@@ -825,12 +850,15 @@ public static class PaperTheoryFoundationAgentService
         {
             PaperTheoryScopeContent content =
                 PaperResearchInputJson.DeserializeStrict<PaperTheoryScopeContent>(contentBytes);
-            var scope = new PaperTheoryScope(cursor.DomainSchema, cursor.DomainRef, content);
-            PaperTheoryFoundationService.Validate(scope);
+            var fromContent = new PaperTheoryScope(
+                PaperTheoryFoundationSchemas.Scope,
+                cursor.DomainRef,
+                content);
+            PaperTheoryFoundationService.Validate(fromContent);
             PaperTheoryScope envelope =
                 PaperResearchInputJson.DeserializeStrict<PaperTheoryScope>(envelopeBytes);
             PaperTheoryFoundationService.Validate(envelope);
-            if (!string.Equals(envelope.ScopeId, scope.ScopeId, StringComparison.Ordinal))
+            if (!string.Equals(envelope.ScopeId, fromContent.ScopeId, StringComparison.Ordinal))
             {
                 throw new InvalidDataException(
                     "Stored scope envelope does not match stored scope content.");
@@ -840,17 +868,17 @@ public static class PaperTheoryFoundationAgentService
         {
             PaperTheoryInventoryContent content =
                 PaperResearchInputJson.DeserializeStrict<PaperTheoryInventoryContent>(contentBytes);
-            var inventory = new PaperTheoryInventory(
-                cursor.DomainSchema,
+            var fromContent = new PaperTheoryInventory(
+                PaperTheoryFoundationSchemas.Inventory,
                 cursor.DomainRef,
                 content);
-            PaperTheoryFoundationService.Validate(inventory);
+            PaperTheoryFoundationService.Validate(fromContent);
             PaperTheoryInventory envelope =
                 PaperResearchInputJson.DeserializeStrict<PaperTheoryInventory>(envelopeBytes);
             PaperTheoryFoundationService.Validate(envelope);
             if (!string.Equals(
                     envelope.InventoryId,
-                    inventory.InventoryId,
+                    fromContent.InventoryId,
                     StringComparison.Ordinal))
             {
                 throw new InvalidDataException(
@@ -882,72 +910,6 @@ public static class PaperTheoryFoundationAgentService
             cursor.AdmittedAt,
             replayed);
 
-    private static void ValidateTaskBinding(
-        PaperAgentTask task,
-        PaperTheoryFoundationAgentDispatch dispatch,
-        string dispatchRef,
-        string dispatchRelativePath)
-    {
-        PaperAgentTask expected = dispatch.Kind switch
-        {
-            ScopeKind => BuildScopeTask(
-                RequireRepositoryRootFromTaskPath(dispatchRelativePath),
-                dispatch,
-                dispatchRef,
-                dispatchRelativePath,
-                throw new InvalidOperationException("unreachable")),
-            _ => task
-        };
-        _ = expected;
-
-        string expectedPhase = dispatch.Kind == ScopeKind
-            ? "theory-scope"
-            : "theory-inventory";
-        string expectedDraft = ExpectedDraftSchema(dispatch.Kind);
-        string expectedOutputPath = dispatch.Kind == ScopeKind
-            ? "outputs/scope-draft.json"
-            : "outputs/inventory-draft.json";
-        PaperAgentProfile profile = PaperAgentRuntimeService.GetProfile(expectedPhase);
-        if (!string.Equals(task.PaperId, dispatch.PaperId, StringComparison.Ordinal)
-            || !string.Equals(task.TheoryProgramRef, dispatch.TheoryProgramRef, StringComparison.Ordinal)
-            || !string.Equals(task.Phase, expectedPhase, StringComparison.Ordinal)
-            || !string.Equals(task.AgentRole, profile.AgentRole, StringComparison.Ordinal)
-            || !string.Equals(task.ContextMode, profile.ContextMode, StringComparison.Ordinal)
-            || !string.Equals(task.RequestedAt, dispatch.RequestedAt, StringComparison.Ordinal)
-            || task.ExpectedOutputs.Count != 1
-            || !string.Equals(task.ExpectedOutputs[0].Schema, expectedDraft, StringComparison.Ordinal)
-            || !string.Equals(task.ExpectedOutputs[0].WorkspaceRelativePath, expectedOutputPath, StringComparison.Ordinal))
-        {
-            throw new InvalidDataException(
-                "Foundation-agent task changed its dispatch-owned phase, role, context, or output contract.");
-        }
-        PaperAgentInputArtifact[] expectedInputs = TaskInputs(
-            dispatch,
-            dispatchRef,
-            dispatchRelativePath);
-        RequireInputSetExactly(task.ExactInputs, expectedInputs);
-    }
-
-    private static string RequireRepositoryRootFromTaskPath(string path) =>
-        throw new InvalidOperationException(
-            $"No repository root can be inferred from repository-relative path {path}.");
-
-    private static void RequireInputSetExactly(
-        IReadOnlyList<PaperAgentInputArtifact> actual,
-        IReadOnlyList<PaperAgentInputArtifact> expected)
-    {
-        string[] left = actual.Select(InputKey).OrderBy(value => value, StringComparer.Ordinal).ToArray();
-        string[] right = expected.Select(InputKey).OrderBy(value => value, StringComparer.Ordinal).ToArray();
-        if (!left.SequenceEqual(right, StringComparer.Ordinal))
-        {
-            throw new InvalidDataException(
-                "Foundation-agent task changed its exact dispatch input closure.");
-        }
-    }
-
-    private static string InputKey(PaperAgentInputArtifact input) =>
-        $"{input.Schema}\n{input.ArtifactRef}\n{input.RepositoryRelativePath}";
-
     private static PaperAgentTask ReadRegisteredTask(string root, string taskRef)
     {
         byte[] bytes = ReadImmutable(
@@ -972,9 +934,9 @@ public static class PaperTheoryFoundationAgentService
             "paper-agents",
             "cursors",
             Hex(taskRef) + ".json");
-        byte[] bytes = ReadBoundedFile(path, MaximumDispatchBytes, "Paper agent cursor");
         PaperAgentTaskCursor cursor =
-            PaperResearchInputJson.DeserializeStrict<PaperAgentTaskCursor>(bytes);
+            PaperResearchInputJson.DeserializeStrict<PaperAgentTaskCursor>(
+                ReadBoundedFile(path, MaximumControlBytes, "Paper agent cursor"));
         PaperAgentRuntimeService.Validate(cursor, task, taskRef);
         return cursor;
     }
@@ -985,12 +947,12 @@ public static class PaperTheoryFoundationAgentService
         string taskRef,
         string resultRef)
     {
-        byte[] bytes = ReadImmutable(
-            AgentArtifactPath(root, "results", resultRef),
-            resultRef,
-            "Paper agent result");
         PaperAgentResultWire result =
-            PaperResearchInputJson.DeserializeStrict<PaperAgentResultWire>(bytes);
+            PaperResearchInputJson.DeserializeStrict<PaperAgentResultWire>(
+                ReadImmutable(
+                    AgentArtifactPath(root, "results", resultRef),
+                    resultRef,
+                    "Paper agent result"));
         PaperAgentRuntimeService.Validate(result, task, taskRef);
         return result;
     }
@@ -1001,12 +963,11 @@ public static class PaperTheoryFoundationAgentService
             outputRef,
             "Paper agent output");
 
-    private static void ValidateAgentCursorResult(
+    private static void RequireCursorMatchesResult(
         PaperAgentTaskCursor cursor,
         PaperAgentResultWire result)
     {
-        if (!string.Equals(cursor.ResultRef, Reference(CanonicalJson.Serialize(result)), StringComparison.Ordinal)
-            || !string.Equals(cursor.Status, result.Status, StringComparison.Ordinal)
+        if (!string.Equals(cursor.Status, result.Status, StringComparison.Ordinal)
             || !string.Equals(cursor.Summary, result.Summary, StringComparison.Ordinal)
             || !string.Equals(cursor.NextRoute, result.NextRoute, StringComparison.Ordinal)
             || !string.Equals(cursor.BlockerCode, result.BlockerCode, StringComparison.Ordinal)
@@ -1034,15 +995,24 @@ public static class PaperTheoryFoundationAgentService
     private static PaperTheoryFoundationAgentAdmissionCursor ReadAdmissionCursor(
         string path)
     {
-        byte[] bytes = ReadBoundedFile(
-            path,
-            MaximumDispatchBytes,
-            "Foundation admission cursor");
         PaperTheoryFoundationAgentAdmissionCursor cursor =
             PaperResearchInputJson.DeserializeStrict<PaperTheoryFoundationAgentAdmissionCursor>(
-                bytes);
+                ReadBoundedFile(path, MaximumControlBytes, "Foundation admission cursor"));
         Validate(cursor);
         return cursor;
+    }
+
+    private static PaperAgentInputArtifact RequiredInput(
+        IReadOnlyList<PaperAgentInputArtifact> inputs,
+        string schema,
+        string artifactRef,
+        string name)
+    {
+        PaperAgentInputArtifact? input = inputs.SingleOrDefault(value =>
+            string.Equals(value.Schema, schema, StringComparison.Ordinal)
+            && string.Equals(value.ArtifactRef, artifactRef, StringComparison.Ordinal));
+        return input ?? throw new InvalidDataException(
+            $"Theory-foundation dispatch is missing the exact {name} content artifact.");
     }
 
     private static void RequireDispatchIdentity(
@@ -1077,19 +1047,6 @@ public static class PaperTheoryFoundationAgentService
             throw new InvalidDataException(
                 "Theory-foundation dispatch changed the domain request exact-input closure.");
         }
-    }
-
-    private static PaperAgentInputArtifact RequiredInput(
-        IReadOnlyList<PaperAgentInputArtifact> inputs,
-        string schema,
-        string artifactRef,
-        string name)
-    {
-        PaperAgentInputArtifact? input = inputs.SingleOrDefault(value =>
-            string.Equals(value.Schema, schema, StringComparison.Ordinal)
-            && string.Equals(value.ArtifactRef, artifactRef, StringComparison.Ordinal));
-        return input ?? throw new InvalidDataException(
-            $"Theory-foundation dispatch is missing the exact {name} content artifact.");
     }
 
     private static void ValidateInputSources(
@@ -1181,8 +1138,7 @@ public static class PaperTheoryFoundationAgentService
     private static string ArtifactPath(
         string root,
         string family,
-        string reference,
-        string extension)
+        string reference)
     {
         string hex = Hex(reference);
         return Path.Combine(
@@ -1192,7 +1148,7 @@ public static class PaperTheoryFoundationAgentService
             family,
             "sha256",
             hex[..2],
-            hex + extension);
+            hex + ".json");
     }
 
     private static string AgentArtifactPath(
@@ -1230,6 +1186,7 @@ public static class PaperTheoryFoundationAgentService
             }
             return true;
         }
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         PaperResearchInputStore.WriteAtomic(path, bytes, overwrite: false);
         return false;
     }
