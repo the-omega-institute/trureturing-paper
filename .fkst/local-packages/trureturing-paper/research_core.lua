@@ -20,6 +20,7 @@ function M.paths(repo_root)
     selection_cli = repo_root .. "src/Trureturing.Paper.ResearchSelection.Cli/bin/Release/net10.0/Trureturing.Paper.ResearchSelection.Cli.dll",
     certification_cli = repo_root .. "src/Trureturing.Paper.Certification.Cli/bin/Release/net10.0/Trureturing.Paper.Certification.Cli.dll",
     claim_manifest_cli = repo_root .. "src/Trureturing.Paper.ClaimManifest.Cli/bin/Release/net10.0/Trureturing.Paper.ClaimManifest.Cli.dll",
+    agent_cli = repo_root .. "src/Trureturing.Paper.Agent.Cli/bin/Release/net10.0/Trureturing.Paper.Agent.Cli.dll",
     store = repo_root .. "artifacts/research-input",
     work = repo_root .. "work/research-input",
   }
