@@ -145,18 +145,18 @@ public static class PaperPortfolioDecisionService
         foreach (PaperCandidateScorecard scorecard in scorecards)
         {
             Validate(scorecard);
-            PaperCandidateScorecardContent content = scorecard.ScorecardContent;
-            if (!papers.Add(content.PaperId)
-                || !programs.Add(content.TheoryProgramRef)
+            PaperCandidateScorecardContent scorecardContent = scorecard.ScorecardContent;
+            if (!papers.Add(scorecardContent.PaperId)
+                || !programs.Add(scorecardContent.TheoryProgramRef)
                 || !refs.Add(scorecard.ScorecardId))
             {
                 throw new InvalidDataException(
                     "Portfolio competition requires distinct papers, programs, and scorecards.");
             }
-            if (!states.TryGetValue(content.PaperId, out PaperCandidateState? state)
+            if (!states.TryGetValue(scorecardContent.PaperId, out PaperCandidateState? state)
                 || !string.Equals(
                     state.TheoryProgramRef,
-                    content.TheoryProgramRef,
+                    scorecardContent.TheoryProgramRef,
                     StringComparison.Ordinal)
                 || !string.Equals(state.Phase, "audit-pending", StringComparison.Ordinal))
             {
