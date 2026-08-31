@@ -35,6 +35,7 @@ public sealed class PaperTheoryDeepeningTests
         PaperTheoryDeepeningRequest request = Request(f);
         PaperTheoryIterationContent content = IterationContent(f, request) with
         {
+            NewClaimIds = [],
             ProgressEvidence = new PaperTheoryProgressEvidence(
                 0,
                 1,
