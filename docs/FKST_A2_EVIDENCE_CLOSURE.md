@@ -15,7 +15,7 @@ paper-theory-inventory.v1
 paper-theory-deepening-request.v1
 ```
 
-A later round adds the immediately prior `paper-theorem-package.v1`.
+A later round adds the immediately prior `paper-theorem-package.v1`. The repository contract consequently accepts exactly seven domain evidence references in round one and exactly eight in later rounds. The immutable A2 dispatch itself is appended only when the generic agent task is staged.
 
 `PaperTheoryDeepeningService.CreateDeepeningRequest` owns this reference set. The native A2 bridge re-creates that request and requires the dispatch inputs to equal its exact references plus the request itself. Each referenced file is then hash-verified and copied into the task workspace.
 
