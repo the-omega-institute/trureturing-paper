@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Trureturing.Paper.Core;
 
 public static partial class PaperFrontierPlanningAgentService

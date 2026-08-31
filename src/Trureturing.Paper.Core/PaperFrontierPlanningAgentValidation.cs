@@ -96,7 +96,7 @@ public static partial class PaperFrontierPlanningAgentService
         {
             ArgumentNullException.ThrowIfNull(spec);
             if (!ClaimIdPattern.IsMatch(spec.ClaimId ?? string.Empty)
-                || !claimIds.Add(spec.ClaimId))
+                || !claimIds.Add(spec.ClaimId!))
             {
                 throw new InvalidDataException(
                     "Frontier draft claim identifiers must be canonical and unique.");
@@ -547,7 +547,7 @@ public static partial class PaperFrontierPlanningAgentService
             if (!ClaimIdPattern.IsMatch(route.ClaimId ?? string.Empty)
                 || !DraftFormalizationKinds.Contains(route.FormalizationKind)
                 || !nodes.Add(route.NodeId)
-                || !claims.Add(route.ClaimId))
+                || !claims.Add(route.ClaimId!))
             {
                 throw new InvalidDataException(
                     "Initial frontier node and claim routes must be canonical and unique.");
