@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-planning-agent-dispatch.v1.schema.json",
+  "title": "Paper frontier planning agent dispatch v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "portfolio_task_ref", "portfolio_result_ref", "portfolio_cursor_ref",
+    "portfolio_dispatch_ref", "portfolio_ref", "candidate_batch_ref", "cycle_number",
+    "judgment_evidence_ref", "portfolio_decision_ref", "updated_portfolio_ref",
+    "paper_id", "theory_program_ref", "scope_ref", "inventory_ref",
+    "theorem_package_ref", "theory_audit_ref", "scorecard_ref",
+    "candidate_paper_ref", "literature_research_ref", "exact_inputs", "requested_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-frontier-planning-agent-dispatch.v1" },
+    "portfolio_task_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_result_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_cursor_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_dispatch_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_ref": { "$ref": "#/$defs/digest" },
+    "candidate_batch_ref": { "$ref": "#/$defs/digest" },
+    "cycle_number": { "type": "integer", "minimum": 1 },
+    "judgment_evidence_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_decision_ref": { "$ref": "#/$defs/digest" },
+    "updated_portfolio_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "$ref": "#/$defs/paperId" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "scope_ref": { "$ref": "#/$defs/digest" },
+    "inventory_ref": { "$ref": "#/$defs/digest" },
+    "theorem_package_ref": { "$ref": "#/$defs/digest" },
+    "theory_audit_ref": { "$ref": "#/$defs/digest" },
+    "scorecard_ref": { "$ref": "#/$defs/digest" },
+    "candidate_paper_ref": { "$ref": "#/$defs/digest" },
+    "literature_research_ref": { "$ref": "#/$defs/digest" },
+    "exact_inputs": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "requested_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paperId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "repository_relative_path"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$",
+          "maxLength": 4096
+        }
+      }
+    }
+  }
+}
