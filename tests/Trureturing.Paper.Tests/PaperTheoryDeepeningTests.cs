@@ -52,7 +52,7 @@ public sealed class PaperTheoryDeepeningTests
                 request,
                 content));
 
-        Assert.Contains("no structural, abstraction, novelty, or counterexample progress", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("progress evidence counters", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
