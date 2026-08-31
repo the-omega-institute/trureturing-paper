@@ -1,0 +1,49 @@
+name: portfolio-judgment-test-fix
+
+on:
+  push:
+    branches:
+      - codex/paper-portfolio-native-judgment
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/paper-portfolio-native-judgment
+          fetch-depth: 0
+      - name: Exercise third-paper evidence isolation after shape validation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tests/Trureturing.Paper.Tests/PaperPortfolioJudgmentAgentTests.cs')
+          text = path.read_text()
+          old = '''        PaperPortfolioPairwiseRelationDraft first = complete.PairwiseRelations[0] with
+        {
+            EvidenceRefs =
+            [fixture.Context.Papers.Single(paper => paper.Coordinates.PaperId == "paper-c").Coordinates.CandidatePaperRef]
+        };'''
+          new = '''        PaperPortfolioPairwiseRelationDraft first = complete.PairwiseRelations[0] with
+        {
+            EvidenceRefs =
+            [
+                complete.PairwiseRelations[0].EvidenceRefs[0],
+                fixture.Context.Papers.Single(
+                    paper => paper.Coordinates.PaperId == "paper-c").Coordinates.CandidatePaperRef
+            ]
+        };'''
+          if old not in text:
+              raise SystemExit('leakage-test target not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add tests/Trureturing.Paper.Tests/PaperPortfolioJudgmentAgentTests.cs
+          git commit -m "test(paper): reach portfolio pair evidence isolation gate"
+          git push origin HEAD:codex/paper-portfolio-native-judgment
