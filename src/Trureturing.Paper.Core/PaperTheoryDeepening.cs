@@ -166,6 +166,10 @@ public static class PaperTheoryDeepeningService
         var contract = new PaperCodexPhaseContract(
             [
                 program.TheoryProgramId,
+                program.ProgramContent.CandidatePaperRef,
+                program.ProgramContent.LiteratureResearchRef,
+                program.ProgramContent.IntuitionProposalRef,
+                program.ProgramContent.PaperResearchInputRef,
                 scope.ScopeId,
                 inventory.InventoryId,
                 .. priorRefs
