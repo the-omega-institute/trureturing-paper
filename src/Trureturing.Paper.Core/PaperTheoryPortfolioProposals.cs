@@ -119,7 +119,7 @@ public static class PaperTheoryPortfolioProposalService
         int theoremLike = 0;
         foreach (string id in content.ExtractedClaimIds)
         {
-            if (!byId.TryGetValue(id, out PaperTheoremPackageClaim claim))
+            if (!byId.TryGetValue(id, out PaperTheoremPackageClaim? claim))
             {
                 throw new InvalidDataException(
                     $"Split claim {id} is absent from the source package.");
