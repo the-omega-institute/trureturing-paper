@@ -20,28 +20,7 @@ jobs:
       - name: Exercise third-paper evidence isolation after shape validation
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('tests/Trureturing.Paper.Tests/PaperPortfolioJudgmentAgentTests.cs')
-          text = path.read_text()
-          old = '''        PaperPortfolioPairwiseRelationDraft first = complete.PairwiseRelations[0] with
-        {
-            EvidenceRefs =
-            [fixture.Context.Papers.Single(paper => paper.Coordinates.PaperId == "paper-c").Coordinates.CandidatePaperRef]
-        };'''
-          new = '''        PaperPortfolioPairwiseRelationDraft first = complete.PairwiseRelations[0] with
-        {
-            EvidenceRefs =
-            [
-                complete.PairwiseRelations[0].EvidenceRefs[0],
-                fixture.Context.Papers.Single(
-                    paper => paper.Coordinates.PaperId == "paper-c").Coordinates.CandidatePaperRef
-            ]
-        };'''
-          if old not in text:
-              raise SystemExit('leakage-test target not found')
-          path.write_text(text.replace(old, new, 1))
-          PY
+          python -c 'from pathlib import Path; p=Path("tests/Trureturing.Paper.Tests/PaperPortfolioJudgmentAgentTests.cs"); s=p.read_text(); old="[fixture.Context.Papers.Single(paper => paper.Coordinates.PaperId == \"paper-c\").Coordinates.CandidatePaperRef]"; new="[complete.PairwiseRelations[0].EvidenceRefs[0], fixture.Context.Papers.Single(paper => paper.Coordinates.PaperId == \"paper-c\").Coordinates.CandidatePaperRef]"; assert old in s; p.write_text(s.replace(old, new, 1))'
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add tests/Trureturing.Paper.Tests/PaperPortfolioJudgmentAgentTests.cs
