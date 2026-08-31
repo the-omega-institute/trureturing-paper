@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-foundation-agent-task-staged.v1.schema.json",
+  "title": "Paper theory foundation agent task staged v1",
+  "description": "A receipt showing that one immutable A0 or A1 dispatch was converted into the exact phase-owned Paper agent task.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "dispatch_ref",
+    "task_ref",
+    "task_path",
+    "kind",
+    "paper_id",
+    "theory_program_ref",
+    "request_ref",
+    "phase",
+    "agent_role",
+    "context_mode",
+    "replayed"
+  ],
+  "properties": {
+    "schema": { "const": "paper-theory-foundation-agent-task-staged.v1" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "task_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "kind": { "enum": ["scope", "inventory"] },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "request_ref": { "$ref": "#/$defs/digest" },
+    "phase": { "enum": ["theory-scope", "theory-inventory"] },
+    "agent_role": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "context_mode": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "replayed": { "type": "boolean" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
