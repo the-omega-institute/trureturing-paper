@@ -12,6 +12,8 @@ internal static class Program
           record-result --repository-root <path> --task-ref <sha256:...> --stdout <path> --run-id <id-or-empty> --provenance <produced|adopted>
           stage-foundation-task --repository-root <path> --dispatch <path>
           admit-foundation-result --repository-root <path> --task-ref <sha256:...>
+          stage-deepening-task --repository-root <path> --dispatch <path>
+          admit-deepening-result --repository-root <path> --task-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
@@ -25,6 +27,8 @@ internal static class Program
                 "record-result" => RecordResult(args),
                 "stage-foundation-task" => StageFoundationTask(args),
                 "admit-foundation-result" => AdmitFoundationResult(args),
+                "stage-deepening-task" => StageDeepeningTask(args),
+                "admit-deepening-result" => AdmitDeepeningResult(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -115,6 +119,36 @@ internal static class Program
             "--task-ref");
         PaperTheoryFoundationAgentResultAdmitted result =
             PaperTheoryFoundationAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageDeepeningTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-deepening-task",
+            "--repository-root",
+            "--dispatch");
+        PaperTheoryDeepeningAgentTaskStaged result =
+            PaperTheoryDeepeningAgentService.StageTask(
+                values["--repository-root"],
+                values["--dispatch"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitDeepeningResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-deepening-result",
+            "--repository-root",
+            "--task-ref");
+        PaperTheoryDeepeningAgentResultAdmitted result =
+            PaperTheoryDeepeningAgentService.AdmitResult(
                 values["--repository-root"],
                 values["--task-ref"]);
         WriteResult(result);
