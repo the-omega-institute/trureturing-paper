@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-foundation-agent-cursor.v1.schema.json",
+  "title": "Paper theory foundation agent cursor v1",
+  "description": "The immutable one-task-to-one-domain-artifact admission decision for an A0 scope or A1 inventory agent result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "task_ref",
+    "result_ref",
+    "dispatch_ref",
+    "kind",
+    "paper_id",
+    "theory_program_ref",
+    "request_ref",
+    "domain_schema",
+    "domain_ref",
+    "domain_content_path",
+    "envelope_ref",
+    "envelope_path",
+    "next_route",
+    "run_id",
+    "provenance",
+    "admitted_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-theory-foundation-agent-cursor.v1" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "result_ref": { "$ref": "#/$defs/digest" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "kind": { "enum": ["scope", "inventory"] },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "request_ref": { "$ref": "#/$defs/digest" },
+    "domain_schema": { "enum": ["paper-theory-scope.v1", "paper-theory-inventory.v1"] },
+    "domain_ref": { "$ref": "#/$defs/digest" },
+    "domain_content_path": { "$ref": "#/$defs/repository_path" },
+    "envelope_ref": { "$ref": "#/$defs/digest" },
+    "envelope_path": { "$ref": "#/$defs/repository_path" },
+    "next_route": { "enum": ["theory-inventory", "theory-deepening"] },
+    "run_id": { "type": "string", "maxLength": 512 },
+    "provenance": { "enum": ["produced", "adopted"] },
+    "admitted_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "repository_path": {
+      "type": "string",
+      "pattern": "^(artifacts|Papers|work|contracts|docs|src|tools|tests)/[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$",
+      "maxLength": 4096
+    }
+  }
+}
