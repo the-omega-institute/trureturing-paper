@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-agent-result.v1.schema.json",
+  "title": "Paper agent result v1",
+  "description": "The only machine result an FKST-managed Paper Codex run may emit. It must acknowledge the exact task identity and input closure and may claim outputs only on completed status.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "task_ref",
+    "paper_id",
+    "theory_program_ref",
+    "phase",
+    "agent_role",
+    "context_mode",
+    "status",
+    "summary",
+    "outputs",
+    "next_route",
+    "blocker_code",
+    "observed_input_refs",
+    "completed_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-agent-result.v1" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "phase": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "agent_role": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "context_mode": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "status": { "enum": ["completed", "no-progress", "blocked"] },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 16384 },
+    "outputs": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema", "workspace_relative_path"],
+        "properties": {
+          "schema": { "$ref": "#/$defs/schema_name" },
+          "workspace_relative_path": { "$ref": "#/$defs/output_path" }
+        }
+      }
+    },
+    "next_route": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "blocker_code": {
+      "oneOf": [
+        { "const": "" },
+        { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,127}$" }
+      ]
+    },
+    "observed_input_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/digest" }
+    },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "completed" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "outputs": { "minItems": 1 },
+          "blocker_code": { "const": "" }
+        }
+      },
+      "else": {
+        "properties": {
+          "outputs": { "maxItems": 0 },
+          "blocker_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,127}$" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "schema_name": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$", "maxLength": 512 },
+    "output_path": {
+      "type": "string",
+      "pattern": "^outputs/[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*\\.json$",
+      "maxLength": 4096
+    }
+  }
+}
