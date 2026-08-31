@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-portfolio-judgment-agent-dispatch.v1.schema.json",
+  "title": "Paper portfolio judgment agent dispatch v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "portfolio_ref", "candidate_batch_ref", "cycle_number", "policy", "papers", "exact_inputs", "requested_at"],
+  "properties": {
+    "schema": { "const": "paper-portfolio-judgment-agent-dispatch.v1" },
+    "portfolio_ref": { "$ref": "#/$defs/digest" },
+    "candidate_batch_ref": { "$ref": "#/$defs/digest" },
+    "cycle_number": { "type": "integer", "minimum": 1 },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["promotion_capacity", "minimum_compared_papers"],
+      "properties": {
+        "promotion_capacity": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "minimum_compared_papers": { "type": "integer", "minimum": 2, "maximum": 5 }
+      }
+    },
+    "papers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/paper" }
+    },
+    "exact_inputs": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "requested_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paper": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paper_id", "theory_program_ref", "scope_ref", "inventory_ref", "theorem_package_ref", "theory_audit_ref", "scorecard_ref", "candidate_paper_ref", "literature_research_ref"],
+      "properties": {
+        "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+        "theory_program_ref": { "$ref": "#/$defs/digest" },
+        "scope_ref": { "$ref": "#/$defs/digest" },
+        "inventory_ref": { "$ref": "#/$defs/digest" },
+        "theorem_package_ref": { "$ref": "#/$defs/digest" },
+        "theory_audit_ref": { "$ref": "#/$defs/digest" },
+        "scorecard_ref": { "$ref": "#/$defs/digest" },
+        "candidate_paper_ref": { "$ref": "#/$defs/digest" },
+        "literature_research_ref": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "repository_relative_path"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "type": "string", "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$", "maxLength": 4096 }
+      }
+    }
+  }
+}
