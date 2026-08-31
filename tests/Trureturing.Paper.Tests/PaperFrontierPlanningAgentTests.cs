@@ -669,7 +669,7 @@ public sealed class PaperFrontierPlanningAgentTests
                 + "\n"
                 + PaperAgentRuntimeService.ResultEnd
                 + "\n";
-            File.WriteAllText(stdoutPath, text, Encoding.UTF8);
+            File.WriteAllBytes(stdoutPath, Encoding.UTF8.GetBytes(text));
         }
 
         public void Dispose()
