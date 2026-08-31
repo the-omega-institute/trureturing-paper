@@ -19,7 +19,10 @@ public sealed class PaperTheoryFoundationAgentWiringTests
             source,
             StringComparison.Ordinal);
         Assert.Contains("domain_schema = admitted.domain_schema", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("schema = admitted.domain_schema", source, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "\n    schema = admitted.domain_schema",
+            source,
+            StringComparison.Ordinal);
     }
 
     [Fact]
