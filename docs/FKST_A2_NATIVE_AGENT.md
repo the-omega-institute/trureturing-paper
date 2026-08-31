@@ -31,6 +31,10 @@ Round one binds exactly:
 
 ```text
 paper-theory-program.v1
+paper candidate evidence
+paper literature research evidence
+paper Intuition proposal
+paper-research-input.v1
 paper-theory-scope.v1
 paper-theory-inventory.v1
 paper-theory-deepening-request.v1
