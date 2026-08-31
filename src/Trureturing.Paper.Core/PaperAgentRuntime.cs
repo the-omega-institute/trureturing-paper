@@ -110,6 +110,7 @@ public sealed record PaperAgentRunPrepared(
     [property: JsonRequired] string ContextMode,
     [property: JsonRequired] string WorkspacePath,
     [property: JsonRequired] string PromptPath,
+    [property: JsonRequired] string StdoutPath,
     [property: JsonRequired] string Sandbox,
     [property: JsonRequired] int TimeoutSeconds,
     [property: JsonRequired] string ResultRef,
@@ -372,7 +373,7 @@ public static class PaperAgentRuntimeService
             }
             string extension = Path.GetExtension(sourcePath);
             string relative = $"inputs/{inputIndex:D2}-{SafeFileStem(input.Schema)}{extension}";
-            string destination = ResolveWorkspaceFile(workspace, relative, "materialized input");
+            string destination = ResolveWorkspaceInputFile(workspace, relative, "materialized input");
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
             PaperResearchInputStore.WriteAtomic(destination, bytes);
             materialized.Add(new PaperAgentMaterializedInput(
@@ -394,6 +395,13 @@ public static class PaperAgentRuntimeService
         PaperResearchInputStore.WriteAtomic(
             promptPath,
             Encoding.UTF8.GetBytes(BuildPrompt(taskRef, task, profile, materialized)));
+        string stdoutPath = RuntimeStdoutPath(root, taskRef);
+        string stdoutDirectory = Path.GetDirectoryName(stdoutPath)!;
+        if (Directory.Exists(stdoutDirectory))
+        {
+            Directory.Delete(stdoutDirectory, recursive: true);
+        }
+        Directory.CreateDirectory(stdoutDirectory);
         return new PaperAgentRunPrepared(
             PaperAgentSchemas.RunPrepared,
             "ready",
@@ -405,6 +413,7 @@ public static class PaperAgentRuntimeService
             task.ContextMode,
             workspace,
             promptPath,
+            stdoutPath,
             profile.Sandbox,
             profile.TimeoutSeconds,
             string.Empty,
@@ -443,15 +452,19 @@ public static class PaperAgentRuntimeService
 
         string workspace = WorkspacePath(root, taskRef);
         EnsureOwnedWorkspace(root, workspace);
-        string expectedStdoutPath = Path.Combine(workspace, "codex.stdout.txt");
+        string expectedStdoutPath = RuntimeStdoutPath(root, taskRef);
         if (!string.Equals(
                 Path.GetFullPath(stdoutPath),
                 expectedStdoutPath,
                 StringComparison.Ordinal))
         {
             throw new InvalidDataException(
-                "Paper agent stdout must be recorded in its exact task workspace.");
+                "Paper agent stdout must be recorded in its exact task runtime directory.");
         }
+        RejectReparsePointsBetween(
+            Path.GetDirectoryName(expectedStdoutPath)!,
+            expectedStdoutPath,
+            "Paper agent stdout");
         byte[] stdoutBytes = ReadBoundedFile(
             expectedStdoutPath,
             MaximumStdoutBytes,
@@ -832,6 +845,10 @@ public static class PaperAgentRuntimeService
                     workspace,
                     output.WorkspaceRelativePath,
                     "Paper agent output");
+                RejectReparsePointsBetween(
+                    workspace,
+                    outputPath,
+                    $"Paper agent output {output.WorkspaceRelativePath}");
                 byte[] bytes = ReadBoundedFile(
                     outputPath,
                     MaximumOutputBytes,
@@ -957,6 +974,7 @@ public static class PaperAgentRuntimeService
             cursor.Phase,
             cursor.AgentRole,
             cursor.ContextMode,
+            string.Empty,
             string.Empty,
             string.Empty,
             profile.Sandbox,
@@ -1099,6 +1117,7 @@ public static class PaperAgentRuntimeService
             throw new InvalidDataException(
                 "Paper agent task must be an existing JSON file in the deployment inbox.");
         }
+        RejectReparsePointsBetween(inbox, full, "Paper agent task path");
         return full;
     }
 
@@ -1122,8 +1141,22 @@ public static class PaperAgentRuntimeService
         {
             throw new FileNotFoundException($"{name} does not exist.", full);
         }
-        RejectReparsePoint(full, name);
+        RejectReparsePointsBetween(root, full, name);
         return full;
+    }
+
+    private static string ResolveWorkspaceInputFile(
+        string workspace,
+        string relativePath,
+        string name)
+    {
+        RequireCanonicalRelativePath(relativePath, name);
+        if (!relativePath.StartsWith("inputs/", StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                $"{name} must be below inputs/.");
+        }
+        return ResolveWorkspaceCanonicalFile(workspace, relativePath, name);
     }
 
     private static string ResolveWorkspaceFile(
@@ -1132,6 +1165,14 @@ public static class PaperAgentRuntimeService
         string name)
     {
         RequireOutputRelativePath(relativePath, name);
+        return ResolveWorkspaceCanonicalFile(workspace, relativePath, name);
+    }
+
+    private static string ResolveWorkspaceCanonicalFile(
+        string workspace,
+        string relativePath,
+        string name)
+    {
         string full = Path.GetFullPath(Path.Combine(
             workspace,
             relativePath.Replace('/', Path.DirectorySeparatorChar)));
@@ -1163,7 +1204,34 @@ public static class PaperAgentRuntimeService
         FileAttributes attributes = File.GetAttributes(path);
         if ((attributes & FileAttributes.ReparsePoint) != 0)
         {
-            throw new InvalidDataException($"{name} cannot be a symbolic link.");
+            throw new InvalidDataException($"{name} cannot traverse a symbolic link.");
+        }
+    }
+
+    private static void RejectReparsePointsBetween(
+        string boundaryRoot,
+        string path,
+        string name)
+    {
+        string root = Path.GetFullPath(boundaryRoot)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        string full = Path.GetFullPath(path);
+        RequirePathWithin(root, full, name);
+        string relative = Path.GetRelativePath(root, full);
+        string current = root;
+        if (Directory.Exists(current) || File.Exists(current))
+        {
+            RejectReparsePoint(current, name);
+        }
+        foreach (string segment in relative.Split(
+                     Path.DirectorySeparatorChar,
+                     StringSplitOptions.RemoveEmptyEntries))
+        {
+            current = Path.Combine(current, segment);
+            if (Directory.Exists(current) || File.Exists(current))
+            {
+                RejectReparsePoint(current, name);
+            }
         }
     }
 
@@ -1174,6 +1242,15 @@ public static class PaperAgentRuntimeService
             "paper-agents",
             "workspaces",
             taskRef["sha256:".Length..]);
+
+    private static string RuntimeStdoutPath(string root, string taskRef) =>
+        Path.Combine(
+            root,
+            "work",
+            "paper-agents",
+            "runtime",
+            taskRef["sha256:".Length..],
+            "codex.stdout.txt");
 
     private static string CursorPath(string root, string taskRef) =>
         Path.Combine(
