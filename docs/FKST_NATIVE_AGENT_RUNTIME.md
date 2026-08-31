@@ -105,6 +105,10 @@ theorem-frontier parallelism:
 
 `with_lock` serializes duplicate invocations for the same task ref. It does not serialize different papers or independent theorem claims. FKST engine backpressure remains the authority for global and per-Department process concurrency.
 
+## Build integration
+
+`Trureturing.Paper.Agent.Cli` is part of `Trureturing.Paper.slnx`, so the ordinary warnings-as-errors build compiles the same validator binary that the FKST Departments invoke. `research_core.paths()` resolves that repository-local binary through the `agent_cli` field. A missing build artifact fails closed before a Codex result can be recorded.
+
 ## Non-goals of this PR
 
 This boundary does not yet create the upstream task artifacts for every A0, A1, A2, A3, literature, journal, manuscript, editing, or review phase. It also does not provide web-source adapters, invoke Formalize, write Base, generate a finished paper, or submit a manuscript.
