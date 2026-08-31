@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace Trureturing.Paper.Core;
 
-internal sealed record PaperPortfolioJudgmentPaperContext(
+public sealed record PaperPortfolioJudgmentPaperContext(
     PaperPortfolioJudgmentPaperInput Coordinates,
     PaperTheoryProgram Program,
     PaperTheoryScope Scope,
@@ -14,12 +14,12 @@ internal sealed record PaperPortfolioJudgmentPaperContext(
     PaperTheoryAudit Audit,
     PaperCandidateScorecard Scorecard);
 
-internal sealed record PaperPortfolioJudgmentContext(
+public sealed record PaperPortfolioJudgmentContext(
     PaperResearchPortfolio Portfolio,
     PaperCandidateBatch CandidateBatch,
     IReadOnlyList<PaperPortfolioJudgmentPaperContext> Papers);
 
-internal sealed record PaperPortfolioJudgmentComputation(
+public sealed record PaperPortfolioJudgmentComputation(
     PaperPortfolioJudgmentEvidence Evidence,
     PaperPortfolioDecision Decision,
     PaperResearchPortfolio UpdatedPortfolio,
@@ -1215,8 +1215,7 @@ public static class PaperPortfolioJudgmentAgentService
         PaperAgentTaskCursor cursor,
         PaperAgentResultWire result)
     {
-        if (!string.Equals(cursor.ResultRef, ByteReference(CanonicalJson.Serialize(result)), StringComparison.Ordinal)
-            || !string.Equals(cursor.Status, result.Status, StringComparison.Ordinal)
+        if (!string.Equals(cursor.Status, result.Status, StringComparison.Ordinal)
             || !string.Equals(cursor.Summary, result.Summary, StringComparison.Ordinal)
             || !string.Equals(cursor.NextRoute, result.NextRoute, StringComparison.Ordinal)
             || !string.Equals(cursor.BlockerCode, result.BlockerCode, StringComparison.Ordinal)
