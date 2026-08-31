@@ -101,3 +101,9 @@ A reviewer `no-progress` or `blocked` result carries no opinion artifact. FKST e
 The review plan, each admitted opinion, and the final aggregate have independent immutable cursors. Reviewer results may arrive in any order. The first opinion yields `waiting`; the last required opinion deterministically creates the audit and scorecard. Concurrent attempts to finalize the same plan converge on one aggregate cursor.
 
 This stage can review several papers at once because plans, tasks, workspaces, and cursors are keyed by paper-specific content hashes. It does not serialize the portfolio behind one paper.
+
+## Identity and filesystem boundaries
+
+Domain objects and raw files use separate identity functions. Canonical object content is hashed after canonical JSON serialization. Exact evidence files, staged tasks, and immutable envelopes are verified against the SHA-256 digest of their existing bytes. This prevents overload resolution or reserialization from changing the meaning of a stored artifact reference.
+
+Reviewer task paths may point only into the deployment-owned `inbox/agent-tasks` tree. Evidence paths remain restricted to approved repository roots, and every traversed path is checked for symbolic links before reading.
