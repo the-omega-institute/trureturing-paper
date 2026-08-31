@@ -4,5 +4,6 @@
   <Project Path="src/Trureturing.Paper.ResearchSelection.Cli/Trureturing.Paper.ResearchSelection.Cli.csproj" />
   <Project Path="src/Trureturing.Paper.Certification.Cli/Trureturing.Paper.Certification.Cli.csproj" />
   <Project Path="src/Trureturing.Paper.ClaimManifest.Cli/Trureturing.Paper.ClaimManifest.Cli.csproj" />
+  <Project Path="src/Trureturing.Paper.Agent.Cli/Trureturing.Paper.Agent.Cli.csproj" />
   <Project Path="tests/Trureturing.Paper.Tests/Trureturing.Paper.Tests.csproj" />
 </Solution>
