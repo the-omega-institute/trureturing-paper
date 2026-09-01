@@ -182,6 +182,8 @@ public sealed class PaperFormalizationFrontierTests
             "",
             "Lean candidate produced",
             "2026-08-31T05:50:00Z");
+        string certifiedRelease =
+            PaperTheoryTestFactory.Digest("certified-later-release");
         state = Apply(
             frontier,
             state,
@@ -190,8 +192,8 @@ public sealed class PaperFormalizationFrontierTests
             "paper-truth-release-certification.v1",
             "certification",
             "",
-            frontier.FrontierContent.TruthReleaseDigest,
-            "candidate joined to exact truth release",
+            certifiedRelease,
+            "candidate joined to a certified descendant truth release",
             "2026-08-31T06:00:00Z");
         state = Apply(
             frontier,
@@ -209,7 +211,7 @@ public sealed class PaperFormalizationFrontierTests
             value => value.NodeId == node.NodeId);
         Assert.Equal("manifested", final.Status);
         Assert.Equal(
-            frontier.FrontierContent.TruthReleaseDigest,
+            certifiedRelease,
             final.CertifiedTruthReleaseDigest);
         Assert.Equal(6, state.StateContent.Version);
     }
@@ -245,7 +247,7 @@ public sealed class PaperFormalizationFrontierTests
     }
 
     [Fact]
-    public void CertificationRejectsDifferentTruthRelease()
+    public void CertificationRejectsUnchangedBaseTruthRelease()
     {
         FrontierFixture fixture = CreateFrontierFixture(promotionCapacity: 2);
         PaperFormalizationFrontier frontier = fixture.Frontiers["paper-a"];
@@ -277,11 +279,11 @@ public sealed class PaperFormalizationFrontierTests
                 "paper-truth-release-certification.v1",
                 "wrong-release-certification",
                 "",
-                PaperTheoryTestFactory.Digest("different-truth-release"),
-                "attempted cross-release certification",
+                frontier.FrontierContent.TruthReleaseDigest,
+                "attempted same-release certification",
                 "2026-08-31T06:00:00Z"));
 
-        Assert.Contains("exact truth release", error.Message, StringComparison.Ordinal);
+        Assert.Contains("later descendant truth release", error.Message, StringComparison.Ordinal);
     }
 
     [Fact]
