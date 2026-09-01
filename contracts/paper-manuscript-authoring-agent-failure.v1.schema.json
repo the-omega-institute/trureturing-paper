@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schema", "task_ref", "result_ref", "paper_id", "theory_program_ref",
-    "status", "blocker_code", "summary", "next_route"
+    "status", "blocker_code", "summary", "next_route", "dedup_key"
   ],
   "properties": {
     "schema": { "const": "paper-manuscript-authoring-agent-failure.v1" },
@@ -17,7 +17,8 @@
     "status": { "enum": ["no-progress", "blocked"] },
     "blocker_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,127}$" },
     "summary": { "type": "string", "minLength": 1, "maxLength": 16384 },
-    "next_route": { "enum": ["manuscript-authoring", "blocked"] }
+    "next_route": { "enum": ["manuscript-authoring", "blocked"] },
+    "dedup_key": { "type": "string", "pattern": "^paper-manuscript-authoring-failure:v1:sha256:[0-9a-f]{64}$" }
   },
   "allOf": [
     {
