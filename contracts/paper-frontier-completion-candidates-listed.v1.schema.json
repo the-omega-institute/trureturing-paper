@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-completion-candidates-listed.v1.schema.json",
+  "title": "Paper frontier completion candidates listed v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "frontier_refs"],
+  "properties": {
+    "schema": { "const": "paper-frontier-completion-candidates-listed.v1" },
+    "frontier_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+    }
+  }
+}
