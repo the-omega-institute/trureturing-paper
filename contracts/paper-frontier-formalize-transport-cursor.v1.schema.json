@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-formalize-transport-cursor.v1.schema.json",
+  "title": "Paper frontier Formalize transport cursor v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "formalization_request_ref",
+    "dispatch_ref",
+    "selection_ref",
+    "frontier_ref",
+    "node_id",
+    "claim_id",
+    "transport_event",
+    "frontier_state",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-frontier-formalize-transport-cursor.v1"
+    },
+    "formalization_request_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "dispatch_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selection_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "frontier_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "node_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "claim_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+    },
+    "transport_event": {
+      "$ref": "#/$defs/artifact"
+    },
+    "frontier_state": {
+      "$ref": "#/$defs/artifact"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "artifact_ref",
+        "blob_ref",
+        "repository_relative_path"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$"
+        },
+        "artifact_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "blob_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "repository_relative_path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$",
+          "maxLength": 4096
+        }
+      }
+    }
+  }
+}
