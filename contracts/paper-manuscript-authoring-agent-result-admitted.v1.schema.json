@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-manuscript-authoring-agent-result-admitted.v1.schema.json",
+  "title": "Paper manuscript authoring agent result admitted v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "task_ref", "result_ref", "dispatch_ref", "paper_id",
+    "theory_program_ref", "completion_ref", "evaluation_ref", "claim_manifest_ref",
+    "eligibility_ref", "manuscript_plan_ref", "manuscript", "main_tex",
+    "bibliography", "formal_claim_count", "informal_item_count", "next_route",
+    "run_id", "provenance", "admitted_at", "replayed"
+  ],
+  "properties": {
+    "schema": { "const": "paper-manuscript-authoring-agent-result-admitted.v1" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "result_ref": { "$ref": "#/$defs/digest" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "completion_ref": { "$ref": "#/$defs/digest" },
+    "evaluation_ref": { "$ref": "#/$defs/digest" },
+    "claim_manifest_ref": { "$ref": "#/$defs/digest" },
+    "eligibility_ref": { "$ref": "#/$defs/digest" },
+    "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+    "manuscript": { "$ref": "#/$defs/stored" },
+    "main_tex": { "$ref": "#/$defs/source" },
+    "bibliography": { "$ref": "#/$defs/source" },
+    "formal_claim_count": { "type": "integer", "minimum": 1, "maximum": 512 },
+    "informal_item_count": { "type": "integer", "minimum": 0, "maximum": 2048 },
+    "next_route": { "const": "scientific-editing" },
+    "run_id": { "type": "string", "maxLength": 512 },
+    "provenance": { "enum": ["produced", "adopted"] },
+    "admitted_at": { "type": "string", "format": "date-time" },
+    "replayed": { "type": "boolean" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "path": { "type": "string", "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$", "maxLength": 4096 },
+    "stored": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "content_path", "envelope_ref", "envelope_path"],
+      "properties": {
+        "schema": { "const": "paper-scientific-manuscript.v1" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "content_path": { "$ref": "#/$defs/path" },
+        "envelope_ref": { "$ref": "#/$defs/digest" },
+        "envelope_path": { "$ref": "#/$defs/path" }
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "media_type", "artifact_ref", "repository_relative_path", "size_bytes"],
+      "properties": {
+        "role": { "enum": ["main-tex", "bibliography"] },
+        "media_type": { "enum": ["text/x-tex", "application/x-bibtex"] },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "$ref": "#/$defs/path" },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 33554432 }
+      }
+    }
+  }
+}
