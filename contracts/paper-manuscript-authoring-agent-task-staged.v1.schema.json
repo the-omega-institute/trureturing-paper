@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-manuscript-authoring-agent-task-staged.v1.schema.json",
+  "title": "Paper manuscript authoring agent task staged v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "dispatch_ref", "task_ref", "task_path", "paper_id",
+    "theory_program_ref", "completion_ref", "evaluation_ref",
+    "claim_manifest_ref", "eligibility_ref", "manuscript_plan_ref",
+    "phase", "agent_role", "context_mode", "replayed"
+  ],
+  "properties": {
+    "schema": { "const": "paper-manuscript-authoring-agent-task-staged.v1" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "task_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "completion_ref": { "$ref": "#/$defs/digest" },
+    "evaluation_ref": { "$ref": "#/$defs/digest" },
+    "claim_manifest_ref": { "$ref": "#/$defs/digest" },
+    "eligibility_ref": { "$ref": "#/$defs/digest" },
+    "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+    "phase": { "const": "manuscript-authoring" },
+    "agent_role": { "const": "paper-manuscript-author" },
+    "context_mode": { "const": "certified-claims-only" },
+    "replayed": { "type": "boolean" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
