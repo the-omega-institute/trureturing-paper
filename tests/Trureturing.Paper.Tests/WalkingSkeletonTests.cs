@@ -254,13 +254,20 @@ public sealed class WalkingSkeletonTests
 
     private static string FindRepositoryRoot()
     {
-        for (DirectoryInfo? current = new(AppContext.BaseDirectory);
-             current is not null;
-             current = current.Parent)
+        foreach (DirectoryInfo start in new[]
         {
-            if (File.Exists(Path.Combine(current.FullName, "Trureturing.Paper.slnx")))
+            new DirectoryInfo(Environment.CurrentDirectory),
+            new DirectoryInfo(AppContext.BaseDirectory)
+        })
+        {
+            for (DirectoryInfo? current = start;
+                 current is not null;
+                 current = current.Parent)
             {
-                return current.FullName;
+                if (File.Exists(Path.Combine(current.FullName, "Trureturing.Paper.slnx")))
+                {
+                    return current.FullName;
+                }
             }
         }
         throw new DirectoryNotFoundException("Could not locate repository root.");
