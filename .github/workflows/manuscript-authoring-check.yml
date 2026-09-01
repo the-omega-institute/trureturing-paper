@@ -27,24 +27,14 @@ jobs:
           from pathlib import Path
           p = Path('tests/Trureturing.Paper.Tests/ManuscriptAuthoringTestRepository.cs')
           text = p.read_text()
-          old = '''        string outputPath = Path.Combine(
-              Prepared.Workspace,
-              "outputs",
-              "scientific-manuscript-draft.json");'''
-          new = '''        string outputPath = Path.Combine(
-              Prepared.WorkspacePath,
-              "outputs",
-              "scientific-manuscript-draft.json");'''
-          if text.count(old) != 1:
+          if text.count('Prepared.Workspace,') != 1:
               raise SystemExit('Workspace target not found')
-          text = text.replace(old, new, 1)
-          old = '''            Registration.ExactInputRefs,
-              "2026-08-31T12:10:00Z");'''
-          new = '''            PaperResearchInputJson.DeserializeStrict<PaperAgentTask>(
+          text = text.replace('Prepared.Workspace,', 'Prepared.WorkspacePath,', 1)
+          old = 'Registration.ExactInputRefs,'
+          new = '''PaperResearchInputJson.DeserializeStrict<PaperAgentTask>(
                   File.ReadAllBytes(Staged.TaskPath)).ExactInputs
                   .Select(input => input.ArtifactRef)
-                  .ToArray(),
-              "2026-08-31T12:10:00Z");'''
+                  .ToArray(),'''
           if text.count(old) != 1:
               raise SystemExit('ExactInputRefs target not found')
           p.write_text(text.replace(old, new, 1))
