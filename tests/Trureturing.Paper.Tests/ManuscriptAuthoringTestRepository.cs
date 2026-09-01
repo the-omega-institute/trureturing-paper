@@ -158,7 +158,7 @@ internal sealed class ManuscriptAuthoringTestRepository : IDisposable
         PaperScientificManuscriptDraft draft)
     {
         string outputPath = Path.Combine(
-            Prepared.Workspace,
+            Prepared.WorkspacePath,
             "outputs",
             "scientific-manuscript-draft.json");
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
@@ -178,7 +178,10 @@ internal sealed class ManuscriptAuthoringTestRepository : IDisposable
                 "outputs/scientific-manuscript-draft.json")],
             "scientific-editing",
             string.Empty,
-            Registration.ExactInputRefs,
+            PaperResearchInputJson.DeserializeStrict<PaperAgentTask>(
+        File.ReadAllBytes(Staged.TaskPath)).ExactInputs
+        .Select(input => input.ArtifactRef)
+        .ToArray(),
             "2026-08-31T12:10:00Z");
         string stdout = "PAPER_AGENT_RESULT_BEGIN\n"
             + Encoding.UTF8.GetString(CanonicalJson.Serialize(result))
