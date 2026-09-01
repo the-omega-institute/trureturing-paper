@@ -18,9 +18,14 @@ internal sealed record FrontierSelectionEvidence(
         new(Schema, ArtifactRef, RepositoryRelativePath);
 }
 
+internal sealed record FrontierSelectionPortfolioArtifact(
+    PaperPortfolioJudgmentStoredArtifact Stored,
+    FrontierSelectionEvidence Content);
+
 internal sealed class FrontierSelectionTestRepository : IDisposable
 {
     private const string SelectedPaperId = "paper-a";
+    private const string PeerPaperId = "paper-b";
 
     public FrontierSelectionTestRepository()
     {
@@ -61,7 +66,7 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
                         100,
                         "2026-08-31T00:00:00Z"),
                     new PaperCandidateSeed(
-                        "paper-b",
+                        PeerPaperId,
                         Digest("candidate-paper-b"),
                         Digest("literature-paper-b"),
                         Digest("intuition-paper-b"),
@@ -76,7 +81,7 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
                 "2026-08-31T00:10:00Z"),
             PaperPortfolioService.CreateTheoryProgram(
                 batch,
-                "paper-b",
+                PeerPaperId,
                 "2026-08-31T00:10:00Z")
         ];
         var scopes = new Dictionary<string, PaperTheoryScope>(StringComparer.Ordinal);
@@ -120,51 +125,345 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
             packages,
             portfolio);
 
-        PaperTheoryAudit auditA = PaperTheoryTestFactory.CreateAudit(
-            fixture,
-            SelectedPaperId,
-            PaperTheoryTestFactory.Metrics(
-                abstraction: 10,
-                depth: 10,
-                closure: 10,
-                proof: 10,
-                novelty: 10,
-                significance: 10,
-                formalization: 10,
-                journal: 10,
-                overlap: 10));
-        PaperTheoryAudit auditB = PaperTheoryTestFactory.CreateAudit(
-            fixture,
-            "paper-b",
-            PaperTheoryTestFactory.Metrics());
-        PaperCandidateScorecard scorecardA =
-            PaperPortfolioDecisionService.CreateScorecard(
-                packages[SelectedPaperId],
-                auditA,
-                "2026-08-31T03:00:00Z");
-        PaperCandidateScorecard scorecardB =
-            PaperPortfolioDecisionService.CreateScorecard(
-                packages["paper-b"],
-                auditB,
-                "2026-08-31T03:00:00Z");
+        var audits = new Dictionary<string, PaperTheoryAudit>(StringComparer.Ordinal)
+        {
+            [SelectedPaperId] = PaperTheoryTestFactory.CreateAudit(
+                fixture,
+                SelectedPaperId,
+                PaperTheoryTestFactory.Metrics(
+                    abstraction: 10,
+                    depth: 10,
+                    closure: 10,
+                    proof: 10,
+                    novelty: 10,
+                    significance: 10,
+                    formalization: 10,
+                    journal: 10,
+                    overlap: 10)),
+            [PeerPaperId] = PaperTheoryTestFactory.CreateAudit(
+                fixture,
+                PeerPaperId,
+                PaperTheoryTestFactory.Metrics())
+        };
+        var scorecards = audits.ToDictionary(
+            item => item.Key,
+            item => PaperPortfolioDecisionService.CreateScorecard(
+                packages[item.Key],
+                item.Value,
+                "2026-08-31T03:00:00Z"),
+            StringComparer.Ordinal);
+        var policy = new PaperPortfolioDecisionPolicy(1, 2);
         PaperPortfolioDecision decision =
             PaperPortfolioDecisionService.CreatePortfolioDecision(
                 portfolio,
-                [scorecardA, scorecardB],
-                new PaperPortfolioDecisionPolicy(1, 2),
+                scorecards.Values.ToArray(),
+                policy,
                 "2026-08-31T04:00:00Z");
         Assert.Equal(
             "promote-to-frontier",
             decision.DecisionContent.Decisions.Single(value =>
                 value.PaperId == SelectedPaperId).Action);
 
-        PaperTheoryProgram programA = programs.Single(value =>
+        string portfolioAdmittedAt = "2026-08-31T04:10:00Z";
+        var decisionsByPaper = decision.DecisionContent.Decisions.ToDictionary(
+            item => item.PaperId,
+            StringComparer.Ordinal);
+        PaperCandidateState[] updatedStates = portfolio.PortfolioContent.CandidateStates
+            .Select(state => PaperPortfolioDecisionService.ApplyDecision(
+                state,
+                decisionsByPaper[state.PaperId],
+                portfolioAdmittedAt))
+            .OrderBy(state => state.PaperId, StringComparer.Ordinal)
+            .ToArray();
+        PaperResearchPortfolioContent updatedPortfolioContent =
+            portfolio.PortfolioContent with
+            {
+                NextCycleNumber = portfolio.PortfolioContent.NextCycleNumber + 1,
+                CandidateStates = updatedStates,
+                UpdatedAt = portfolioAdmittedAt
+            };
+        var updatedPortfolio = new PaperResearchPortfolio(
+            PaperPortfolioSchemas.Portfolio,
+            CanonicalJson.Sha256Reference(
+                CanonicalJson.Serialize(updatedPortfolioContent)),
+            updatedPortfolioContent);
+        PaperPortfolioService.Validate(updatedPortfolio);
+
+        FrontierSelectionEvidence batchEvidence = PutContent(
+            PaperPortfolioSchemas.CandidateBatch,
+            "candidate-batch.json",
+            batch.BatchId,
+            batch.BatchContent);
+        FrontierSelectionEvidence portfolioEvidence = PutContent(
+            PaperPortfolioSchemas.Portfolio,
+            "portfolio.json",
+            portfolio.PortfolioId,
+            portfolio.PortfolioContent);
+        var programEvidence = new Dictionary<string, FrontierSelectionEvidence>(StringComparer.Ordinal);
+        var scopeEvidence = new Dictionary<string, FrontierSelectionEvidence>(StringComparer.Ordinal);
+        var inventoryEvidence = new Dictionary<string, FrontierSelectionEvidence>(StringComparer.Ordinal);
+        var packageEvidence = new Dictionary<string, FrontierSelectionEvidence>(StringComparer.Ordinal);
+        var auditEvidence = new Dictionary<string, FrontierSelectionEvidence>(StringComparer.Ordinal);
+        var scorecardEvidence = new Dictionary<string, FrontierSelectionEvidence>(StringComparer.Ordinal);
+        var candidateEvidence = new Dictionary<string, FrontierSelectionEvidence>(StringComparer.Ordinal);
+        var literatureEvidence = new Dictionary<string, FrontierSelectionEvidence>(StringComparer.Ordinal);
+        foreach (PaperTheoryProgram program in programs)
+        {
+            string paperId = program.ProgramContent.PaperId;
+            programEvidence.Add(
+                paperId,
+                PutContent(
+                    PaperPortfolioSchemas.TheoryProgram,
+                    $"{paperId}-program.json",
+                    program.TheoryProgramId,
+                    program.ProgramContent));
+            scopeEvidence.Add(
+                paperId,
+                PutContent(
+                    PaperTheoryFoundationSchemas.Scope,
+                    $"{paperId}-scope.json",
+                    scopes[paperId].ScopeId,
+                    scopes[paperId].ScopeContent));
+            inventoryEvidence.Add(
+                paperId,
+                PutContent(
+                    PaperTheoryFoundationSchemas.Inventory,
+                    $"{paperId}-inventory.json",
+                    inventories[paperId].InventoryId,
+                    inventories[paperId].InventoryContent));
+            packageEvidence.Add(
+                paperId,
+                PutContent(
+                    PaperTheoryDeepeningSchemas.TheoremPackage,
+                    $"{paperId}-package.json",
+                    packages[paperId].TheoremPackageId,
+                    packages[paperId].TheoremPackageContent));
+            auditEvidence.Add(
+                paperId,
+                PutContent(
+                    PaperTheoryAuditSchemas.Audit,
+                    $"{paperId}-audit.json",
+                    audits[paperId].AuditId,
+                    audits[paperId].AuditContent));
+            scorecardEvidence.Add(
+                paperId,
+                PutContent(
+                    PaperPortfolioDecisionSchemas.Scorecard,
+                    $"{paperId}-scorecard.json",
+                    scorecards[paperId].ScorecardId,
+                    scorecards[paperId].ScorecardContent));
+            candidateEvidence.Add(
+                paperId,
+                PutExpectedBytes(
+                    CandidateArtifactSchemas.CandidatePaper,
+                    $"{paperId}-candidate.json",
+                    program.ProgramContent.CandidatePaperRef,
+                    Encoding.UTF8.GetBytes($"candidate-{paperId}")));
+            literatureEvidence.Add(
+                paperId,
+                PutExpectedBytes(
+                    CandidateArtifactSchemas.LiteratureResearch,
+                    $"{paperId}-literature.json",
+                    program.ProgramContent.LiteratureResearchRef,
+                    Encoding.UTF8.GetBytes($"literature-{paperId}")));
+        }
+        TamperableInputPath = candidateEvidence[SelectedPaperId].FullPath;
+
+        PaperPortfolioJudgmentPaperInput[] coordinates = programs
+            .Select(program =>
+            {
+                string paperId = program.ProgramContent.PaperId;
+                return new PaperPortfolioJudgmentPaperInput(
+                    paperId,
+                    program.TheoryProgramId,
+                    scopes[paperId].ScopeId,
+                    inventories[paperId].InventoryId,
+                    packages[paperId].TheoremPackageId,
+                    audits[paperId].AuditId,
+                    scorecards[paperId].ScorecardId,
+                    program.ProgramContent.CandidatePaperRef,
+                    program.ProgramContent.LiteratureResearchRef);
+            })
+            .OrderBy(value => value.PaperId, StringComparer.Ordinal)
+            .ToArray();
+        var portfolioInputs = new List<PaperAgentInputArtifact>
+        {
+            portfolioEvidence.ToInput(),
+            batchEvidence.ToInput()
+        };
+        foreach (string paperId in programs
+            .Select(value => value.ProgramContent.PaperId)
+            .OrderBy(value => value, StringComparer.Ordinal))
+        {
+            portfolioInputs.Add(programEvidence[paperId].ToInput());
+            portfolioInputs.Add(scopeEvidence[paperId].ToInput());
+            portfolioInputs.Add(inventoryEvidence[paperId].ToInput());
+            portfolioInputs.Add(packageEvidence[paperId].ToInput());
+            portfolioInputs.Add(auditEvidence[paperId].ToInput());
+            portfolioInputs.Add(scorecardEvidence[paperId].ToInput());
+            portfolioInputs.Add(candidateEvidence[paperId].ToInput());
+            portfolioInputs.Add(literatureEvidence[paperId].ToInput());
+        }
+        Assert.Equal(18, portfolioInputs.Count);
+        var portfolioDispatch = new PaperPortfolioJudgmentAgentDispatch(
+            PaperPortfolioJudgmentAgentSchemas.Dispatch,
+            portfolio.PortfolioId,
+            batch.BatchId,
+            portfolio.PortfolioContent.NextCycleNumber,
+            policy,
+            coordinates,
+            portfolioInputs,
+            "2026-08-31T03:30:00Z");
+        PaperPortfolioJudgmentAgentService.Validate(portfolioDispatch);
+        FrontierSelectionEvidence portfolioDispatchEvidence = PutBytes(
+            PaperPortfolioJudgmentAgentSchemas.Dispatch,
+            "portfolio-dispatch.json",
+            CanonicalJson.Serialize(portfolioDispatch));
+
+        string portfolioTaskRef = Digest("portfolio-task");
+        string portfolioResultRef = Digest("portfolio-result");
+        var pairwise = new PaperPortfolioPairwiseRelationDraft(
+            SelectedPaperId,
+            PeerPaperId,
+            "distinct",
+            string.Empty,
+            [
+                programs.Single(value => value.ProgramContent.PaperId == SelectedPaperId)
+                    .ProgramContent.CandidatePaperRef,
+                programs.Single(value => value.ProgramContent.PaperId == PeerPaperId)
+                    .ProgramContent.CandidatePaperRef
+            ],
+            "The theorem packages have independently identifiable load-bearing proof chains and neither admitted package logically subsumes the other.",
+            "The two candidate papers claim distinct theorem-level novelty increments under the admitted literature and audit evidence boundaries.");
+        var judgmentEvidenceContent = new PaperPortfolioJudgmentEvidenceContent(
+            portfolioDispatchEvidence.ArtifactRef,
+            portfolioResultRef,
+            portfolio.PortfolioId,
+            batch.BatchId,
+            portfolio.PortfolioContent.NextCycleNumber,
+            scorecards.Values
+                .Select(value => value.ScorecardId)
+                .OrderBy(value => value, StringComparer.Ordinal)
+                .ToArray(),
+            decision.DecisionContent.Decisions
+                .OrderBy(value => value.Rank)
+                .Select(value => value.PaperId)
+                .ToArray(),
+            [pairwise],
+            "The admitted portfolio judgment preserves the calibrated score order, promotes only the strongest eligible theorem package, records the complete pairwise theorem boundary, and keeps overflow work outside the formalization frontier.",
+            decision.DecisionId,
+            portfolioAdmittedAt);
+        var judgmentEvidence = new PaperPortfolioJudgmentEvidence(
+            PaperPortfolioJudgmentAgentSchemas.Evidence,
+            CanonicalJson.Sha256Reference(
+                CanonicalJson.Serialize(judgmentEvidenceContent)),
+            judgmentEvidenceContent);
+        PaperPortfolioJudgmentAgentService.Validate(judgmentEvidence);
+
+        FrontierSelectionPortfolioArtifact storedJudgment = PutPortfolioArtifact(
+            "judgment-evidence",
+            judgmentEvidence.Schema,
+            judgmentEvidence.EvidenceId,
+            judgmentEvidence.EvidenceContent,
+            judgmentEvidence);
+        FrontierSelectionPortfolioArtifact storedDecision = PutPortfolioArtifact(
+            "portfolio-decision",
+            decision.Schema,
+            decision.DecisionId,
+            decision.DecisionContent,
+            decision);
+        FrontierSelectionPortfolioArtifact storedUpdatedPortfolio = PutPortfolioArtifact(
+            "updated-portfolio",
+            updatedPortfolio.Schema,
+            updatedPortfolio.PortfolioId,
+            updatedPortfolio.PortfolioContent,
+            updatedPortfolio);
+
+        PaperPortfolioJudgmentPaperRoute[] portfolioRoutes = decision.DecisionContent.Decisions
+            .OrderBy(value => value.Rank)
+            .Select(value => new PaperPortfolioJudgmentPaperRoute(
+                value.Rank,
+                value.PaperId,
+                value.TheoryProgramRef,
+                value.ScorecardRef,
+                value.Action,
+                PortfolioRoute(value.Action),
+                value.Reason))
+            .ToArray();
+        var portfolioCursor = new PaperPortfolioJudgmentAgentAdmissionCursor(
+            PaperPortfolioJudgmentAgentSchemas.AdmissionCursor,
+            portfolioTaskRef,
+            portfolioResultRef,
+            portfolioDispatchEvidence.ArtifactRef,
+            portfolio.PortfolioId,
+            batch.BatchId,
+            portfolio.PortfolioContent.NextCycleNumber,
+            storedJudgment.Stored,
+            storedDecision.Stored,
+            storedUpdatedPortfolio.Stored,
+            portfolioRoutes,
+            "codex-portfolio-test-run",
+            "produced",
+            portfolioAdmittedAt);
+        PaperPortfolioJudgmentAgentService.Validate(portfolioCursor);
+        FrontierSelectionEvidence portfolioCursorEvidence = PutBytes(
+            PaperPortfolioJudgmentAgentSchemas.AdmissionCursor,
+            "portfolio-cursor.json",
+            CanonicalJson.Serialize(portfolioCursor));
+
+        PaperTheoryProgram selectedProgram = programs.Single(value =>
             value.ProgramContent.PaperId == SelectedPaperId);
+        var planningInputs = new PaperAgentInputArtifact[]
+        {
+            portfolioCursorEvidence.ToInput(),
+            portfolioDispatchEvidence.ToInput(),
+            programEvidence[SelectedPaperId].ToInput(),
+            scopeEvidence[SelectedPaperId].ToInput(),
+            inventoryEvidence[SelectedPaperId].ToInput(),
+            packageEvidence[SelectedPaperId].ToInput(),
+            auditEvidence[SelectedPaperId].ToInput(),
+            scorecardEvidence[SelectedPaperId].ToInput(),
+            candidateEvidence[SelectedPaperId].ToInput(),
+            literatureEvidence[SelectedPaperId].ToInput(),
+            storedJudgment.Content.ToInput(),
+            storedDecision.Content.ToInput(),
+            storedUpdatedPortfolio.Content.ToInput()
+        };
+        Assert.Equal(13, planningInputs.Length);
+        var planningDispatch = new PaperFrontierPlanningAgentDispatch(
+            PaperFrontierPlanningAgentSchemas.Dispatch,
+            portfolioTaskRef,
+            portfolioResultRef,
+            portfolioCursorEvidence.ArtifactRef,
+            portfolioDispatchEvidence.ArtifactRef,
+            portfolio.PortfolioId,
+            batch.BatchId,
+            portfolio.PortfolioContent.NextCycleNumber,
+            judgmentEvidence.EvidenceId,
+            decision.DecisionId,
+            updatedPortfolio.PortfolioId,
+            SelectedPaperId,
+            selectedProgram.TheoryProgramId,
+            scopes[SelectedPaperId].ScopeId,
+            inventories[SelectedPaperId].InventoryId,
+            packages[SelectedPaperId].TheoremPackageId,
+            audits[SelectedPaperId].AuditId,
+            scorecards[SelectedPaperId].ScorecardId,
+            selectedProgram.ProgramContent.CandidatePaperRef,
+            selectedProgram.ProgramContent.LiteratureResearchRef,
+            planningInputs,
+            portfolioAdmittedAt);
+        PaperFrontierPlanningContext reopened =
+            PaperFrontierPlanningAgentService.ReopenContext(
+                Root,
+                planningDispatch);
+        Assert.Equal(SelectedPaperId, reopened.Program.ProgramContent.PaperId);
+
         Frontier = PaperFormalizationFrontierService.CreateFrontier(
-            programA,
+            selectedProgram,
             packages[SelectedPaperId],
-            auditA,
-            scorecardA,
+            audits[SelectedPaperId],
+            scorecards[SelectedPaperId],
             decision,
             Specs(),
             "2026-08-31T05:00:00Z");
@@ -172,66 +471,10 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
             PaperFormalizationFrontierLifecycleService.CreateInitialState(
                 Frontier,
                 "2026-08-31T05:10:00Z");
-
-        FrontierSelectionEvidence programEvidence = PutContent(
-            PaperPortfolioSchemas.TheoryProgram,
-            "program.json",
-            programA.TheoryProgramId,
-            programA.ProgramContent);
-        FrontierSelectionEvidence packageEvidence = PutContent(
-            PaperTheoryDeepeningSchemas.TheoremPackage,
-            "package.json",
-            packages[SelectedPaperId].TheoremPackageId,
-            packages[SelectedPaperId].TheoremPackageContent);
-        var exactInputs = new List<PaperAgentInputArtifact>
-        {
-            programEvidence.ToInput(),
-            packageEvidence.ToInput()
-        };
-        for (int index = 0; index < 11; index++)
-        {
-            FrontierSelectionEvidence dummy = PutBytes(
-                $"paper-frontier-selection-source-{index:D2}.v1",
-                $"source-{index:D2}.json",
-                Encoding.UTF8.GetBytes($"frontier-source-{index:D2}"));
-            exactInputs.Add(dummy.ToInput());
-            if (index == 0)
-            {
-                TamperableInputPath = dummy.FullPath;
-            }
-        }
-
-        PlanningTaskRef = Digest("frontier-planning-task");
-        string planningResultRef = Digest("frontier-planning-result");
-        string portfolioTaskRef = Digest("portfolio-task");
-        string portfolioResultRef = Digest("portfolio-result");
-        var planningDispatch = new PaperFrontierPlanningAgentDispatch(
-            PaperFrontierPlanningAgentSchemas.Dispatch,
-            portfolioTaskRef,
-            portfolioResultRef,
-            Digest("portfolio-cursor"),
-            Digest("portfolio-dispatch"),
-            portfolio.PortfolioId,
-            batch.BatchId,
-            1,
-            Digest("judgment-evidence"),
-            decision.DecisionId,
-            Digest("updated-portfolio"),
-            SelectedPaperId,
-            programA.TheoryProgramId,
-            scopes[SelectedPaperId].ScopeId,
-            inventories[SelectedPaperId].InventoryId,
-            packages[SelectedPaperId].TheoremPackageId,
-            auditA.AuditId,
-            scorecardA.ScorecardId,
-            programA.ProgramContent.CandidatePaperRef,
-            programA.ProgramContent.LiteratureResearchRef,
-            exactInputs,
-            "2026-08-31T05:20:00Z");
-        PaperFrontierPlanningAgentService.Validate(planningDispatch);
-        byte[] dispatchBytes = CanonicalJson.Serialize(planningDispatch);
-        string dispatchRef = PaperResearchInputStore.Reference(dispatchBytes);
-        WritePlanningDispatch(dispatchRef, dispatchBytes);
+        byte[] planningDispatchBytes = CanonicalJson.Serialize(planningDispatch);
+        string planningDispatchRef = PaperResearchInputStore.Reference(
+            planningDispatchBytes);
+        WritePlanningDispatch(planningDispatchRef, planningDispatchBytes);
 
         PaperFrontierPlanningStoredArtifact storedFrontier = PutPlanningEnvelope(
             "frontier",
@@ -257,22 +500,24 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
                 "governed-selection"))
             .ToArray();
         Assert.Equal(2, routes.Length);
-        var cursor = new PaperFrontierPlanningAgentAdmissionCursor(
+
+        PlanningTaskRef = Digest("frontier-planning-task");
+        var planningCursor = new PaperFrontierPlanningAgentAdmissionCursor(
             PaperFrontierPlanningAgentSchemas.AdmissionCursor,
             PlanningTaskRef,
-            planningResultRef,
-            dispatchRef,
+            Digest("frontier-planning-result"),
+            planningDispatchRef,
             portfolioTaskRef,
             portfolioResultRef,
             portfolio.PortfolioId,
-            1,
-            planningDispatch.JudgmentEvidenceRef,
-            planningDispatch.UpdatedPortfolioRef,
+            portfolio.PortfolioContent.NextCycleNumber,
+            judgmentEvidence.EvidenceId,
+            updatedPortfolio.PortfolioId,
             SelectedPaperId,
-            programA.TheoryProgramId,
+            selectedProgram.TheoryProgramId,
             packages[SelectedPaperId].TheoremPackageId,
-            auditA.AuditId,
-            scorecardA.ScorecardId,
+            audits[SelectedPaperId].AuditId,
+            scorecards[SelectedPaperId].ScorecardId,
             decision.DecisionId,
             storedFrontier,
             storedInitialState,
@@ -280,15 +525,17 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
             "codex-frontier-planning-test-run",
             "produced",
             "2026-08-31T05:30:00Z");
-        PaperFrontierPlanningAgentService.Validate(cursor);
-        string cursorPath = Path.Combine(
+        PaperFrontierPlanningAgentService.Validate(planningCursor);
+        string planningCursorPath = Path.Combine(
             Root,
             "work",
             "paper-frontier-planning",
             "cursors",
             Hex(PlanningTaskRef) + ".json");
-        Directory.CreateDirectory(Path.GetDirectoryName(cursorPath)!);
-        File.WriteAllBytes(cursorPath, CanonicalJson.Serialize(cursor));
+        Directory.CreateDirectory(Path.GetDirectoryName(planningCursorPath)!);
+        File.WriteAllBytes(
+            planningCursorPath,
+            CanonicalJson.Serialize(planningCursor));
     }
 
     public string Root { get; }
@@ -517,6 +764,17 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
         return PutBytes(schema, fileName, bytes);
     }
 
+    private FrontierSelectionEvidence PutExpectedBytes(
+        string schema,
+        string fileName,
+        string expectedRef,
+        byte[] bytes)
+    {
+        FrontierSelectionEvidence evidence = PutBytes(schema, fileName, bytes);
+        Assert.Equal(expectedRef, evidence.ArtifactRef);
+        return evidence;
+    }
+
     private FrontierSelectionEvidence PutBytes(
         string schema,
         string fileName,
@@ -531,6 +789,31 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
         return new(schema, reference, relative, full);
     }
 
+    private FrontierSelectionPortfolioArtifact PutPortfolioArtifact<TContent, TEnvelope>(
+        string name,
+        string schema,
+        string artifactRef,
+        TContent content,
+        TEnvelope envelope)
+    {
+        FrontierSelectionEvidence storedContent = PutContent(
+            schema,
+            $"{name}-content.json",
+            artifactRef,
+            content);
+        FrontierSelectionEvidence storedEnvelope = PutBytes(
+            schema,
+            $"{name}-envelope.json",
+            CanonicalJson.Serialize(envelope));
+        var stored = new PaperPortfolioJudgmentStoredArtifact(
+            schema,
+            artifactRef,
+            storedContent.RepositoryRelativePath,
+            storedEnvelope.ArtifactRef,
+            storedEnvelope.RepositoryRelativePath);
+        return new(stored, storedContent);
+    }
+
     private PaperFrontierPlanningStoredArtifact PutPlanningEnvelope<TContent, TEnvelope>(
         string name,
         string schema,
@@ -538,24 +821,21 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
         TContent content,
         TEnvelope envelope)
     {
-        byte[] contentBytes = CanonicalJson.Serialize(content);
-        Assert.Equal(artifactRef, PaperResearchInputStore.Reference(contentBytes));
-        string contentRelative = $"artifacts/source/{name}-content.json";
-        File.WriteAllBytes(
-            Path.Combine(Root, contentRelative.Replace('/', Path.DirectorySeparatorChar)),
-            contentBytes);
-        byte[] envelopeBytes = CanonicalJson.Serialize(envelope);
-        string envelopeRef = PaperResearchInputStore.Reference(envelopeBytes);
-        string envelopeRelative = $"artifacts/source/{name}-envelope.json";
-        File.WriteAllBytes(
-            Path.Combine(Root, envelopeRelative.Replace('/', Path.DirectorySeparatorChar)),
-            envelopeBytes);
+        FrontierSelectionEvidence storedContent = PutContent(
+            schema,
+            $"{name}-content.json",
+            artifactRef,
+            content);
+        FrontierSelectionEvidence storedEnvelope = PutBytes(
+            schema,
+            $"{name}-envelope.json",
+            CanonicalJson.Serialize(envelope));
         return new(
             schema,
             artifactRef,
-            contentRelative,
-            envelopeRef,
-            envelopeRelative);
+            storedContent.RepositoryRelativePath,
+            storedEnvelope.ArtifactRef,
+            storedEnvelope.RepositoryRelativePath);
     }
 
     private void WritePlanningDispatch(string dispatchRef, byte[] bytes)
@@ -573,6 +853,20 @@ internal sealed class FrontierSelectionTestRepository : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllBytes(path, bytes);
     }
+
+    private static string PortfolioRoute(string action) =>
+        action switch
+        {
+            "promote-to-frontier" => "frontier-planning",
+            "hold" => "portfolio-judgment",
+            "continue-deepening" => "theory-deepening",
+            "split" => "portfolio-split",
+            "merge" => "portfolio-merge",
+            "park" => "parked",
+            "archive" => "archived",
+            _ => throw new InvalidDataException(
+                $"Unsupported portfolio action {action}.")
+        };
 
     public void Dispose()
     {
