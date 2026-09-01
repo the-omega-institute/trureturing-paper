@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-node-selection-authorization.v1.schema.json",
+  "title": "Paper frontier node selection authorization v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "authorization_id", "authorization_content"],
+  "properties": {
+    "schema": { "const": "paper-frontier-node-selection-authorization.v1" },
+    "authorization_id": { "$ref": "#/$defs/digest" },
+    "authorization_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frontier_planning_task_ref", "frontier_planning_result_ref", "frontier_planning_dispatch_ref", "frontier_ref", "initial_state_ref", "paper_id", "theory_program_ref", "theorem_package_ref", "portfolio_decision_ref", "dispatch_order", "node_id", "claim_id", "formalization_kind", "parallel_wave", "priority", "authorized_at"],
+      "properties": {
+        "frontier_planning_task_ref": { "$ref": "#/$defs/digest" },
+        "frontier_planning_result_ref": { "$ref": "#/$defs/digest" },
+        "frontier_planning_dispatch_ref": { "$ref": "#/$defs/digest" },
+        "frontier_ref": { "$ref": "#/$defs/digest" },
+        "initial_state_ref": { "$ref": "#/$defs/digest" },
+        "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+        "theory_program_ref": { "$ref": "#/$defs/digest" },
+        "theorem_package_ref": { "$ref": "#/$defs/digest" },
+        "portfolio_decision_ref": { "$ref": "#/$defs/digest" },
+        "dispatch_order": { "type": "integer", "minimum": 1 },
+        "node_id": { "$ref": "#/$defs/digest" },
+        "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+        "formalization_kind": { "$ref": "#/$defs/kind" },
+        "parallel_wave": { "const": 0 },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "authorized_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "kind": { "enum": ["definition", "prerequisite", "structural", "main-theorem", "sharpness", "corollary", "counterexample", "proof-interface"] }
+  }
+}
