@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-certified-claim-manifest.v1.schema.json",
+  "title": "Paper frontier certified claim manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "manifest_id", "manifest_content"],
+  "properties": {
+    "schema": { "const": "paper-frontier-certified-claim-manifest.v1" },
+    "manifest_id": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "manifest_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frontier_ref",
+        "node_id",
+        "claim_id",
+        "formalization_request_ref",
+        "selection_ref",
+        "formalization_result_ref",
+        "decision_ref",
+        "certification_evaluation_ref",
+        "certified_claim_ref",
+        "certifying_release_ref",
+        "certifying_release_digest",
+        "paper_id",
+        "gid",
+        "lean_declaration",
+        "declaration_kind",
+        "statement_id",
+        "axiom_closure",
+        "manifested_at"
+      ],
+      "properties": {
+        "frontier_ref": { "$ref": "#/$defs/digest" },
+        "node_id": { "$ref": "#/$defs/digest" },
+        "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+        "formalization_request_ref": { "$ref": "#/$defs/digest" },
+        "selection_ref": { "$ref": "#/$defs/digest" },
+        "formalization_result_ref": { "$ref": "#/$defs/digest" },
+        "decision_ref": { "$ref": "#/$defs/digest" },
+        "certification_evaluation_ref": { "$ref": "#/$defs/digest" },
+        "certified_claim_ref": { "$ref": "#/$defs/digest" },
+        "certifying_release_ref": { "$ref": "#/$defs/digest" },
+        "certifying_release_digest": { "$ref": "#/$defs/digest" },
+        "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+        "gid": {
+          "type": "string",
+          "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$"
+        },
+        "lean_declaration": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "declaration_kind": { "const": "theorem" },
+        "statement_id": { "$ref": "#/$defs/digest" },
+        "axiom_closure": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 1024 }
+        },
+        "manifested_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
