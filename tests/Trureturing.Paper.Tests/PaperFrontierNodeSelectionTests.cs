@@ -100,6 +100,63 @@ public sealed class PaperFrontierNodeSelectionTests
     }
 
     [Fact]
+    public void LaterNodeRecoversCursorCommittedBeforeStatePointer()
+    {
+        using var repository = new FrontierSelectionTestRepository();
+        PaperFormalizationFrontierNode definition =
+            repository.Node("def:object");
+        PaperFormalizationFrontierNode sharpness =
+            repository.Node("thm:sharp");
+        _ = PaperFrontierNodeSelectionService.Admit(
+            repository.Root,
+            repository.PlanningTaskRef,
+            definition.NodeId);
+        File.Delete(CurrentStateCursorPath(repository));
+
+        PaperFrontierNodeSelectionAdmitted admitted =
+            PaperFrontierNodeSelectionService.Admit(
+                repository.Root,
+                repository.PlanningTaskRef,
+                sharpness.NodeId);
+
+        Assert.False(admitted.Replayed);
+        PaperFormalizationFrontierState state = repository.ReadState(
+            repository.ReadCurrentStateCursor().State);
+        Assert.Equal(4, state.StateContent.Version);
+        Assert.Equal(
+            2,
+            state.StateContent.NodeStates.Count(value =>
+                value.Status == "request-recorded"));
+        Assert.Equal(4, state.StateContent.AppliedEventRefs.Count);
+    }
+
+    [Fact]
+    public void ReplayRepairsMissingRequestBindingLookup()
+    {
+        using var repository = new FrontierSelectionTestRepository();
+        PaperFrontierNodeSelectionAdmitted admitted =
+            PaperFrontierNodeSelectionService.Admit(
+                repository.Root,
+                repository.PlanningTaskRef,
+                repository.Node("def:object").NodeId);
+        string lookupPath = BindingLookupPath(
+            repository,
+            admitted.FormalizationRequestRef);
+        File.Delete(lookupPath);
+
+        PaperFrontierNodeSelectionAdmitted replay =
+            PaperFrontierNodeSelectionService.Admit(
+                repository.Root,
+                repository.PlanningTaskRef,
+                repository.Node("def:object").NodeId);
+
+        Assert.True(replay.Replayed);
+        Assert.True(File.Exists(lookupPath));
+        Assert.True(
+            repository.BindingLookupExists(admitted.FormalizationRequestRef));
+    }
+
+    [Fact]
     public void DependentNodeCannotBypassTheReleasedReadySet()
     {
         using var repository = new FrontierSelectionTestRepository();
@@ -133,4 +190,26 @@ public sealed class PaperFrontierNodeSelectionTests
             error.Message,
             StringComparison.OrdinalIgnoreCase);
     }
+
+    private static string CurrentStateCursorPath(
+        FrontierSelectionTestRepository repository) =>
+        Path.Combine(
+            repository.Root,
+            "work",
+            "paper-frontiers",
+            "current-state",
+            Hex(repository.Frontier.FrontierId) + ".json");
+
+    private static string BindingLookupPath(
+        FrontierSelectionTestRepository repository,
+        string requestRef) =>
+        Path.Combine(
+            repository.Root,
+            "work",
+            "paper-frontier-formalization-bindings",
+            "by-request",
+            Hex(requestRef) + ".json");
+
+    private static string Hex(string reference) =>
+        reference["sha256:".Length..];
 }
