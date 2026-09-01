@@ -24,6 +24,7 @@ jobs:
         shell: bash
         run: |
           python tools/frontier_completion_patch.py
+          python tools/frontier_completion_patch_fix.py
           dotnet restore Trureturing.Paper.slnx --ignore-failed-sources
           dotnet build Trureturing.Paper.slnx -c Release --no-restore
       - name: Commit patched completion implementation
