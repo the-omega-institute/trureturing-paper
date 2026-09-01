@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-manuscript-authoring-retry-requested.v1.schema.json",
+  "title": "Paper manuscript authoring retry requested v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "prior_task_ref", "prior_result_ref", "paper_id",
+    "theory_program_ref", "blocker_code", "summary", "next_route", "dedup_key"
+  ],
+  "properties": {
+    "schema": { "const": "paper-manuscript-authoring-retry-requested.v1" },
+    "prior_task_ref": { "$ref": "#/$defs/digest" },
+    "prior_result_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "blocker_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,127}$" },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 16384 },
+    "next_route": { "const": "manuscript-authoring" },
+    "dedup_key": { "type": "string", "pattern": "^paper-manuscript-authoring-retry:v1:sha256:[0-9a-f]{64}$" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
