@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-ready-wave-selection-cursor.v1.schema.json",
+  "title": "Paper frontier ready-wave selection cursor v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "ready_set_ref",
+    "frontier_ref",
+    "trigger_node_id",
+    "trigger_manifest_ref",
+    "release_state_ref",
+    "frontier_planning_task_ref",
+    "paper_id",
+    "theory_program_ref",
+    "theorem_package_ref",
+    "node_admissions",
+    "admitted_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-frontier-ready-wave-selection-cursor.v1" },
+    "ready_set_ref": { "$ref": "#/$defs/digest" },
+    "frontier_ref": { "$ref": "#/$defs/digest" },
+    "trigger_node_id": { "$ref": "#/$defs/digest" },
+    "trigger_manifest_ref": { "$ref": "#/$defs/digest" },
+    "release_state_ref": { "$ref": "#/$defs/digest" },
+    "frontier_planning_task_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "$ref": "#/$defs/paperId" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "theorem_package_ref": { "$ref": "#/$defs/digest" },
+    "node_admissions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nodeAdmission" }
+    },
+    "admitted_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paperId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "claimId": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+    "gid": { "type": "string", "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$" },
+    "kind": { "enum": ["definition", "prerequisite", "structural", "main-theorem", "sharpness", "corollary", "counterexample", "proof-interface"] },
+    "nodeAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dispatch_order",
+        "node_id",
+        "claim_id",
+        "formalization_kind",
+        "parallel_wave",
+        "priority",
+        "authorization_ref",
+        "verification_budget_ref",
+        "selection_ref",
+        "formalization_request_ref",
+        "binding_ref",
+        "frontier_state_ref",
+        "gid"
+      ],
+      "properties": {
+        "dispatch_order": { "type": "integer", "minimum": 1 },
+        "node_id": { "$ref": "#/$defs/digest" },
+        "claim_id": { "$ref": "#/$defs/claimId" },
+        "formalization_kind": { "$ref": "#/$defs/kind" },
+        "parallel_wave": { "type": "integer", "minimum": 1 },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "authorization_ref": { "$ref": "#/$defs/digest" },
+        "verification_budget_ref": { "$ref": "#/$defs/digest" },
+        "selection_ref": { "$ref": "#/$defs/digest" },
+        "formalization_request_ref": { "$ref": "#/$defs/digest" },
+        "binding_ref": { "$ref": "#/$defs/digest" },
+        "frontier_state_ref": { "$ref": "#/$defs/digest" },
+        "gid": { "$ref": "#/$defs/gid" }
+      }
+    }
+  }
+}
