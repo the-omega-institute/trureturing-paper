@@ -9,20 +9,21 @@ internal static class Program
         Usage:
           admit-frontier-node-selection --repository-root <path> --frontier-task-ref <sha256:...> --node-id <sha256:...>
           admit-frontier-ready-wave --repository-root <path> --frontier-ref <sha256:...> --ready-set-ref <sha256:...>
+          evaluate-frontier-completion --repository-root <path> --frontier-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
     {
         try
         {
-            if (args.Length != 7)
+            object result = args.FirstOrDefault() switch
             {
-                throw new ArgumentException(Usage);
-            }
-            object result = args[0] switch
-            {
-                "admit-frontier-node-selection" => AdmitNode(args),
-                "admit-frontier-ready-wave" => AdmitReadyWave(args),
+                "admit-frontier-node-selection" when args.Length == 7
+                    => AdmitNode(args),
+                "admit-frontier-ready-wave" when args.Length == 7
+                    => AdmitReadyWave(args),
+                "evaluate-frontier-completion" when args.Length == 5
+                    => EvaluateCompletion(args),
                 _ => throw new ArgumentException(Usage)
             };
             Console.WriteLine(
@@ -66,6 +67,18 @@ internal static class Program
             values["--repository-root"],
             values["--frontier-ref"],
             values["--ready-set-ref"]);
+    }
+
+    private static PaperFrontierCompletionEvaluated EvaluateCompletion(
+        string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "--repository-root",
+            "--frontier-ref");
+        return PaperFrontierNodeSelectionService.EvaluateFrontierCompletion(
+            values["--repository-root"],
+            values["--frontier-ref"]);
     }
 
     private static Dictionary<string, string> ParseValues(
