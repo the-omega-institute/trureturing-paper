@@ -20,7 +20,7 @@
     "node_id": { "$ref": "#/$defs/digest" },
     "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
     "formalization_kind": { "$ref": "#/$defs/kind" },
-    "parallel_wave": { "const": 0 },
+    "parallel_wave": { "type": "integer", "minimum": 0 },
     "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
     "authorization": { "$ref": "#/$defs/stored" },
     "verification_budget": { "$ref": "#/$defs/stored" },
