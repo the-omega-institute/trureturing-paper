@@ -110,7 +110,7 @@ public static partial class PaperFrontierNodeSelectionService
         {
             1 => matches[0],
             0 => throw new InvalidDataException(
-                "No admitted initial route or dependency-ready set released the requested frontier node."),
+                "The admitted frontier authorities did not release the requested node."),
             _ => throw new InvalidDataException(
                 "Multiple dependency-ready sets attempted to release the same frontier node.")
         };

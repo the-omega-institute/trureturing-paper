@@ -162,7 +162,6 @@ local function raise_node_events(admitted)
     frontier_ref = admitted.frontier_ref,
     frontier_node_id = admitted.node_id,
     frontier_binding_ref = admitted.binding.artifact_ref,
-    ready_set_ref = admitted.ready_set_ref or "",
     dedup_key = "paper-formalization-request:v1:" ..
       admitted.formalization_request_ref,
   })
