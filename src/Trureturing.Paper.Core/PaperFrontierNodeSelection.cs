@@ -319,11 +319,7 @@ public static partial class PaperFrontierNodeSelectionService
             .KnownResultsToCite
             .OrderBy(value => value, StringComparer.Ordinal)
             .ToArray();
-        string[] reuseApi = dependencyGids
-            .Concat(knownResults)
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(value => value, StringComparer.Ordinal)
-            .ToArray();
+        string[] reuseApi = dependencyGids;
         string statementDigest = TextReference(source.Node.FormalStatement);
         string dependencyDigest = TextReference(
             string.Join("\n", source.Node.DependencyNodeIds
