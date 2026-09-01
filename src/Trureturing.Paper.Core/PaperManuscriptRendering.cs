@@ -318,9 +318,7 @@ public static partial class PaperManuscriptAuthoringAgentService
         {
             if (Count(source, binding.BeginMarker) != 1
                 || Count(source, binding.EndMarker) != 1
-                || Count(source, $"\\label{{{binding.LatexLabel}}}") != 1
-                || Count(source, $"\\begin{{{binding.Environment}}}") != 1
-                || Count(source, $"\\end{{{binding.Environment}}}") != 1)
+                || Count(source, $"\\label{{{binding.LatexLabel}}}") != 1)
             {
                 throw new InvalidDataException(
                     $"Rendered source changed or duplicated formal claim {binding.ClaimId}.");

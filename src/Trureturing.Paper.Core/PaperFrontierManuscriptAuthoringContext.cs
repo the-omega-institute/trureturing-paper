@@ -96,9 +96,7 @@ public static partial class PaperFrontierNodeSelectionService
                 StringComparison.Ordinal)
             || !string.Equals(
                 manifest.ManuscriptTruthReleaseRef,
-                selectedRelease.ReleaseDigest == string.Empty
-                    ? string.Empty
-                    : plan.ManuscriptTruthReleaseRef,
+                plan.ManuscriptTruthReleaseRef,
                 StringComparison.Ordinal))
         {
             throw new InvalidDataException(
