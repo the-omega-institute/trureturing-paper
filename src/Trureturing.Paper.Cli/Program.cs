@@ -51,7 +51,7 @@ internal static class Program
             "--output");
         var recipe = ReadJson<PaperRecipe>(values["--recipe"]);
         var ports = new FrozenBundleFilePorts(values["--frozen-bundle"]);
-        byte[] bytes = new PaperAssemblyService(ports, ports, ports, ports, ports, ports)
+        byte[] bytes = new PaperAssemblyService(ports, ports, ports, ports, ports, ports, ports)
             .Assemble(recipe);
         WriteFile(values["--output"], bytes);
         return 0;
@@ -260,7 +260,8 @@ internal sealed class FrozenBundleFilePorts :
     IBlueprintPort,
     ICitationPort,
     IEvidencePort,
-    ITruthGraphPort
+    ITruthGraphPort,
+    IDocumentGraphPort
 {
     private readonly string _root;
 
@@ -286,6 +287,29 @@ internal sealed class FrozenBundleFilePorts :
                 path);
         }
         return new TruthGraphEnvelope(File.ReadAllBytes(path));
+    }
+
+    public DocumentGraphEnvelope ReadDocumentGraph()
+    {
+        var graphPath = Path.Combine(_root, "document-graph.v1.json");
+        if (!File.Exists(graphPath))
+        {
+            throw new FileNotFoundException(
+                "Frozen bundle is missing document-graph.v1.json; document mappings cannot be verified.",
+                graphPath);
+        }
+
+        var digestPath = Path.Combine(_root, "document-graph.v1.sha256");
+        if (!File.Exists(digestPath))
+        {
+            throw new FileNotFoundException(
+                "Frozen bundle is missing document-graph.v1.sha256; document graph bytes are not blessed.",
+                digestPath);
+        }
+
+        return new DocumentGraphEnvelope(
+            File.ReadAllBytes(graphPath),
+            File.ReadAllText(digestPath).Trim());
     }
 
     public IReadOnlyList<FrozenDeclaration> ReadDeclarations()

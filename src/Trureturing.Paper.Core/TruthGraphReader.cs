@@ -52,11 +52,6 @@ public static class TruthGraphReader
             var edges = ReadEdges(ReadProperty(truth, "edges"));
             VerifyStateCounts(nodes, RequireObject(ReadProperty(truth, "state_counts"), "truth.state_counts"));
 
-            var documents = RequireObject(ReadProperty(root, "documents"), "documents");
-            var describeNodes = ReadDescribeNodes(ReadProperty(documents, "describe_nodes"));
-            var joins = RequireObject(ReadProperty(root, "joins"), "joins");
-            var anchors = ReadAnchors(ReadProperty(joins, "truth_anchors"));
-
             var provenanceRoot = RequireObject(ReadProperty(root, "provenance"), "provenance");
             var snapshotRoot = RequireObject(
                 ReadProperty(provenanceRoot, "snapshot"),
@@ -74,19 +69,19 @@ public static class TruthGraphReader
             return new FrozenTruthGraph(
                 nodes,
                 edges,
-                describeNodes,
-                anchors,
                 provenance,
                 deferredLayers);
         }
     }
 
     public static ClosedTruthBinding RequireClosedTheorem(
-        FrozenTruthGraph graph,
+        FrozenTruthGraph truthGraph,
+        FrozenDocumentGraph documentGraph,
         string declarationGid,
         string describeAnchor)
     {
-        ArgumentNullException.ThrowIfNull(graph);
+        ArgumentNullException.ThrowIfNull(truthGraph);
+        ArgumentNullException.ThrowIfNull(documentGraph);
         if (string.IsNullOrWhiteSpace(declarationGid)
             || string.IsNullOrWhiteSpace(describeAnchor)
             || !describeAnchor.StartsWith("describe:", StringComparison.Ordinal))
@@ -95,18 +90,18 @@ public static class TruthGraphReader
         }
 
         var describeId = describeAnchor["describe:".Length..];
-        var descriptions = graph.DescribeNodes.Where(value =>
+        var descriptions = documentGraph.DescribeNodes.Where(value =>
             string.Equals(value.DescribeId, describeId, StringComparison.Ordinal)
             && string.Equals(value.LeanDeclarationGid, declarationGid, StringComparison.Ordinal)
             && string.Equals(value.Kind, "theorem", StringComparison.Ordinal)).ToArray();
         if (descriptions.Length != 1)
         {
             throw new ClaimGateException(
-                $"Declaration '{declarationGid}' has no unique theorem describe node in frozen truth.");
+                $"Declaration '{declarationGid}' has no unique theorem describe node in the frozen document graph.");
         }
 
         var description = descriptions[0];
-        var closedNodes = graph.Nodes.Where(value =>
+        var closedNodes = truthGraph.Nodes.Where(value =>
             string.Equals(value.Gid, description.DocumentGid, StringComparison.Ordinal)
             && string.Equals(value.State, "closed", StringComparison.Ordinal)).ToArray();
         if (closedNodes.Length != 1)
@@ -115,7 +110,7 @@ public static class TruthGraphReader
                 $"Declaration '{declarationGid}' does not map to a unique closed truth node.");
         }
 
-        var anchors = graph.TruthAnchors.Where(value =>
+        var anchors = documentGraph.TruthAnchors.Where(value =>
             string.Equals(value.DescribeId, description.DescribeId, StringComparison.Ordinal)
             && string.Equals(value.DocumentGid, description.DocumentGid, StringComparison.Ordinal)
             && string.Equals(value.DocumentRepoPath, description.RepoPath, StringComparison.Ordinal)
@@ -169,39 +164,6 @@ public static class TruthGraphReader
                 ReadString(edge, "dependent")));
         }
         return edges;
-    }
-
-    private static IReadOnlyList<TruthGraphDescribeNode> ReadDescribeNodes(JsonElement element)
-    {
-        var nodes = new List<TruthGraphDescribeNode>();
-        foreach (var value in RequireArray(element, "documents.describe_nodes").EnumerateArray())
-        {
-            var node = RequireObject(value, "documents.describe_nodes item");
-            nodes.Add(new TruthGraphDescribeNode(
-                ReadString(node, "describe_id"),
-                ReadString(node, "document_gid"),
-                ReadString(node, "formula_provenance"),
-                ReadString(node, "kind"),
-                ReadNullableString(node, "lean_declaration_gid"),
-                ReadString(node, "repo_path")));
-        }
-        return nodes;
-    }
-
-    private static IReadOnlyList<TruthGraphAnchor> ReadAnchors(JsonElement element)
-    {
-        var anchors = new List<TruthGraphAnchor>();
-        foreach (var value in RequireArray(element, "joins.truth_anchors").EnumerateArray())
-        {
-            var anchor = RequireObject(value, "joins.truth_anchors item");
-            anchors.Add(new TruthGraphAnchor(
-                ReadString(anchor, "describe_id"),
-                ReadString(anchor, "document_gid"),
-                ReadString(anchor, "document_repo_path"),
-                ReadString(anchor, "formal_truth_repo_path"),
-                ReadString(anchor, "lean_declaration_gid")));
-        }
-        return anchors;
     }
 
     private static void VerifyStateCounts(

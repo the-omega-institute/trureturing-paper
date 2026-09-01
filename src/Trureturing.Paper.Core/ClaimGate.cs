@@ -6,11 +6,17 @@ public static class ClaimGate
         PaperRecipe recipe,
         FrozenInputs inputs,
         SourceSnapshot snapshot,
-        FrozenTruthGraph? truthGraph = null)
+        FrozenTruthGraph? truthGraph = null,
+        FrozenDocumentGraph? documentGraph = null)
     {
         ArgumentNullException.ThrowIfNull(recipe);
         ArgumentNullException.ThrowIfNull(inputs);
         ArgumentNullException.ThrowIfNull(snapshot);
+        if ((truthGraph is null) != (documentGraph is null))
+        {
+            throw new ClaimGateException(
+                "Claim gate requires both the verified truth graph and verified document graph.");
+        }
         if (!string.Equals(recipe.Schema, "recipe.v1", StringComparison.Ordinal)
             || string.IsNullOrWhiteSpace(recipe.PaperId)
             || string.IsNullOrWhiteSpace(recipe.Title)
@@ -50,6 +56,7 @@ public static class ClaimGate
             {
                 var binding = TruthGraphReader.RequireClosedTheorem(
                     truthGraph,
+                    documentGraph!,
                     declaration.DeclarationGid,
                     claim.DescribeAnchor);
                 if (!string.Equals(

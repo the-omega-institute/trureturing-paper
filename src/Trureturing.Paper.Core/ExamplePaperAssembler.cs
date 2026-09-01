@@ -55,8 +55,12 @@ public static class ExamplePaperAssembler
             frozenInputs.TruthGraph ?? throw new ClaimGateException(
                 "Example assembly requires a frozen truth graph."),
             snapshot);
+        FrozenDocumentGraph documentGraph = DocumentGraphReader.ReadAndVerify(
+            frozenInputs.DocumentGraph ?? throw new ClaimGateException(
+                "Example assembly requires a frozen document graph."));
         ClosedTruthBinding binding = TruthGraphReader.RequireClosedTheorem(
             graph,
+            documentGraph,
             certified.DeclarationId,
             theorem.DescribeAnchor);
         if (!string.Equals(

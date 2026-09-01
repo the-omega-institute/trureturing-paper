@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using StrataLint.Scribe;
 using Trureturing.Paper.Core;
 using Xunit;
@@ -113,6 +114,102 @@ public sealed class WalkingSkeletonTests
             PaperAssembler.Assemble(injectedRecipe, injectedInputs));
     }
 
+    [Fact]
+    public void Document_graph_digest_mismatch_is_rejected()
+    {
+        RealFixtureResult fixture = RealFixture.Load();
+        FrozenInputs inputs = fixture.Inputs with
+        {
+            DocumentGraph = fixture.Inputs.DocumentGraph! with
+            {
+                ContentSha256 = new string('0', 64)
+            }
+        };
+
+        Assert.Throws<ClaimGateException>(() => PaperAssembler.Assemble(fixture.Recipe, inputs));
+    }
+
+    [Fact]
+    public void Missing_document_graph_is_rejected_when_truth_graph_is_present()
+    {
+        RealFixtureResult fixture = RealFixture.Load();
+
+        Assert.Throws<ClaimGateException>(() => PaperAssembler.Assemble(
+            fixture.Recipe,
+            fixture.Inputs with { DocumentGraph = null }));
+    }
+
+    [Fact]
+    public void Document_join_mismatch_is_rejected_even_when_embedded_truth_join_is_correct()
+    {
+        RealFixtureResult fixture = RealFixture.Load();
+        byte[] changedDocumentGraph = MutateJson(fixture.DocumentGraphBytes, root =>
+        {
+            JsonArray anchors = root["joins"]!["truth_anchors"]!.AsArray();
+            JsonNode anchor = anchors.Single(value => string.Equals(
+                value!["lean_declaration_gid"]!.GetValue<string>(),
+                fixture.DeclarationGid,
+                StringComparison.Ordinal))!;
+            anchor["document_gid"] = "D5/S0/Carrier/Conj";
+        });
+        FrozenInputs inputs = fixture.Inputs with
+        {
+            DocumentGraph = new DocumentGraphEnvelope(
+                changedDocumentGraph,
+                Sha256(changedDocumentGraph))
+        };
+
+        Assert.Throws<ClaimGateException>(() => PaperAssembler.Assemble(fixture.Recipe, inputs));
+    }
+
+    [Fact]
+    public void Nonclosed_truth_state_is_rejected_when_document_join_is_correct()
+    {
+        RealFixtureResult fixture = RealFixture.Load();
+        byte[] changedTruthGraph = MutateJson(fixture.TruthGraphBytes, root =>
+        {
+            JsonNode truth = root["truth"]!;
+            JsonArray nodes = truth["nodes"]!.AsArray();
+            JsonNode node = nodes.Single(value => string.Equals(
+                value!["gid"]?.GetValue<string>(),
+                "D5/S0/Carrier/TraceConjugation",
+                StringComparison.Ordinal))!;
+            node["state"] = "open";
+            JsonNode counts = truth["state_counts"]!;
+            counts["closed"] = counts["closed"]!.GetValue<int>() - 1;
+            counts["open"] = counts["open"]!.GetValue<int>() + 1;
+        });
+        byte[] changedSnapshot = MutateJson(fixture.Inputs.Snapshot.Json, root =>
+            root["truth_graph_sha256"] = Sha256(changedTruthGraph));
+        FrozenInputs inputs = fixture.Inputs with
+        {
+            Snapshot = new BlessedSnapshotEnvelope(changedSnapshot, Sha256(changedSnapshot)),
+            TruthGraph = new TruthGraphEnvelope(changedTruthGraph)
+        };
+
+        Assert.Throws<ClaimGateException>(() => PaperAssembler.Assemble(fixture.Recipe, inputs));
+    }
+
+    [Fact]
+    public void Document_graph_only_digest_change_is_a_distinct_publication_key()
+    {
+        string root = FindRepositoryRoot();
+        string core = File.ReadAllText(Path.Combine(
+            root, ".fkst", "local-packages", "trureturing-paper", "core.lua"));
+        string observe = File.ReadAllText(Path.Combine(
+            root, ".fkst", "local-packages", "trureturing-paper", "departments", "observe", "main.lua"));
+        string act = File.ReadAllText(Path.Combine(
+            root, ".fkst", "local-packages", "trureturing-paper", "departments", "act", "main.lua"));
+        string raiser = File.ReadAllText(Path.Combine(
+            root, ".fkst", "local-packages", "trureturing-paper", "raisers", "blessed_input.lua"));
+
+        Assert.Contains("rec.truth_graph_sha256 == key.truth_graph_sha256", core, StringComparison.Ordinal);
+        Assert.Contains("rec.document_graph_sha256 == key.document_graph_sha256", core, StringComparison.Ordinal);
+        Assert.Contains("document_graph_sha256 = blessed.document_graph_sha256", observe, StringComparison.Ordinal);
+        Assert.Contains("document_graph_sha256", act, StringComparison.Ordinal);
+        Assert.Contains("Papers/frozen-bundle/*", raiser, StringComparison.Ordinal);
+    }
+
     private static byte[] AssembleInEnvironment(
         PaperRecipe recipe,
         FrozenInputs inputs,
@@ -147,6 +244,27 @@ public sealed class WalkingSkeletonTests
 
     private static string Sha256(byte[] bytes) =>
         Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+
+    private static byte[] MutateJson(byte[] bytes, Action<JsonNode> mutation)
+    {
+        JsonNode root = JsonNode.Parse(bytes) ?? throw new InvalidOperationException("Fixture JSON is empty.");
+        mutation(root);
+        return Encoding.UTF8.GetBytes(root.ToJsonString());
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        for (DirectoryInfo? current = new(AppContext.BaseDirectory);
+             current is not null;
+             current = current.Parent)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Trureturing.Paper.slnx")))
+            {
+                return current.FullName;
+            }
+        }
+        throw new DirectoryNotFoundException("Could not locate repository root.");
+    }
 }
 
 internal sealed record RealFixtureResult(
@@ -155,6 +273,8 @@ internal sealed record RealFixtureResult(
     SourceSnapshot Snapshot,
     FrozenTruthGraph TruthGraph,
     byte[] TruthGraphBytes,
+    FrozenDocumentGraph DocumentGraph,
+    byte[] DocumentGraphBytes,
     string DeclarationGid,
     string LatexStatement);
 
@@ -179,6 +299,11 @@ internal static class RealFixture
         var truthGraphBytes = File.ReadAllBytes(Path.Combine(root, "truth-graph.v1.json"));
         var truthGraphEnvelope = new TruthGraphEnvelope(truthGraphBytes);
         var truthGraph = TruthGraphReader.ReadAndVerify(truthGraphEnvelope, snapshot);
+        var documentGraphBytes = File.ReadAllBytes(Path.Combine(root, "document-graph.v1.json"));
+        var documentGraphEnvelope = new DocumentGraphEnvelope(
+            documentGraphBytes,
+            File.ReadAllText(Path.Combine(root, "document-graph.v1.sha256")).Trim());
+        var documentGraph = DocumentGraphReader.ReadAndVerify(documentGraphEnvelope);
 
         var recipe = Deserialize<PaperRecipe>(root, "trace-conjugation.recipe.v1.json");
         var truthEnvelope = Deserialize<RealFrozenTruthEnvelope>(root, "frozen-truth.v1.json");
@@ -196,6 +321,7 @@ internal static class RealFixture
 
         var binding = TruthGraphReader.RequireClosedTheorem(
             truthGraph,
+            documentGraph,
             truth.DeclarationGid,
             blueprint.DescribeAnchor);
         Assert.Equal(truth.DescribeId, binding.DescribeId);
@@ -224,13 +350,16 @@ internal static class RealFixture
             [blueprintBlock],
             [],
             [],
-            truthGraphEnvelope);
+            truthGraphEnvelope,
+            documentGraphEnvelope);
         return new RealFixtureResult(
             recipe,
             inputs,
             snapshot,
             truthGraph,
             truthGraphBytes,
+            documentGraph,
+            documentGraphBytes,
             truth.DeclarationGid,
             truth.LatexStatement);
     }

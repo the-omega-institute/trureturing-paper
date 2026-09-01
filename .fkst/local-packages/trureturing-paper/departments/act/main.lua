@@ -22,21 +22,25 @@ M.spec = {
 }
 
 local function current_blessed(pth)
-  return core.blessed_digest(json.decode(file.read(pth.snap)))
+  return core.blessed_digest(
+    json.decode(file.read(pth.snap)), file.read(pth.document_digest))
 end
 
 function pipeline(event)
   local p = event.payload or {}
-  local digest = p.snapshot_digest
+  local key = {
+    truth_graph_sha256 = p.truth_graph_sha256,
+    document_graph_sha256 = p.document_graph_sha256,
+  }
   local pth, perr = core.paths(p.snapshot_path)
   if not pth then
     error("act: " .. tostring(perr))
   end
-  if not core.is_digest(digest) then
-    error("act: trigger digest is not a valid sha256: " .. tostring(digest))
+  if not core.is_blessing(key) then
+    error("act: trigger graph digest pair is invalid")
   end
-  if current_blessed(pth) ~= digest then
-    log.info("act: bundle blessing now other than " .. digest .. "; obsolete, dropping")
+  if not core.same_blessing(current_blessed(pth), key) then
+    log.info("act: bundle blessing no longer matches trigger; obsolete, dropping")
     return
   end
   -- exec_argv: no shell, no quoting. The claim gate runs inside assemble, so a
@@ -58,20 +62,20 @@ function pipeline(event)
   if #file.read(pth.tex) == 0 then
     error("act: assembled tex is empty")
   end
-  if current_blessed(pth) ~= digest then
-    log.info("act: bundle moved during assemble; not recording stale receipt for " .. digest)
+  if not core.same_blessing(current_blessed(pth), key) then
+    log.info("act: bundle moved during assemble; not recording stale receipt")
     return
   end
   with_lock("trureturing-paper/publications", function()
     local prior = ""
     if file.exists(pth.pubs) then prior = file.read(pth.pubs) end
-    if core.ledger_has_digest(prior, digest) then
-      log.info("act: receipt for " .. digest .. " already present; publication is idempotent")
+    if core.ledger_has_digest(prior, key) then
+      log.info("act: receipt for graph pair already present; publication is idempotent")
       return
     end
-    file.write(pth.pubs, prior .. core.receipt_line(digest, "Papers/paper.tex", now()))
+    file.write(pth.pubs, prior .. core.receipt_line(key, "Papers/paper.tex", now()))
   end)
-  log.info("act: assembled + recorded " .. digest)
+  log.info("act: assembled + recorded graph pair")
 end
 
 return M

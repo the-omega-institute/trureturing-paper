@@ -33,3 +33,10 @@ public interface ITruthGraphPort
     // theorem with a GID that is not actually closed in the blessed truth.
     TruthGraphEnvelope ReadTruthGraph();
 }
+
+public interface IDocumentGraphPort
+{
+    // The document graph and its separately blessed byte digest. The assembler verifies the
+    // digest before using describe nodes or truth anchors from this graph.
+    DocumentGraphEnvelope ReadDocumentGraph();
+}
