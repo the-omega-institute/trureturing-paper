@@ -132,6 +132,19 @@ public static partial class PaperFrontierNodeSelectionService
                 planningDispatch.PortfolioResultRef,
                 StringComparison.Ordinal)
             || !string.Equals(
+                planningCursor.PortfolioRef,
+                planningDispatch.PortfolioRef,
+                StringComparison.Ordinal)
+            || planningCursor.CycleNumber != planningDispatch.CycleNumber
+            || !string.Equals(
+                planningCursor.JudgmentEvidenceRef,
+                planningDispatch.JudgmentEvidenceRef,
+                StringComparison.Ordinal)
+            || !string.Equals(
+                planningCursor.UpdatedPortfolioRef,
+                planningDispatch.UpdatedPortfolioRef,
+                StringComparison.Ordinal)
+            || !string.Equals(
                 planningCursor.PaperId,
                 planningDispatch.PaperId,
                 StringComparison.Ordinal)
