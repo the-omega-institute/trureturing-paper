@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-manuscript-authoring-agent-failure.v1.schema.json",
+  "title": "Paper manuscript authoring agent failure v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "task_ref", "result_ref", "paper_id", "theory_program_ref",
+    "status", "blocker_code", "summary", "next_route"
+  ],
+  "properties": {
+    "schema": { "const": "paper-manuscript-authoring-agent-failure.v1" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "result_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "status": { "enum": ["no-progress", "blocked"] },
+    "blocker_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,127}$" },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 16384 },
+    "next_route": { "enum": ["manuscript-authoring", "blocked"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "no-progress" } }, "required": ["status"] },
+      "then": { "properties": { "next_route": { "const": "manuscript-authoring" } } },
+      "else": { "properties": { "next_route": { "const": "blocked" } } }
+    }
+  ],
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
