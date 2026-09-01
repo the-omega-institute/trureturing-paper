@@ -404,13 +404,13 @@ public static class PaperFormalizationFrontierLifecycleService
 
         if (string.Equals(artifactFamily, TruthReleaseCertificationFamily, StringComparison.Ordinal))
         {
-            if (!string.Equals(
+            if (string.Equals(
                     certifiedTruthReleaseDigest,
                     frontier.FrontierContent.TruthReleaseDigest,
                     StringComparison.Ordinal))
             {
                 throw new InvalidDataException(
-                    "Frontier certification must join the exact truth release used by the paper program.");
+                    "Frontier certification must identify a later descendant truth release.");
             }
             if (!string.Equals(
                     current.OutcomeDisposition,
