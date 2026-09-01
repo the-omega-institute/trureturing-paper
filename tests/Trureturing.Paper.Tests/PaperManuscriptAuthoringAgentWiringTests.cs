@@ -37,7 +37,7 @@ public sealed class PaperManuscriptAuthoringAgentWiringTests
 
         Assert.Contains("stage-manuscript-authoring-task", agentCli, StringComparison.Ordinal);
         Assert.Contains("admit-manuscript-authoring-result", agentCli, StringComparison.Ordinal);
-        Assert.Contains("spawn_codex_sync", runtime, StringComparison.Ordinal);
+        Assert.Contains("agent.execute", runtime, StringComparison.Ordinal);
     }
 
     [Fact]
