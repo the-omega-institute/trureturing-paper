@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-scientific-manuscript-draft.v1.schema.json",
+  "title": "Paper scientific manuscript draft v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "dispatch_ref", "claim_manifest_ref", "manuscript_plan_ref",
+    "paper_id", "theory_program_ref", "title", "abstract_latex", "keywords",
+    "sections", "references", "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-scientific-manuscript-draft.v1" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "claim_manifest_ref": { "$ref": "#/$defs/digest" },
+    "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "$ref": "#/$defs/paper_id" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "abstract_latex": { "type": "string", "minLength": 200, "maxLength": 8192 },
+    "keywords": {
+      "type": "array", "minItems": 3, "maxItems": 10, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 128 }
+    },
+    "sections": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "prefixItems": [
+        { "$ref": "#/$defs/introduction" },
+        { "$ref": "#/$defs/prior_work" },
+        { "$ref": "#/$defs/setting" },
+        { "$ref": "#/$defs/main_results" },
+        { "$ref": "#/$defs/proof_architecture" },
+        { "$ref": "#/$defs/formalization" },
+        { "$ref": "#/$defs/boundaries" },
+        { "$ref": "#/$defs/discussion" }
+      ],
+      "items": false
+    },
+    "references": {
+      "type": "array", "maxItems": 512,
+      "items": { "$ref": "#/$defs/reference" }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "identifier": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$" },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "kind", "target_id", "latex"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1 },
+        "kind": { "enum": ["prose", "formal-claim", "proof", "informal-item"] },
+        "target_id": { "type": "string", "maxLength": 128 },
+        "latex": { "type": "string", "maxLength": 65536 }
+      }
+    },
+    "section_base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "section_id", "title", "blocks"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "section_id": { "type": "string" },
+        "title": { "type": "string" },
+        "blocks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/block" } }
+      }
+    },
+    "introduction": { "allOf": [{ "$ref": "#/$defs/section_base" }, { "properties": { "order": { "const": 1 }, "section_id": { "const": "introduction" }, "title": { "const": "Introduction" } } }] },
+    "prior_work": { "allOf": [{ "$ref": "#/$defs/section_base" }, { "properties": { "order": { "const": 2 }, "section_id": { "const": "prior-work" }, "title": { "const": "Prior work and contribution boundary" } } }] },
+    "setting": { "allOf": [{ "$ref": "#/$defs/section_base" }, { "properties": { "order": { "const": 3 }, "section_id": { "const": "setting" }, "title": { "const": "Setting and definitions" } } }] },
+    "main_results": { "allOf": [{ "$ref": "#/$defs/section_base" }, { "properties": { "order": { "const": 4 }, "section_id": { "const": "main-results" }, "title": { "const": "Main results" } } }] },
+    "proof_architecture": { "allOf": [{ "$ref": "#/$defs/section_base" }, { "properties": { "order": { "const": 5 }, "section_id": { "const": "proof-architecture" }, "title": { "const": "Proof architecture" } } }] },
+    "formalization": { "allOf": [{ "$ref": "#/$defs/section_base" }, { "properties": { "order": { "const": 6 }, "section_id": { "const": "formalization" }, "title": { "const": "Formalization and certified provenance" } } }] },
+    "boundaries": { "allOf": [{ "$ref": "#/$defs/section_base" }, { "properties": { "order": { "const": 7 }, "section_id": { "const": "boundaries" }, "title": { "const": "Boundaries, sharpness, and counterexamples" } } }] },
+    "discussion": { "allOf": [{ "$ref": "#/$defs/section_base" }, { "properties": { "order": { "const": 8 }, "section_id": { "const": "discussion" }, "title": { "const": "Discussion" } } }] },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["citation_key", "related_work_index", "source_ref", "usage"],
+      "properties": {
+        "citation_key": { "$ref": "#/$defs/identifier" },
+        "related_work_index": { "type": "integer", "minimum": 1 },
+        "source_ref": { "$ref": "#/$defs/digest" },
+        "usage": { "type": "string", "minLength": 20, "maxLength": 4096 }
+      }
+    }
+  }
+}
