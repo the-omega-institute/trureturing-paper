@@ -4,6 +4,7 @@ local research = require("research_core")
 M.spec = {
   consumes = { "paper_formalization_result_recorded" },
   produces = {
+    "paper_frontier_formalization_outcome_ready",
     "paper_candidate_pending_certification",
     "paper_intuition_research_requested",
     "paper_sublemma_research_requested",
@@ -84,6 +85,50 @@ function pipeline(event)
 
   local decision_ref =
     research.required(result.decision_ref, "decision_ref")
+  local progress = research.run(paths, {
+    "record-outcome",
+    "--repository-root", paths.root,
+    "--decision-ref", decision_ref,
+  }, paths.frontier_lifecycle_cli)
+  if type(progress) ~= "table" or
+      progress.schema ~= "paper-frontier-formalization-outcome-recorded.v1" or
+      progress.result_ref ~= result_ref or
+      progress.decision_ref ~= decision_ref or
+      (progress.status ~= "recorded" and
+       progress.status ~= "not-frontier-bound" and
+       progress.status ~= "ignored") then
+    error("classify-formalization-outcome: frontier outcome recorder returned an invalid result")
+  end
+
+  if progress.status == "recorded" then
+    if not is_sha256(progress.frontier_ref) or
+        not is_sha256(progress.node_id) or
+        type(progress.claim_id) ~= "string" or
+        progress.claim_id == "" or
+        not is_sha256(progress.frontier_state_ref) or
+        not is_sha256(progress.outcome_event_ref) or
+        type(progress.outcome_disposition) ~= "string" or
+        progress.outcome_disposition == "" then
+      error("classify-formalization-outcome: frontier outcome identity is invalid")
+    end
+    raise("paper_frontier_formalization_outcome_ready", {
+      schema = "paper-frontier-formalization-outcome-ready.v1",
+      formalization_request_ref = progress.formalization_request_ref,
+      result_ref = result_ref,
+      decision_ref = decision_ref,
+      frontier_ref = progress.frontier_ref,
+      node_id = progress.node_id,
+      claim_id = progress.claim_id,
+      outcome_class = progress.outcome_class,
+      outcome_disposition = progress.outcome_disposition,
+      frontier_state_ref = progress.frontier_state_ref,
+      outcome_event_ref = progress.outcome_event_ref,
+      replayed = progress.replayed == true,
+      dedup_key = "paper-frontier-formalization-outcome:v1:" ..
+        progress.frontier_ref .. ":" .. progress.node_id,
+    })
+  end
+
   raise(queue, {
     decision_ref = decision_ref,
     certification_wait_ref = text(result.certification_wait_ref),
@@ -117,6 +162,9 @@ function pipeline(event)
     claim_status = research.required(
       result.claim_status,
       "claim_status"),
+    frontier_ref = progress.frontier_ref or "",
+    frontier_node_id = progress.node_id or "",
+    frontier_state_ref = progress.frontier_state_ref or "",
     replayed = result.replayed == true,
     dedup_key = "paper-formalization-decision:v1:" .. decision_ref,
   })
