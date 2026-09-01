@@ -99,7 +99,7 @@ public sealed class PaperFrontierReadyWaveSelectionTests
         PaperFrontierReadyWaveSelectionAdmitted replay =
             PaperFrontierNodeSelectionService.AdmitReadyWave(
                 repository.Root,
-                repository.Frier.FrontierId,
+                repository.Frontier.FrontierId,
                 certification.ReadySetRef);
 
         Assert.True(replay.Replayed);
