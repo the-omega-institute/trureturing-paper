@@ -6,84 +6,16 @@ on:
       - codex/paper-manuscript-native-authoring
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   check:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: codex/paper-manuscript-native-authoring
-          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-      - name: Apply deterministic source corrections
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          agents = Path('src/Trureturing.Paper.Core/PaperManuscriptAuthoringAgents.cs')
-          text = agents.read_text()
-          text, count = re.subn(
-              r'    public static void Validate\(\n\s*PaperScientificManuscript manuscript,\n\s*PaperManuscriptAuthoringContext context,',
-              '    internal static void Validate(\n        PaperScientificManuscript manuscript,\n        PaperManuscriptAuthoringContext context,',
-              text,
-              count=1)
-          if count != 1:
-              raise SystemExit('scientific manuscript Validate accessibility target not found')
-          text, count = re.subn(
-              r'(\s*dispatch\.SelectedReleaseDigest,\n)\s*dispatch\.PaperId,(\n\s*mainTex,)',
-              r'\1            draft.Title,\2',
-              text,
-              count=1)
-          if count != 1:
-              raise SystemExit('scientific manuscript title target not found')
-          agents.write_text(text)
-
-          context = Path('src/Trureturing.Paper.Core/PaperFrontierManuscriptAuthoringContext.cs')
-          text = context.read_text()
-          text, count = re.subn(
-              r'\|\| !string\.Equals\(\n\s*manifest\.ManuscriptTruthReleaseRef,\n\s*selectedRelease\.ReleaseDigest == string\.Empty\n\s*\? string\.Empty\n\s*: plan\.ManuscriptTruthReleaseRef,\n\s*StringComparison\.Ordinal\)\)',
-              '|| !string.Equals(\n                manifest.ManuscriptTruthReleaseRef,\n                plan.ManuscriptTruthReleaseRef,\n                StringComparison.Ordinal))',
-              text,
-              count=1)
-          if count != 1:
-              raise SystemExit('selected release comparison target not found')
-          context.write_text(text)
-
-          validation = Path('src/Trureturing.Paper.Core/PaperManuscriptAuthoringValidation.cs')
-          text = validation.read_text()
-          if 'using System.Text.Json;\n' not in text:
-              text = text.replace(
-                  'using System.Text;\n',
-                  'using System.Text;\nusing System.Text.Json;\n',
-                  1)
-          validation.write_text(text)
-
-          rendering = Path('src/Trureturing.Paper.Core/PaperManuscriptRendering.cs')
-          text = rendering.read_text()
-          text, count = re.subn(
-              r'(\|\| Count\(source, \$"\\\\label\{\{\{binding\.LatexLabel\}\}\}"\) != 1)\n\s*\|\| Count\(source, \$"\\\\begin\{\{\{binding\.Environment\}\}\}"\) != 1\n\s*\|\| Count\(source, \$"\\\\end\{\{\{binding\.Environment\}\}\}"\) != 1\)',
-              r'\1)',
-              text,
-              count=1)
-          if count != 1:
-              raise SystemExit('formal environment count target not found')
-          rendering.write_text(text)
-          PY
       - run: dotnet restore Trureturing.Paper.slnx --ignore-failed-sources
       - run: dotnet build Trureturing.Paper.slnx -c Release --no-restore
       - run: dotnet test Trureturing.Paper.slnx -c Release --no-build --no-restore
-      - name: Commit verified corrections
-        shell: bash
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add src/Trureturing.Paper.Core
-          git commit -m "fix(paper): align manuscript authoring visibility and bindings"
-          git push origin HEAD:codex/paper-manuscript-native-authoring
