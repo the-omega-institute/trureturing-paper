@@ -20,6 +20,8 @@ internal static class Program
           admit-portfolio-judgment-result --repository-root <path> --task-ref <sha256:...>
           stage-frontier-planning-task --repository-root <path> --portfolio-task-ref <sha256:...> --paper-id <id>
           admit-frontier-planning-result --repository-root <path> --task-ref <sha256:...>
+          stage-manuscript-authoring-task --repository-root <path> --evaluation-ref <sha256:...> --claim-manifest-ref <sha256:...> --eligibility-ref <sha256:...>
+          admit-manuscript-authoring-result --repository-root <path> --task-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
@@ -41,6 +43,8 @@ internal static class Program
                 "admit-portfolio-judgment-result" => AdmitPortfolioJudgmentResult(args),
                 "stage-frontier-planning-task" => StageFrontierPlanningTask(args),
                 "admit-frontier-planning-result" => AdmitFrontierPlanningResult(args),
+                "stage-manuscript-authoring-task" => StageManuscriptAuthoringTask(args),
+                "admit-manuscript-authoring-result" => AdmitManuscriptAuthoringResult(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -253,6 +257,40 @@ internal static class Program
             "--task-ref");
         PaperFrontierPlanningAgentResultAdmitted result =
             PaperFrontierPlanningAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageManuscriptAuthoringTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-manuscript-authoring-task",
+            "--repository-root",
+            "--evaluation-ref",
+            "--claim-manifest-ref",
+            "--eligibility-ref");
+        PaperManuscriptAuthoringAgentTaskStaged result =
+            PaperManuscriptAuthoringAgentService.StageTask(
+                values["--repository-root"],
+                values["--evaluation-ref"],
+                values["--claim-manifest-ref"],
+                values["--eligibility-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitManuscriptAuthoringResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-manuscript-authoring-result",
+            "--repository-root",
+            "--task-ref");
+        PaperManuscriptAuthoringAgentResultAdmitted result =
+            PaperManuscriptAuthoringAgentService.AdmitResult(
                 values["--repository-root"],
                 values["--task-ref"]);
         WriteResult(result);
