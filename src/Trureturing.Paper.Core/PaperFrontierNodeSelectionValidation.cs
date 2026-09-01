@@ -46,7 +46,7 @@ public static partial class PaperFrontierNodeSelectionService
         RequireDigest(content.TheoremPackageRef, nameof(content.TheoremPackageRef));
         RequireDigest(content.PortfolioDecisionRef, nameof(content.PortfolioDecisionRef));
         if (content.DispatchOrder < 1
-            || content.ParallelWave != 0
+            || content.ParallelWave < 0
             || content.Priority is < 0 or > 100)
         {
             throw new InvalidDataException(
@@ -166,7 +166,7 @@ public static partial class PaperFrontierNodeSelectionService
         RequireDigest(cursor.TheoremPackageRef, nameof(cursor.TheoremPackageRef));
         RequireDigest(cursor.PortfolioDecisionRef, nameof(cursor.PortfolioDecisionRef));
         if (cursor.DispatchOrder < 1
-            || cursor.ParallelWave != 0
+            || cursor.ParallelWave < 0
             || cursor.Priority is < 0 or > 100)
         {
             throw new InvalidDataException(
