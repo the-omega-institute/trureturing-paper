@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-completion-pending.v1.schema.json",
+  "title": "Paper frontier completion pending v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "frontier_ref", "frontier_state_ref", "missing_node_ids",
+    "blocking_release_refs", "reason", "checked_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-frontier-completion-pending.v1" },
+    "frontier_ref": { "$ref": "#/$defs/digest" },
+    "frontier_state_ref": { "$ref": "#/$defs/digest" },
+    "missing_node_ids": {
+      "type": "array", "uniqueItems": true,
+      "items": { "$ref": "#/$defs/digest" }
+    },
+    "blocking_release_refs": {
+      "type": "array", "uniqueItems": true,
+      "items": { "$ref": "#/$defs/digest" }
+    },
+    "reason": { "enum": ["load-bearing-claims-incomplete", "coherent-truth-release-absent"] },
+    "checked_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
