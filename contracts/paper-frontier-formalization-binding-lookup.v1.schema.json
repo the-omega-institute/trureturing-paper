@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-formalization-binding-lookup.v1.schema.json",
+  "title": "Paper frontier formalization binding lookup v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "formalization_request_ref", "binding_ref", "binding_blob_ref", "binding_path"],
+  "properties": {
+    "schema": { "const": "paper-frontier-formalization-binding-lookup.v1" },
+    "formalization_request_ref": { "$ref": "#/$defs/digest" },
+    "binding_ref": { "$ref": "#/$defs/digest" },
+    "binding_blob_ref": { "$ref": "#/$defs/digest" },
+    "binding_path": { "$ref": "#/$defs/path" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "path": { "type": "string", "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$", "maxLength": 4096 }
+  }
+}
