@@ -9,6 +9,8 @@ public static class PaperFrontierCompletionSchemas
     public const string Cursor = "paper-frontier-completion-cursor.v1";
     public const string Evaluated = "paper-frontier-completion-evaluated.v1";
     public const string Ready = "paper-frontier-completion-ready.v1";
+    public const string CandidatesListed =
+        "paper-frontier-completion-candidates-listed.v1";
 }
 
 public static class PaperFrontierCompletionStatuses
@@ -99,3 +101,8 @@ public sealed record PaperFrontierCompletionEvaluated(
     [property: JsonRequired] IReadOnlyList<string> MissingNodeIds,
     [property: JsonRequired] string Reason,
     [property: JsonRequired] bool Replayed);
+
+
+public sealed record PaperFrontierCompletionCandidatesListed(
+    [property: JsonRequired] string Schema,
+    [property: JsonRequired] IReadOnlyList<string> FrontierRefs);

@@ -18,6 +18,61 @@ public static partial class PaperFrontierNodeSelectionService
         ["lemma", "proposition", "theorem", "corollary"],
         StringComparer.Ordinal);
 
+    public static IReadOnlyList<string> ListFrontierCompletionCandidates(
+        string repositoryRoot)
+    {
+        string root = RequireRepositoryRoot(repositoryRoot);
+        string directory = Path.Combine(
+            root,
+            "work",
+            "paper-frontier-formalization-progress",
+            "certifications");
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        var frontiers = new List<string>();
+        foreach (string child in Directory.EnumerateDirectories(directory)
+            .OrderBy(value => value, StringComparer.Ordinal))
+        {
+            string hex = Path.GetFileName(child);
+            if (hex.Length != 64
+                || hex.Any(character =>
+                    character is not ((>= '0' and <= '9')
+                        or (>= 'a' and <= 'f'))))
+            {
+                throw new InvalidDataException(
+                    "Frontier completion certification directory has a noncanonical identity.");
+            }
+            string frontierRef = "sha256:" + hex;
+            if (File.Exists(CompletionCursorPath(root, frontierRef)))
+            {
+                continue;
+            }
+            PaperFrontierCertificationCursor[] cursors =
+                ReadCertificationCursors(root, frontierRef).ToArray();
+            if (cursors.Length == 0)
+            {
+                continue;
+            }
+            foreach (PaperFrontierCertificationCursor cursor in cursors)
+            {
+                Validate(cursor);
+                if (!string.Equals(
+                        cursor.FrontierRef,
+                        frontierRef,
+                        StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException(
+                        "Frontier completion candidate directory contains a cross-frontier cursor.");
+                }
+            }
+            frontiers.Add(frontierRef);
+        }
+        return frontiers;
+    }
+
     public static PaperFrontierCompletionEvaluated EvaluateFrontierCompletion(
         string repositoryRoot,
         string frontierRef)
@@ -71,18 +126,28 @@ public static partial class PaperFrontierNodeSelectionService
         string terminalCursorPath = CompletionCursorPath(root, frontierRef);
         if (File.Exists(terminalCursorPath))
         {
-            PaperFrontierCompletionCursor cursor =
+            PaperFrontierCompletionCursor existingCursor =
                 ReadCompletionCursor(terminalCursorPath);
-            ValidateCompletionReplay(root, context, current, cursor);
-            PaperFrontierCompletionReceipt receipt =
+            ValidateCompletionReplay(root, context, current, existingCursor);
+            PaperFrontierCompletionReceipt existingReceipt =
                 ResearchStore(root).Get<PaperFrontierCompletionReceipt>(
-                    cursor.CompletionRef);
-            PaperManuscriptPlan plan =
+                    existingCursor.CompletionRef);
+            PaperManuscriptPlan existingPlan =
                 ResearchStore(root).Get<PaperManuscriptPlan>(
-                    cursor.ManuscriptPlanRef);
-            Validate(receipt, context.Source.Frontier, current, plan);
-            PaperCertifiedClaimManifestService.Validate(plan);
-            return CompletedResult(cursor, receipt, replayed: true);
+                    existingCursor.ManuscriptPlanRef);
+            Validate(
+                existingReceipt,
+                context.Source.Frontier,
+                LoadStateByReference(
+                    root,
+                    context.Source.Frontier,
+                    existingCursor.FrontierStateRef),
+                existingPlan);
+            PaperCertifiedClaimManifestService.Validate(existingPlan);
+            return CompletedResult(
+                existingCursor,
+                existingReceipt,
+                replayed: true);
         }
 
         HashSet<string> requiredClaimIds = RequiredClaimIds(
@@ -117,6 +182,7 @@ public static partial class PaperFrontierNodeSelectionService
                 root,
                 frontierRef,
                 current.StateId,
+                context.Source.Program.ProgramContent.PaperId,
                 missingNodeIds,
                 [],
                 PaperFrontierCompletionReasons.LoadBearingClaimsIncomplete,
@@ -128,6 +194,7 @@ public static partial class PaperFrontierNodeSelectionService
             context,
             requiredNodes);
         PaperFrontierCoherentRelease? selected = SelectCoherentRelease(
+            root,
             materials);
         if (selected is null)
         {
@@ -140,6 +207,7 @@ public static partial class PaperFrontierNodeSelectionService
                 root,
                 frontierRef,
                 current.StateId,
+                context.Source.Program.ProgramContent.PaperId,
                 [],
                 blocking,
                 PaperFrontierCompletionReasons.CoherentTruthReleaseAbsent,
@@ -208,6 +276,7 @@ public static partial class PaperFrontierNodeSelectionService
             PaperFrontierCompletionSchemas.Cursor,
             frontierRef,
             current.StateId,
+            context.Source.Program.ProgramContent.PaperId,
             completionRef,
             registration.ManuscriptPlanRef,
             selected.ReleaseRef,
@@ -263,6 +332,7 @@ public static partial class PaperFrontierNodeSelectionService
         }
         var nodeIds = new HashSet<string>(StringComparer.Ordinal);
         var claimIds = new HashSet<string>(StringComparer.Ordinal);
+        var labels = new HashSet<string>(StringComparer.Ordinal);
         int formalCount = 0;
         int informalCount = 0;
         for (int index = 0; index < receipt.Claims.Count; index++)
@@ -272,7 +342,8 @@ public static partial class PaperFrontierNodeSelectionService
                     "Frontier completion claims cannot contain null.");
             if (claim.Order != index + 1
                 || !nodeIds.Add(claim.NodeId)
-                || !claimIds.Add(claim.ClaimId))
+                || !claimIds.Add(claim.ClaimId)
+                || !labels.Add(claim.LatexLabel))
             {
                 throw new InvalidDataException(
                     "Frontier completion claim order and identities must be unique.");
@@ -291,32 +362,42 @@ public static partial class PaperFrontierNodeSelectionService
             }
             RequireClaimId(claim.ClaimId);
             RequireGid(claim.Gid);
-            RequireText(
+            RequireCompletionText(
                 claim.TheoremPackageKind,
                 nameof(claim.TheoremPackageKind),
                 128);
-            RequireText(
+            RequireCompletionText(
                 claim.ManuscriptDisposition,
                 nameof(claim.ManuscriptDisposition),
                 128);
-            RequireText(claim.LatexLabel, nameof(claim.LatexLabel), 256);
+            RequireCompletionText(claim.LatexLabel, nameof(claim.LatexLabel), 256);
             if (string.Equals(
                     claim.ManuscriptDisposition,
                     "formal-claim",
                     StringComparison.Ordinal))
             {
-                RequireText(
+                RequireCompletionText(
                     claim.ManuscriptClaimKind,
                     nameof(claim.ManuscriptClaimKind),
                     128);
+                if (!ManuscriptFormalKinds.Contains(
+                        claim.ManuscriptClaimKind))
+                {
+                    throw new InvalidDataException(
+                        "Frontier completion formal claim kind is unsupported.");
+                }
                 formalCount++;
             }
             else
             {
-                if (!string.IsNullOrEmpty(claim.ManuscriptClaimKind))
+                if (!string.IsNullOrEmpty(claim.ManuscriptClaimKind)
+                    || claim.ManuscriptDisposition is not (
+                        "informal-definition"
+                        or "informal-example"
+                        or "informal-remark"))
                 {
                     throw new InvalidDataException(
-                        "Informal completion claims cannot carry a manuscript claim kind.");
+                        "Informal completion claims have an invalid disposition or claim kind.");
                 }
                 informalCount++;
             }
@@ -348,6 +429,7 @@ public static partial class PaperFrontierNodeSelectionService
         RequireDigest(
             pending.FrontierStateRef,
             nameof(pending.FrontierStateRef));
+        RequirePaperId(pending.PaperId);
         RequireCompletionDigestList(
             pending.MissingNodeIds,
             nameof(pending.MissingNodeIds),
@@ -383,10 +465,12 @@ public static partial class PaperFrontierNodeSelectionService
             throw new InvalidDataException(
                 "Frontier completion cursor has the wrong schema.");
         }
+        RequirePaperId(cursor.PaperId);
         foreach (string digest in new[]
         {
             cursor.FrontierRef,
             cursor.FrontierStateRef,
+            cursor.PaperId,
             cursor.CompletionRef,
             cursor.ManuscriptPlanRef,
             cursor.ManuscriptTruthReleaseRef,
@@ -520,19 +604,14 @@ public static partial class PaperFrontierNodeSelectionService
     }
 
     private static PaperFrontierCoherentRelease? SelectCoherentRelease(
+        string root,
         IReadOnlyList<PaperFrontierCompletionMaterial> materials)
     {
-        var candidates = materials
-            .GroupBy(
-                value => value.CertifiedClaim.CertifyingReleaseRef,
-                StringComparer.Ordinal)
-            .Select(group => new PaperFrontierCoherentRelease(
-                group.Key,
-                group.First().OriginalRelease))
-            .OrderBy(value => value.Release.ReleaseDigest, StringComparer.Ordinal)
-            .ToArray();
-        PaperFrontierCoherentRelease[] coherent = candidates
+        PaperFrontierCoherentRelease[] coherent = ReadRegisteredReleases(
+                root,
+                materials)
             .Where(candidate => ReleaseCoversAll(candidate.Release, materials))
+            .OrderBy(candidate => candidate.Release.ReleaseDigest, StringComparer.Ordinal)
             .ToArray();
         PaperFrontierCoherentRelease[] maximal = coherent
             .Where(candidate => coherent.All(other =>
@@ -545,6 +624,72 @@ public static partial class PaperFrontierNodeSelectionService
                     StringComparer.Ordinal)))
             .ToArray();
         return maximal.Length == 1 ? maximal[0] : null;
+    }
+
+    private static PaperFrontierCoherentRelease[] ReadRegisteredReleases(
+        string root,
+        IReadOnlyList<PaperFrontierCompletionMaterial> materials)
+    {
+        var byReference = new Dictionary<string, PaperCertificationRelease>(
+            StringComparer.Ordinal);
+        foreach (PaperFrontierCompletionMaterial material in materials)
+        {
+            byReference[material.CertifiedClaim.CertifyingReleaseRef] =
+                material.OriginalRelease;
+        }
+
+        string directory = Path.Combine(
+            root,
+            "work",
+            "research-input",
+            "certification-releases");
+        if (Directory.Exists(directory))
+        {
+            foreach (string path in Directory.EnumerateFiles(
+                directory,
+                "*.json",
+                SearchOption.TopDirectoryOnly)
+                .OrderBy(value => value, StringComparer.Ordinal))
+            {
+                PaperCertificationReleaseCursor cursor =
+                    PaperResearchInputJson.DeserializeStrict<
+                        PaperCertificationReleaseCursor>(
+                            ReadBoundedFile(
+                                path,
+                                MaximumControlBytes,
+                                "Certification release cursor"));
+                if (!string.Equals(
+                        cursor.Schema,
+                        PaperCertificationSchemas.ReleaseCursor,
+                        StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException(
+                        "Frontier completion encountered an invalid certification release cursor schema.");
+                }
+                RequireDigest(cursor.ReleaseRef, nameof(cursor.ReleaseRef));
+                RequireDigest(cursor.ReleaseDigest, nameof(cursor.ReleaseDigest));
+                PaperCertificationRelease release =
+                    ResearchStore(root).Get<PaperCertificationRelease>(
+                        cursor.ReleaseRef);
+                PaperCertificationService.Validate(release);
+                if (!string.Equals(
+                        cursor.ReleaseDigest,
+                        release.ReleaseDigest,
+                        StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException(
+                        "Certification release cursor changed the observed release digest.");
+                }
+                byReference[cursor.ReleaseRef] = release;
+            }
+        }
+
+        return byReference
+            .Select(value => new PaperFrontierCoherentRelease(
+                value.Key,
+                value.Value))
+            .OrderBy(value => value.Release.ReleaseDigest, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static bool ReleaseCoversAll(
@@ -612,10 +757,7 @@ public static partial class PaperFrontierNodeSelectionService
                     material.PackageClaim.ClaimId,
                     ManuscriptLabel(kind, material.PackageClaim.ClaimId),
                     kind,
-                    material.CertifiedClaim.CertifyingReleaseRef == string.Empty
-                        ? throw new InvalidDataException(
-                            "Completed formal claim lacks certification evidence.")
-                        : material.FrontierManifest.ManifestContent.CertifiedClaimRef,
+                    material.FrontierManifest.ManifestContent.CertifiedClaimRef,
                     material.Node.FormalStatement,
                     ManuscriptRole(package, material.PackageClaim)));
                 continue;
@@ -633,7 +775,7 @@ public static partial class PaperFrontierNodeSelectionService
                 material.PackageClaim.ClaimId,
                 ManuscriptLabel(itemKind, material.PackageClaim.ClaimId),
                 itemKind,
-                material.PackageClaim.Statement,
+                material.Node.FormalStatement,
                 PaperCertifiedClaimManifestService.ExplicitlyInformal));
         }
         if (formal.Count == 0)
@@ -761,6 +903,7 @@ public static partial class PaperFrontierNodeSelectionService
         string root,
         string frontierRef,
         string stateRef,
+        string paperId,
         IReadOnlyList<string> missingNodeIds,
         IReadOnlyList<string> blockingReleaseRefs,
         string reason,
@@ -770,6 +913,7 @@ public static partial class PaperFrontierNodeSelectionService
             PaperFrontierCompletionSchemas.Pending,
             frontierRef,
             stateRef,
+            paperId,
             missingNodeIds.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
             blockingReleaseRefs.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
             reason,
@@ -781,6 +925,7 @@ public static partial class PaperFrontierNodeSelectionService
             PaperFrontierCompletionStatuses.Pending,
             frontierRef,
             stateRef,
+            paperId,
             string.Empty,
             pendingRef,
             string.Empty,
@@ -802,6 +947,7 @@ public static partial class PaperFrontierNodeSelectionService
             PaperFrontierCompletionStatuses.Completed,
             cursor.FrontierRef,
             cursor.FrontierStateRef,
+            cursor.PaperId,
             cursor.CompletionRef,
             string.Empty,
             cursor.ManuscriptPlanRef,
@@ -820,7 +966,8 @@ public static partial class PaperFrontierNodeSelectionService
         PaperFrontierCompletionCursor cursor)
     {
         Validate(cursor);
-        if (!string.Equals(cursor.FrontierRef, context.Source.Frontier.FrontierId, StringComparison.Ordinal))
+        if (!string.Equals(cursor.FrontierRef, context.Source.Frontier.FrontierId, StringComparison.Ordinal)
+            || !string.Equals(cursor.PaperId, context.Source.Program.ProgramContent.PaperId, StringComparison.Ordinal))
         {
             throw new InvalidDataException(
                 "Frontier completion cursor changed the frontier identity.");
@@ -880,6 +1027,18 @@ public static partial class PaperFrontierNodeSelectionService
         return cursor;
     }
 
+    private static void RequireCompletionText(
+        string value,
+        string name,
+        int maximum)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length > maximum)
+        {
+            throw new InvalidDataException(
+                $"{name} must contain between 1 and {maximum} characters.");
+        }
+    }
+
     private static void RequireCompletionDigestList(
         IReadOnlyList<string>? values,
         string name,
@@ -889,18 +1048,15 @@ public static partial class PaperFrontierNodeSelectionService
         {
             throw new InvalidDataException($"{name} is incomplete.");
         }
-        string[] normalized = values
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(value => value, StringComparer.Ordinal)
-            .ToArray();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (string value in values)
         {
             RequireDigest(value, name);
-        }
-        if (!values.SequenceEqual(normalized, StringComparer.Ordinal))
-        {
-            throw new InvalidDataException(
-                $"{name} must be sorted and unique.");
+            if (!seen.Add(value))
+            {
+                throw new InvalidDataException(
+                    $"{name} must contain unique references.");
+            }
         }
     }
 

@@ -10,6 +10,7 @@ internal static class Program
           admit-frontier-node-selection --repository-root <path> --frontier-task-ref <sha256:...> --node-id <sha256:...>
           admit-frontier-ready-wave --repository-root <path> --frontier-ref <sha256:...> --ready-set-ref <sha256:...>
           evaluate-frontier-completion --repository-root <path> --frontier-ref <sha256:...>
+          list-frontier-completion-candidates --repository-root <path>
         """;
 
     public static int Main(string[] args)
@@ -24,6 +25,8 @@ internal static class Program
                     => AdmitReadyWave(args),
                 "evaluate-frontier-completion" when args.Length == 5
                     => EvaluateCompletion(args),
+                "list-frontier-completion-candidates" when args.Length == 3
+                    => ListCompletionCandidates(args),
                 _ => throw new ArgumentException(Usage)
             };
             Console.WriteLine(
@@ -79,6 +82,20 @@ internal static class Program
         return PaperFrontierNodeSelectionService.EvaluateFrontierCompletion(
             values["--repository-root"],
             values["--frontier-ref"]);
+    }
+
+    private static PaperFrontierCompletionCandidatesListed
+        ListCompletionCandidates(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "--repository-root");
+        IReadOnlyList<string> frontiers =
+            PaperFrontierNodeSelectionService.ListFrontierCompletionCandidates(
+                values["--repository-root"]);
+        return new(
+            PaperFrontierCompletionSchemas.CandidatesListed,
+            frontiers);
     }
 
     private static Dictionary<string, string> ParseValues(
