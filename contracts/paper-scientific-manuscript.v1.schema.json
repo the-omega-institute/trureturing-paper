@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-scientific-manuscript.v1.schema.json",
+  "title": "Paper scientific manuscript v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "manuscript_id", "manuscript_content"],
+  "properties": {
+    "schema": { "const": "paper-scientific-manuscript.v1" },
+    "manuscript_id": { "$ref": "#/$defs/digest" },
+    "manuscript_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_ref", "result_ref", "dispatch_ref", "completion_ref",
+        "evaluation_ref", "claim_manifest_ref", "eligibility_ref",
+        "manuscript_plan_ref", "frontier_ref", "paper_id", "theory_program_ref",
+        "theorem_package_ref", "theory_audit_ref", "literature_research_ref",
+        "selected_release_ref", "selected_release_digest", "title", "main_tex",
+        "bibliography", "claim_bindings", "section_ids", "citation_keys",
+        "formal_claim_count", "informal_item_count", "authoring_status", "created_at"
+      ],
+      "properties": {
+        "task_ref": { "$ref": "#/$defs/digest" },
+        "result_ref": { "$ref": "#/$defs/digest" },
+        "dispatch_ref": { "$ref": "#/$defs/digest" },
+        "completion_ref": { "$ref": "#/$defs/digest" },
+        "evaluation_ref": { "$ref": "#/$defs/digest" },
+        "claim_manifest_ref": { "$ref": "#/$defs/digest" },
+        "eligibility_ref": { "$ref": "#/$defs/digest" },
+        "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+        "frontier_ref": { "$ref": "#/$defs/digest" },
+        "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+        "theory_program_ref": { "$ref": "#/$defs/digest" },
+        "theorem_package_ref": { "$ref": "#/$defs/digest" },
+        "theory_audit_ref": { "$ref": "#/$defs/digest" },
+        "literature_research_ref": { "$ref": "#/$defs/digest" },
+        "selected_release_ref": { "$ref": "#/$defs/digest" },
+        "selected_release_digest": { "$ref": "#/$defs/digest" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "main_tex": { "$ref": "#/$defs/source_file" },
+        "bibliography": { "$ref": "#/$defs/source_file" },
+        "claim_bindings": {
+          "type": "array", "minItems": 1, "maxItems": 512,
+          "items": { "$ref": "#/$defs/claim_binding" }
+        },
+        "section_ids": {
+          "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true,
+          "prefixItems": [
+            { "const": "introduction" }, { "const": "prior-work" },
+            { "const": "setting" }, { "const": "main-results" },
+            { "const": "proof-architecture" }, { "const": "formalization" },
+            { "const": "boundaries" }, { "const": "discussion" }
+          ],
+          "items": false
+        },
+        "citation_keys": {
+          "type": "array", "maxItems": 512, "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$" }
+        },
+        "formal_claim_count": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "informal_item_count": { "type": "integer", "minimum": 0, "maximum": 2048 },
+        "authoring_status": { "const": "journal-neutral-scientific-draft" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "relative_path": { "type": "string", "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$", "maxLength": 4096 },
+    "source_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "media_type", "artifact_ref", "repository_relative_path", "size_bytes"],
+      "properties": {
+        "role": { "enum": ["main-tex", "bibliography"] },
+        "media_type": { "enum": ["text/x-tex", "application/x-bibtex"] },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "$ref": "#/$defs/relative_path" },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 33554432 }
+      }
+    },
+    "claim_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "order", "claim_id", "latex_label", "claim_kind", "environment",
+        "certified_claim_ref", "gid", "statement_id", "requested_statement_digest",
+        "begin_marker", "end_marker"
+      ],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1 },
+        "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$" },
+        "latex_label": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.-]*:[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" },
+        "claim_kind": { "enum": ["theorem", "lemma", "proposition", "corollary"] },
+        "environment": { "enum": ["theorem", "lemma", "proposition", "corollary"] },
+        "certified_claim_ref": { "$ref": "#/$defs/digest" },
+        "gid": { "type": "string", "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$" },
+        "statement_id": { "$ref": "#/$defs/digest" },
+        "requested_statement_digest": { "$ref": "#/$defs/digest" },
+        "begin_marker": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "end_marker": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    }
+  }
+}
