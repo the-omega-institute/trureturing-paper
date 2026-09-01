@@ -6,47 +6,16 @@ on:
       - codex/paper-manuscript-native-authoring
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   check:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: codex/paper-manuscript-native-authoring
-          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-      - name: Repair fixture against generic agent API
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('tests/Trureturing.Paper.Tests/ManuscriptAuthoringTestRepository.cs')
-          text = p.read_text()
-          if text.count('Prepared.Workspace,') != 1:
-              raise SystemExit('Workspace target not found')
-          text = text.replace('Prepared.Workspace,', 'Prepared.WorkspacePath,', 1)
-          old = 'Registration.ExactInputRefs,'
-          new = '''PaperResearchInputJson.DeserializeStrict<PaperAgentTask>(
-                  File.ReadAllBytes(Staged.TaskPath)).ExactInputs
-                  .Select(input => input.ArtifactRef)
-                  .ToArray(),'''
-          if text.count(old) != 1:
-              raise SystemExit('ExactInputRefs target not found')
-          p.write_text(text.replace(old, new, 1))
-          PY
       - run: dotnet restore Trureturing.Paper.slnx --ignore-failed-sources
       - run: dotnet build Trureturing.Paper.slnx -c Release --no-restore
       - run: dotnet test Trureturing.Paper.slnx -c Release --no-build --no-restore
-      - name: Commit verified fixture repair
-        shell: bash
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add tests/Trureturing.Paper.Tests/ManuscriptAuthoringTestRepository.cs
-          git commit -m "test(paper): align manuscript fixture with agent runtime"
-          git push origin HEAD:codex/paper-manuscript-native-authoring
