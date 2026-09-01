@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-formalization-binding.v1.schema.json",
+  "title": "Paper frontier formalization binding v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "binding_id", "binding_content"],
+  "properties": {
+    "schema": { "const": "paper-frontier-formalization-binding.v1" },
+    "binding_id": { "$ref": "#/$defs/digest" },
+    "binding_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frontier_planning_task_ref", "frontier_planning_result_ref", "frontier_ref", "node_id", "claim_id", "authorization_ref", "verification_budget_ref", "selection_ref", "formalization_request_ref", "selection_event_ref", "request_event_ref", "truth_release_digest", "source_commit", "source_tree", "gid", "created_at"],
+      "properties": {
+        "frontier_planning_task_ref": { "$ref": "#/$defs/digest" },
+        "frontier_planning_result_ref": { "$ref": "#/$defs/digest" },
+        "frontier_ref": { "$ref": "#/$defs/digest" },
+        "node_id": { "$ref": "#/$defs/digest" },
+        "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+        "authorization_ref": { "$ref": "#/$defs/digest" },
+        "verification_budget_ref": { "$ref": "#/$defs/digest" },
+        "selection_ref": { "$ref": "#/$defs/digest" },
+        "formalization_request_ref": { "$ref": "#/$defs/digest" },
+        "selection_event_ref": { "$ref": "#/$defs/digest" },
+        "request_event_ref": { "$ref": "#/$defs/digest" },
+        "truth_release_digest": { "$ref": "#/$defs/digest" },
+        "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "source_tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "gid": { "type": "string", "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
