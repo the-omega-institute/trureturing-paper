@@ -60,6 +60,13 @@ public sealed class PaperFrontierNodeSelectionTests
         Assert.Equal(
             repository.TruthReleaseDigest,
             request.TruthRelease.ReleaseDigest);
+        Assert.Empty(selection.SelectionContent.ReuseApi);
+        Assert.Equal(
+            2,
+            selection.SelectionContent.Target.AllowedAssumptions.Count);
+        Assert.Equal(
+            selection.SelectionContent.Target.AllowedAssumptions,
+            request.Target.AllowedAssumptions);
 
         PaperFrontierCurrentStateCursor stateCursor =
             repository.ReadCurrentStateCursor();
@@ -107,11 +114,15 @@ public sealed class PaperFrontierNodeSelectionTests
             repository.Node("def:object");
         PaperFormalizationFrontierNode sharpness =
             repository.Node("thm:sharp");
-        _ = PaperFrontierNodeSelectionService.Admit(
-            repository.Root,
-            repository.PlanningTaskRef,
-            definition.NodeId);
+        PaperFrontierNodeSelectionAdmitted first =
+            PaperFrontierNodeSelectionService.Admit(
+                repository.Root,
+                repository.PlanningTaskRef,
+                definition.NodeId);
         File.Delete(CurrentStateCursorPath(repository));
+        File.Delete(BindingLookupPath(
+            repository,
+            first.FormalizationRequestRef));
 
         PaperFrontierNodeSelectionAdmitted admitted =
             PaperFrontierNodeSelectionService.Admit(
@@ -128,6 +139,8 @@ public sealed class PaperFrontierNodeSelectionTests
             state.StateContent.NodeStates.Count(value =>
                 value.Status == "request-recorded"));
         Assert.Equal(4, state.StateContent.AppliedEventRefs.Count);
+        Assert.True(
+            repository.BindingLookupExists(first.FormalizationRequestRef));
     }
 
     [Fact]
