@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   patch:
-    if: github.actor != 'github-actions[bot]'
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -20,86 +20,9 @@ jobs:
       - name: Record descendant certification release on frontier state
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          lifecycle = Path('src/Trureturing.Paper.Core/PaperFormalizationFrontierLifecycle.cs')
-          text = lifecycle.read_text()
-          old = '''            if (!string.Equals(
-                    certifiedTruthReleaseDigest,
-                    frontier.FrontierContent.TruthReleaseDigest,
-                    StringComparison.Ordinal))
-            {
-                throw new InvalidDataException(
-                    "Frontier certification must join the exact truth release used by the paper program.");
-            }'''
-          new = '''            if (string.Equals(
-                    certifiedTruthReleaseDigest,
-                    frontier.FrontierContent.TruthReleaseDigest,
-                    StringComparison.Ordinal))
-            {
-                throw new InvalidDataException(
-                    "Frontier certification must identify a later descendant truth release.");
-            }'''
-          if old not in text:
-              raise SystemExit('lifecycle certification block not found')
-          lifecycle.write_text(text.replace(old, new, 1))
-
-          tests = Path('tests/Trureturing.Paper.Tests/PaperFormalizationFrontierTests.cs')
-          text = tests.read_text()
-          old_chain = '''        state = Apply(
-            frontier,
-            state,
-            node,
-            PaperFormalizationFrontierLifecycleService.TruthReleaseCertificationFamily,
-            "paper-truth-release-certification.v1",
-            "certification",
-            "",
-            frontier.FrontierContent.TruthReleaseDigest,
-            "candidate joined to exact truth release",
-            "2026-08-31T06:00:00Z");'''
-          new_chain = '''        string certifiedRelease =
-            PaperTheoryTestFactory.Digest("certified-later-release");
-        state = Apply(
-            frontier,
-            state,
-            node,
-            PaperFormalizationFrontierLifecycleService.TruthReleaseCertificationFamily,
-            "paper-truth-release-certification.v1",
-            "certification",
-            "",
-            certifiedRelease,
-            "candidate joined to a certified descendant truth release",
-            "2026-08-31T06:00:00Z");'''
-          if old_chain not in text:
-              raise SystemExit('frontier traversal certification block not found')
-          text = text.replace(old_chain, new_chain, 1)
-          old_assert = '''        Assert.Equal(
-            frontier.FrontierContent.TruthReleaseDigest,
-            final.CertifiedTruthReleaseDigest);'''
-          new_assert = '''        Assert.Equal(
-            certifiedRelease,
-            final.CertifiedTruthReleaseDigest);'''
-          if old_assert not in text:
-              raise SystemExit('frontier traversal release assertion not found')
-          text = text.replace(old_assert, new_assert, 1)
-          text = text.replace(
-              'public void CertificationRejectsDifferentTruthRelease()',
-              'public void CertificationRejectsUnchangedBaseTruthRelease()',
-              1)
-          old_release = '''                PaperTheoryTestFactory.Digest("different-truth-release"),
-                "attempted cross-release certification",'''
-          new_release = '''                frontier.FrontierContent.TruthReleaseDigest,
-                "attempted same-release certification",'''
-          if old_release not in text:
-              raise SystemExit('frontier rejection release input not found')
-          text = text.replace(old_release, new_release, 1)
-          text = text.replace(
-              'Assert.Contains("exact truth release", error.Message, StringComparison.Ordinal);',
-              'Assert.Contains("later descendant truth release", error.Message, StringComparison.Ordinal);',
-              1)
-          tests.write_text(text)
-          PY
+          python -c 'from pathlib import Path; p=Path("src/Trureturing.Paper.Core/PaperFormalizationFrontierLifecycle.cs"); s=p.read_text(); old="            if (!string.Equals(\n                    certifiedTruthReleaseDigest,\n                    frontier.FrontierContent.TruthReleaseDigest,\n                    StringComparison.Ordinal))\n            {\n                throw new InvalidDataException(\n                    \"Frontier certification must join the exact truth release used by the paper program.\");\n            }"; new="            if (string.Equals(\n                    certifiedTruthReleaseDigest,\n                    frontier.FrontierContent.TruthReleaseDigest,\n                    StringComparison.Ordinal))\n            {\n                throw new InvalidDataException(\n                    \"Frontier certification must identify a later descendant truth release.\");\n            }"; assert old in s; p.write_text(s.replace(old,new,1))'
+          python -c 'from pathlib import Path; p=Path("tests/Trureturing.Paper.Tests/PaperFormalizationFrontierTests.cs"); s=p.read_text(); old="        state = Apply(\n            frontier,\n            state,\n            node,\n            PaperFormalizationFrontierLifecycleService.TruthReleaseCertificationFamily,\n            \"paper-truth-release-certification.v1\",\n            \"certification\",\n            \"\",\n            frontier.FrontierContent.TruthReleaseDigest,\n            \"candidate joined to exact truth release\",\n            \"2026-08-31T06:00:00Z\");"; new="        string certifiedRelease =\n            PaperTheoryTestFactory.Digest(\"certified-later-release\");\n        state = Apply(\n            frontier,\n            state,\n            node,\n            PaperFormalizationFrontierLifecycleService.TruthReleaseCertificationFamily,\n            \"paper-truth-release-certification.v1\",\n            \"certification\",\n            \"\",\n            certifiedRelease,\n            \"candidate joined to a certified descendant truth release\",\n            \"2026-08-31T06:00:00Z\");"; assert old in s; s=s.replace(old,new,1); old2="        Assert.Equal(\n            frontier.FrontierContent.TruthReleaseDigest,\n            final.CertifiedTruthReleaseDigest);"; new2="        Assert.Equal(\n            certifiedRelease,\n            final.CertifiedTruthReleaseDigest);"; assert old2 in s; p.write_text(s.replace(old2,new2,1))'
+          python -c 'from pathlib import Path; p=Path("tests/Trureturing.Paper.Tests/PaperFormalizationFrontierTests.cs"); s=p.read_text(); s=s.replace("public void CertificationRejectsDifferentTruthRelease()","public void CertificationRejectsUnchangedBaseTruthRelease()",1); old="                PaperTheoryTestFactory.Digest(\"different-truth-release\"),\n                \"attempted cross-release certification\","; new="                frontier.FrontierContent.TruthReleaseDigest,\n                \"attempted same-release certification\","; assert old in s; s=s.replace(old,new,1); old2="Assert.Contains(\"exact truth release\", error.Message, StringComparison.Ordinal);"; new2="Assert.Contains(\"later descendant truth release\", error.Message, StringComparison.Ordinal);"; assert old2 in s; p.write_text(s.replace(old2,new2,1))'
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add src/Trureturing.Paper.Core/PaperFormalizationFrontierLifecycle.cs tests/Trureturing.Paper.Tests/PaperFormalizationFrontierTests.cs
