@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-completion.v1.schema.json",
+  "title": "Paper frontier completion v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "frontier_ref", "frontier_planning_task_ref", "frontier_state_ref",
+    "paper_id", "theory_program_ref", "theorem_package_ref", "theory_audit_ref",
+    "scorecard_ref", "portfolio_decision_ref", "required_node_ids", "claims",
+    "manuscript_truth_release_ref", "manuscript_truth_release_digest",
+    "manuscript_plan_ref", "formal_claim_count", "informal_item_count", "completed_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-frontier-completion.v1" },
+    "frontier_ref": { "$ref": "#/$defs/digest" },
+    "frontier_planning_task_ref": { "$ref": "#/$defs/digest" },
+    "frontier_state_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "theorem_package_ref": { "$ref": "#/$defs/digest" },
+    "theory_audit_ref": { "$ref": "#/$defs/digest" },
+    "scorecard_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_decision_ref": { "$ref": "#/$defs/digest" },
+    "required_node_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/digest" }
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "manuscript_truth_release_ref": { "$ref": "#/$defs/digest" },
+    "manuscript_truth_release_digest": { "$ref": "#/$defs/digest" },
+    "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+    "formal_claim_count": { "type": "integer", "minimum": 1, "maximum": 512 },
+    "informal_item_count": { "type": "integer", "minimum": 0, "maximum": 2048 },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "order", "node_id", "claim_id", "theorem_package_kind", "load_bearing",
+        "frontier_manifest_ref", "certified_claim_ref", "formalization_request_ref",
+        "gid", "certifying_release_ref", "certifying_release_digest",
+        "manuscript_disposition", "manuscript_claim_kind", "latex_label"
+      ],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1 },
+        "node_id": { "$ref": "#/$defs/digest" },
+        "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+        "theorem_package_kind": { "enum": ["definition", "lemma", "proposition", "theorem", "corollary", "counterexample", "proof-interface"] },
+        "load_bearing": { "type": "boolean" },
+        "frontier_manifest_ref": { "$ref": "#/$defs/digest" },
+        "certified_claim_ref": { "$ref": "#/$defs/digest" },
+        "formalization_request_ref": { "$ref": "#/$defs/digest" },
+        "gid": { "type": "string", "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$" },
+        "certifying_release_ref": { "$ref": "#/$defs/digest" },
+        "certifying_release_digest": { "$ref": "#/$defs/digest" },
+        "manuscript_disposition": { "enum": ["formal-claim", "informal-definition", "informal-example", "informal-remark"] },
+        "manuscript_claim_kind": { "enum": ["", "lemma", "proposition", "theorem", "corollary"] },
+        "latex_label": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.-]*:[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$" }
+      }
+    }
+  }
+}
