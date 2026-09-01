@@ -470,7 +470,6 @@ public static partial class PaperFrontierNodeSelectionService
         {
             cursor.FrontierRef,
             cursor.FrontierStateRef,
-            cursor.PaperId,
             cursor.CompletionRef,
             cursor.ManuscriptPlanRef,
             cursor.ManuscriptTruthReleaseRef,
