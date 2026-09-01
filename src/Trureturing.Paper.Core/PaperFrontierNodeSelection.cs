@@ -62,6 +62,7 @@ public static partial class PaperFrontierNodeSelectionService
         using FileStream frontierLock = AcquireFrontierLock(
             root,
             source.Frontier.FrontierId);
+        RecoverCurrentStateCursor(root, source);
         string cursorPath = AdmissionCursorPath(
             root,
             source.Frontier.FrontierId,
@@ -71,6 +72,10 @@ public static partial class PaperFrontierNodeSelectionService
             PaperFrontierNodeSelectionAdmissionCursor existing =
                 ReadAdmissionCursor(cursorPath);
             ValidateReplay(root, existing, source);
+            WriteBindingLookup(
+                root,
+                existing.FormalizationRequestRef,
+                existing.Binding);
             RepairCurrentStatePointer(root, source, existing);
             return ToAdmitted(existing, replayed: true);
         }
