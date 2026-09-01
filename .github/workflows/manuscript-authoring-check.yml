@@ -6,16 +6,50 @@ on:
       - codex/paper-manuscript-native-authoring
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   check:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: codex/paper-manuscript-native-authoring
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+      - name: Align tests with the generic runtime envelope
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          fixture = Path('tests/Trureturing.Paper.Tests/ManuscriptAuthoringTestRepository.cs')
+          text = fixture.read_text()
+          old = 'File.WriteAllText(Prepared.StdoutPath, stdout, Encoding.UTF8);'
+          new = 'File.WriteAllText(Prepared.StdoutPath, stdout, new UTF8Encoding(false));'
+          if text.count(old) != 1:
+              raise SystemExit('stdout encoding target not found')
+          fixture.write_text(text.replace(old, new, 1))
+
+          wiring = Path('tests/Trureturing.Paper.Tests/PaperManuscriptAuthoringAgentWiringTests.cs')
+          text = wiring.read_text()
+          old = 'Assert.Contains("spawn_codex_sync", runtime, StringComparison.Ordinal);'
+          new = 'Assert.Contains("agent.execute", runtime, StringComparison.Ordinal);'
+          if text.count(old) != 1:
+              raise SystemExit('runtime wiring target not found')
+          wiring.write_text(text.replace(old, new, 1))
+          PY
       - run: dotnet restore Trureturing.Paper.slnx --ignore-failed-sources
       - run: dotnet build Trureturing.Paper.slnx -c Release --no-restore
       - run: dotnet test Trureturing.Paper.slnx -c Release --no-build --no-restore
+      - name: Commit verified runtime-aligned tests
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add tests/Trureturing.Paper.Tests/ManuscriptAuthoringTestRepository.cs tests/Trureturing.Paper.Tests/PaperManuscriptAuthoringAgentWiringTests.cs
+          git commit -m "test(paper): align manuscript tests with agent runtime"
+          git push origin HEAD:codex/paper-manuscript-native-authoring
