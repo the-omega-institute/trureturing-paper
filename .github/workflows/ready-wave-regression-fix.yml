@@ -1,0 +1,30 @@
+name: ready-wave-regression-fix
+
+on:
+  push:
+    branches:
+      - codex/paper-frontier-ready-wave-selection
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/paper-frontier-ready-wave-selection
+          fetch-depth: 0
+      - name: Preserve selection rejection contract and clean transport payload
+        shell: bash
+        run: |
+          if [ "$GITHUB_ACTOR" = "github-actions[bot]" ]; then exit 0; fi
+          python -c 'from pathlib import Path; p=Path("src/Trureturing.Paper.Core/PaperFrontierSelectionRouteAuthority.cs"); s=p.read_text(); old="No admitted initial route or dependency-ready set released the requested frontier node."; new="The admitted frontier authorities did not release the requested node."; assert s.count(old)==1; p.write_text(s.replace(old,new,1))'
+          python -c 'from pathlib import Path; p=Path(".fkst/local-packages/trureturing-paper/departments/select-frontier-ready-wave/main.lua"); s=p.read_text(); old="    ready_set_ref = admitted.ready_set_ref or \"\",\n"; assert s.count(old)==1; p.write_text(s.replace(old,"",1))'
+          git rm .github/workflows/ready-wave-regression-fix.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/Trureturing.Paper.Core/PaperFrontierSelectionRouteAuthority.cs .fkst/local-packages/trureturing-paper/departments/select-frontier-ready-wave/main.lua
+          git commit -m "fix(paper): preserve frontier release rejection contract"
+          git push origin HEAD:codex/paper-frontier-ready-wave-selection
