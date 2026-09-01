@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-certification-cursor.v1.schema.json",
+  "title": "Paper frontier certification cursor v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "formalization_request_ref",
+    "evaluation_ref",
+    "certified_claim_ref",
+    "certifying_release_ref",
+    "certifying_release_digest",
+    "frontier_ref",
+    "node_id",
+    "claim_id",
+    "certification_event",
+    "certified_manifest",
+    "manifest_event",
+    "frontier_state",
+    "ready_set",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-frontier-certification-cursor.v1" },
+    "formalization_request_ref": { "$ref": "#/$defs/digest" },
+    "evaluation_ref": { "$ref": "#/$defs/digest" },
+    "certified_claim_ref": { "$ref": "#/$defs/digest" },
+    "certifying_release_ref": { "$ref": "#/$defs/digest" },
+    "certifying_release_digest": { "$ref": "#/$defs/digest" },
+    "frontier_ref": { "$ref": "#/$defs/digest" },
+    "node_id": { "$ref": "#/$defs/digest" },
+    "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+    "certification_event": { "$ref": "#/$defs/artifact" },
+    "certified_manifest": { "$ref": "#/$defs/artifact" },
+    "manifest_event": { "$ref": "#/$defs/artifact" },
+    "frontier_state": { "$ref": "#/$defs/artifact" },
+    "ready_set": { "$ref": "#/$defs/artifact" },
+    "recorded_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "blob_ref", "repository_relative_path"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "blob_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$",
+          "maxLength": 4096
+        }
+      }
+    }
+  }
+}
