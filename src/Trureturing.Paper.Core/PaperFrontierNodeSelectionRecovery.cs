@@ -90,6 +90,10 @@ public static partial class PaperFrontierNodeSelectionService
                     source.PlanningCursor.TaskRef,
                     cursor.NodeId);
                 ValidateReplay(root, cursor, cursorSource);
+                WriteBindingLookup(
+                    root,
+                    cursor.FormalizationRequestRef,
+                    cursor.Binding);
                 PaperFormalizationFrontierState cursorState =
                     ReadStoredState(root, cursor.FrontierState);
                 PaperFormalizationFrontierLifecycleService.Validate(
