@@ -3,7 +3,10 @@ local research = require("research_core")
 
 M.spec = {
   consumes = { "formalization_request_ready" },
-  produces = { "trureturing-formalize.solve_request" },
+  produces = {
+    "paper_frontier_formalize_transport_ready",
+    "trureturing-formalize.solve_request",
+  },
   stall_window = "5m",
 }
 
@@ -79,6 +82,47 @@ function pipeline(event)
   same_if_present(payload, "source_commit", result.source_commit)
   same_if_present(payload, "source_tree", result.source_tree)
 
+  local dispatch_ref = research.required(result.dispatch_ref, "dispatch_ref")
+  local progress = research.run(paths, {
+    "record-transport",
+    "--repository-root", paths.root,
+    "--formalization-request-ref", request_ref,
+    "--dispatch-ref", dispatch_ref,
+  }, paths.frontier_lifecycle_cli)
+  if type(progress) ~= "table" or
+      progress.schema ~= "paper-frontier-formalize-transport-recorded.v1" or
+      progress.formalization_request_ref ~= request_ref or
+      progress.dispatch_ref ~= dispatch_ref or
+      (progress.status ~= "recorded" and
+       progress.status ~= "not-frontier-bound") then
+    error("dispatch-formalization: frontier transport recorder returned an invalid result")
+  end
+
+  if progress.status == "recorded" then
+    if not is_sha256(progress.frontier_ref) or
+        not is_sha256(progress.node_id) or
+        type(progress.claim_id) ~= "string" or
+        progress.claim_id == "" or
+        not is_sha256(progress.frontier_state_ref) or
+        not is_sha256(progress.transport_event_ref) then
+      error("dispatch-formalization: frontier transport identity is invalid")
+    end
+    raise("paper_frontier_formalize_transport_ready", {
+      schema = "paper-frontier-formalize-transport-ready.v1",
+      formalization_request_ref = request_ref,
+      dispatch_ref = dispatch_ref,
+      selection_ref = selection_ref,
+      frontier_ref = progress.frontier_ref,
+      node_id = progress.node_id,
+      claim_id = progress.claim_id,
+      frontier_state_ref = progress.frontier_state_ref,
+      transport_event_ref = progress.transport_event_ref,
+      replayed = progress.replayed == true,
+      dedup_key = "paper-frontier-formalize-transport:v1:" ..
+        progress.frontier_ref .. ":" .. progress.node_id,
+    })
+  end
+
   raise("trureturing-formalize.solve_request", {
     request_path = research.required(result.request_path, "request_path"),
     formalization_request_ref = request_ref,
@@ -90,7 +134,9 @@ function pipeline(event)
       result.truth_release_digest,
       "truth_release_digest"),
     gid = research.required(result.gid, "gid"),
-    dispatch_ref = research.required(result.dispatch_ref, "dispatch_ref"),
+    dispatch_ref = dispatch_ref,
+    frontier_ref = progress.frontier_ref or "",
+    frontier_node_id = progress.node_id or "",
     dedup_key = "paper-formalize-solve-request:v1:" .. request_ref,
   })
 end
