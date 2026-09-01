@@ -186,7 +186,7 @@ internal sealed class ManuscriptAuthoringTestRepository : IDisposable
         string stdout = "PAPER_AGENT_RESULT_BEGIN\n"
             + Encoding.UTF8.GetString(CanonicalJson.Serialize(result))
             + "\nPAPER_AGENT_RESULT_END\n";
-        File.WriteAllText(Prepared.StdoutPath, stdout, Encoding.UTF8);
+        File.WriteAllText(Prepared.StdoutPath, stdout, new UTF8Encoding(false));
         return PaperAgentRuntimeService.RecordResult(
             Root,
             Staged.TaskRef,
