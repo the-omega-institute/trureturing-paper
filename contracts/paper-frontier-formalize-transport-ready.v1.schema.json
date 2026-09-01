@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-formalize-transport-ready.v1.schema.json",
+  "title": "Paper frontier Formalize transport ready v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "formalization_request_ref",
+    "dispatch_ref",
+    "selection_ref",
+    "frontier_ref",
+    "node_id",
+    "claim_id",
+    "frontier_state_ref",
+    "transport_event_ref",
+    "replayed",
+    "dedup_key"
+  ],
+  "properties": {
+    "schema": { "const": "paper-frontier-formalize-transport-ready.v1" },
+    "formalization_request_ref": { "$ref": "#/$defs/digest" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "selection_ref": { "$ref": "#/$defs/digest" },
+    "frontier_ref": { "$ref": "#/$defs/digest" },
+    "node_id": { "$ref": "#/$defs/digest" },
+    "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+    "frontier_state_ref": { "$ref": "#/$defs/digest" },
+    "transport_event_ref": { "$ref": "#/$defs/digest" },
+    "replayed": { "type": "boolean" },
+    "dedup_key": { "type": "string", "minLength": 1, "maxLength": 1024 }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
