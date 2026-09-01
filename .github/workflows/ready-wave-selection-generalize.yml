@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   patch:
-    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +19,9 @@ jobs:
       - name: Generalize governed node selection to dependency-ready waves
         shell: bash
         run: |
+          if [ "$GITHUB_ACTOR" = "github-actions[bot]" ]; then
+            exit 0
+          fi
           python - <<'PY'
           from pathlib import Path
 
@@ -119,9 +121,10 @@ jobs:
 
           validation = Path('src/Trureturing.Paper.Core/PaperFrontierNodeSelectionValidation.cs')
           text = validation.read_text()
-          count = text.count('content.ParallelWave != 0') + text.count('cursor.ParallelWave != 0')
-          if count != 2:
-              raise SystemExit(f'expected two wave-zero validator checks, found {count}')
+          if text.count('content.ParallelWave != 0') != 1:
+              raise SystemExit('authorization wave-zero validator target not found')
+          if text.count('cursor.ParallelWave != 0') != 1:
+              raise SystemExit('cursor wave-zero validator target not found')
           text = text.replace('content.ParallelWave != 0', 'content.ParallelWave < 0', 1)
           text = text.replace('cursor.ParallelWave != 0', 'cursor.ParallelWave < 0', 1)
           validation.write_text(text)
@@ -138,7 +141,7 @@ jobs:
               path = Path(name)
               text = path.read_text()
               if text.count(old_schema) != 1:
-                  raise SystemExit(f'parallel_wave schema target not found exactly once: {name}')
+                  raise SystemExit('parallel_wave schema target not found exactly once: ' + name)
               path.write_text(text.replace(old_schema, new_schema, 1))
           PY
           git config user.name github-actions[bot]
