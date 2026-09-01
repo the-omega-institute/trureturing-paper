@@ -5,7 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema", "frontier_ref", "frontier_state_ref", "completion_ref",
+    "schema", "frontier_ref", "frontier_state_ref", "paper_id", "completion_ref",
     "manuscript_plan_ref", "manuscript_truth_release_ref",
     "manuscript_truth_release_digest", "completed_at"
   ],
@@ -13,6 +13,7 @@
     "schema": { "const": "paper-frontier-completion-cursor.v1" },
     "frontier_ref": { "$ref": "#/$defs/digest" },
     "frontier_state_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "minLength": 1, "maxLength": 512 },
     "completion_ref": { "$ref": "#/$defs/digest" },
     "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
     "manuscript_truth_release_ref": { "$ref": "#/$defs/digest" },
