@@ -3,7 +3,10 @@ local research = require("research_core")
 local agent = require("agent_runtime")
 
 M.spec = {
-  consumes = { "paper_frontier_certified_claim_manifest_ready" },
+  consumes = {
+    "paper_frontier_certified_claim_manifest_ready",
+    "paper_certification_release_registered",
+  },
   produces = {
     "paper_frontier_completion_pending",
     "paper_frontier_completion_ready",
@@ -20,6 +23,13 @@ local function require_digest(value, name)
   return value
 end
 
+local function require_text(value, name)
+  if type(value) ~= "string" or value == "" then
+    error("complete-frontier: " .. name .. " is required")
+  end
+  return value
+end
+
 local function require_digest_array(values, name)
   if type(values) ~= "table" then
     error("complete-frontier: " .. name .. " must be an array")
@@ -30,14 +40,28 @@ local function require_digest_array(values, name)
   return values
 end
 
-function pipeline(event)
-  local payload = event.payload or {}
-  local frontier_ref = require_digest(payload.frontier_ref, "frontier_ref")
-  require_digest(payload.node_id, "node_id")
-  require_digest(payload.certified_manifest_ref, "certified_manifest_ref")
-  require_digest(payload.frontier_state_ref, "frontier_state_ref")
+local function candidate_frontiers(payload, paths)
+  if agent.is_sha256(payload.frontier_ref) then
+    require_digest(payload.node_id, "node_id")
+    require_digest(payload.certified_manifest_ref, "certified_manifest_ref")
+    require_digest(payload.frontier_state_ref, "frontier_state_ref")
+    return { payload.frontier_ref }
+  end
 
-  local paths = research.paths(agent.repository_root())
+  require_digest(payload.release_ref, "release_ref")
+  require_digest(payload.release_digest, "release_digest")
+  local listed = research.run(paths, {
+    "list-frontier-completion-candidates",
+    "--repository-root", paths.root,
+  }, paths.frontier_selection_cli)
+  if type(listed) ~= "table"
+      or listed.schema ~= "paper-frontier-completion-candidates-listed.v1" then
+    error("complete-frontier: completion candidate listing is invalid")
+  end
+  return require_digest_array(listed.frontier_refs, "frontier_refs")
+end
+
+local function evaluate_frontier(frontier_ref, paths)
   local evaluated = nil
   with_lock(
     "paper-frontier-completion:v1:" .. frontier_ref,
@@ -54,7 +78,9 @@ function pipeline(event)
       or evaluated.frontier_ref ~= frontier_ref
       or not agent.is_sha256(evaluated.frontier_state_ref)
       or type(evaluated.reason) ~= "string"
-      or evaluated.reason == "" then
+      or evaluated.reason == ""
+      or type(evaluated.paper_id) ~= "string"
+      or evaluated.paper_id == "" then
     error("complete-frontier: completion CLI returned an invalid result")
   end
 
@@ -65,6 +91,7 @@ function pipeline(event)
       schema = "paper-frontier-completion-pending-ready.v1",
       frontier_ref = frontier_ref,
       frontier_state_ref = evaluated.frontier_state_ref,
+      paper_id = evaluated.paper_id,
       pending_ref = evaluated.pending_ref,
       missing_node_ids = evaluated.missing_node_ids,
       reason = evaluated.reason,
@@ -93,6 +120,7 @@ function pipeline(event)
     schema = "paper-frontier-completion-ready.v1",
     frontier_ref = frontier_ref,
     frontier_state_ref = evaluated.frontier_state_ref,
+    paper_id = evaluated.paper_id,
     completion_ref = evaluated.completion_ref,
     manuscript_plan_ref = evaluated.manuscript_plan_ref,
     manuscript_truth_release_ref = evaluated.manuscript_truth_release_ref,
@@ -106,6 +134,7 @@ function pipeline(event)
 
   raise("paper_manuscript_plan_registered", {
     manuscript_plan_ref = evaluated.manuscript_plan_ref,
+    paper_id = evaluated.paper_id,
     manuscript_truth_release_ref = evaluated.manuscript_truth_release_ref,
     frontier_ref = frontier_ref,
     completion_ref = evaluated.completion_ref,
@@ -122,6 +151,15 @@ function pipeline(event)
     dedup_key = "paper-manuscript-evaluate:v1:" ..
       evaluated.manuscript_plan_ref .. ":" .. evaluated.completion_ref,
   })
+end
+
+function pipeline(event)
+  local payload = event.payload or {}
+  local paths = research.paths(agent.repository_root())
+  local frontiers = candidate_frontiers(payload, paths)
+  for _, frontier_ref in ipairs(frontiers) do
+    evaluate_frontier(require_digest(frontier_ref, "frontier_ref"), paths)
+  end
 end
 
 return M
