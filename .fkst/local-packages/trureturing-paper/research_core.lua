@@ -18,6 +18,7 @@ function M.paths(repo_root)
     root = repo_root,
     cli = repo_root .. "tools/Trureturing.Paper.ResearchInput.Cli/bin/Release/net10.0/Trureturing.Paper.ResearchInput.Cli.dll",
     selection_cli = repo_root .. "src/Trureturing.Paper.ResearchSelection.Cli/bin/Release/net10.0/Trureturing.Paper.ResearchSelection.Cli.dll",
+    frontier_selection_cli = repo_root .. "src/Trureturing.Paper.FrontierSelection.Cli/bin/Release/net10.0/Trureturing.Paper.FrontierSelection.Cli.dll",
     certification_cli = repo_root .. "src/Trureturing.Paper.Certification.Cli/bin/Release/net10.0/Trureturing.Paper.Certification.Cli.dll",
     claim_manifest_cli = repo_root .. "src/Trureturing.Paper.ClaimManifest.Cli/bin/Release/net10.0/Trureturing.Paper.ClaimManifest.Cli.dll",
     agent_cli = repo_root .. "src/Trureturing.Paper.Agent.Cli/bin/Release/net10.0/Trureturing.Paper.Agent.Cli.dll",
