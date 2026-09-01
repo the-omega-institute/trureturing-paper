@@ -53,15 +53,10 @@ public static partial class PaperFrontierNodeSelectionService
         PaperFrontierPlanningAgentDispatch planningDispatch =
             PaperResearchInputJson.DeserializeStrict<PaperFrontierPlanningAgentDispatch>(
                 planningDispatchBytes);
-        PaperFrontierPlanningAgentService.Validate(planningDispatch);
-        foreach (PaperAgentInputArtifact input in planningDispatch.ExactInputs)
-        {
-            _ = ReadRepositoryArtifact(
+        PaperFrontierPlanningContext planningContext =
+            PaperFrontierPlanningAgentService.ReopenContext(
                 root,
-                input.RepositoryRelativePath,
-                input.ArtifactRef,
-                $"Exact frontier-planning input {input.Schema}");
-        }
+                planningDispatch);
 
         PaperFormalizationFrontier frontier =
             ReadPlanningStoredEnvelope<PaperFormalizationFrontier>(
@@ -80,30 +75,8 @@ public static partial class PaperFrontierNodeSelectionService
             initialState,
             frontier);
 
-        PaperAgentInputArtifact programInput = FindExactInput(
-            planningDispatch.ExactInputs,
-            PaperPortfolioSchemas.TheoryProgram,
-            planningDispatch.TheoryProgramRef);
-        PaperTheoryProgramContent programContent =
-            ReadExactContent<PaperTheoryProgramContent>(root, programInput);
-        var program = new PaperTheoryProgram(
-            PaperPortfolioSchemas.TheoryProgram,
-            planningDispatch.TheoryProgramRef,
-            programContent);
-        PaperPortfolioService.Validate(program);
-
-        PaperAgentInputArtifact packageInput = FindExactInput(
-            planningDispatch.ExactInputs,
-            PaperTheoryDeepeningSchemas.TheoremPackage,
-            planningDispatch.TheoremPackageRef);
-        PaperTheoremPackageContent packageContent =
-            ReadExactContent<PaperTheoremPackageContent>(root, packageInput);
-        var theoremPackage = new PaperTheoremPackage(
-            PaperTheoryDeepeningSchemas.TheoremPackage,
-            planningDispatch.TheoremPackageRef,
-            packageContent);
-        PaperTheoryDeepeningService.Validate(theoremPackage);
-
+        PaperTheoryProgram program = planningContext.Program;
+        PaperTheoremPackage theoremPackage = planningContext.TheoremPackage;
         PaperFormalizationFrontierNode node =
             PaperFormalizationFrontierService.RequireNode(frontier, nodeId);
         PaperFormalizationFrontierNodeState initialNodeState =
@@ -307,24 +280,4 @@ public static partial class PaperFrontierNodeSelectionService
             name);
         return PaperResearchInputJson.DeserializeStrict<T>(bytes);
     }
-
-    private static T ReadExactContent<T>(
-        string root,
-        PaperAgentInputArtifact input) =>
-        PaperResearchInputJson.DeserializeStrict<T>(
-            ReadRepositoryArtifact(
-                root,
-                input.RepositoryRelativePath,
-                input.ArtifactRef,
-                $"Exact frontier-planning input {input.Schema}"));
-
-    private static PaperAgentInputArtifact FindExactInput(
-        IReadOnlyList<PaperAgentInputArtifact> inputs,
-        string schema,
-        string reference) =>
-        inputs.SingleOrDefault(input =>
-                string.Equals(input.Schema, schema, StringComparison.Ordinal)
-                && string.Equals(input.ArtifactRef, reference, StringComparison.Ordinal))
-            ?? throw new InvalidDataException(
-                $"Frontier selection is missing exact input {schema} at {reference}.");
 }
