@@ -1,0 +1,153 @@
+name: ready-wave-selection-generalize
+
+on:
+  push:
+    branches:
+      - codex/paper-frontier-ready-wave-selection
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/paper-frontier-ready-wave-selection
+          fetch-depth: 0
+      - name: Generalize governed node selection to dependency-ready waves
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path('src/Trureturing.Paper.Core/PaperFrontierNodeSelectionSource.cs')
+          text = source.read_text()
+          old = '''        PaperFrontierPlanningNodeRoute route = planningCursor.InitialNodeRoutes
+            .SingleOrDefault(value => string.Equals(
+                value.NodeId,
+                nodeId,
+                StringComparison.Ordinal))
+            ?? throw new InvalidDataException(
+                "Frontier-planning admission did not release the requested node.");
+        if (route.ParallelWave != 0
+            || !string.Equals(
+                route.NextRoute,
+                "governed-selection",
+                StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                "Only an admitted wave-zero governed-selection route may be selected.");
+        }
+'''
+          new = '''        PaperFrontierSelectionRouteAuthority routeAuthority =
+            ResolveSelectionRouteAuthority(root, planningCursor, nodeId);
+        PaperFrontierPlanningNodeRoute route = routeAuthority.Route;
+'''
+          if old not in text:
+              raise SystemExit('initial route block not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        if (!string.Equals(route.ClaimId, node.ClaimId, StringComparison.Ordinal)
+            || !string.Equals(
+                route.FormalizationKind,
+                node.FormalizationKind,
+                StringComparison.Ordinal)
+            || route.Priority != node.Priority
+            || route.DispatchOrder < 1
+            || node.ParallelWave != 0
+            || node.DependencyNodeIds.Count != 0
+            || !string.Equals(
+                initialNodeState.Status,
+                PaperFormalizationFrontierService.InitialNodeStatus,
+                StringComparison.Ordinal)
+            || !string.Equals(
+                claim.Statement,
+                node.InformalStatement,
+                StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                "Frontier selection route changed the admitted wave-zero node.");
+        }
+'''
+          new = '''        if (!string.Equals(route.ClaimId, node.ClaimId, StringComparison.Ordinal)
+            || !string.Equals(
+                route.FormalizationKind,
+                node.FormalizationKind,
+                StringComparison.Ordinal)
+            || route.Priority != node.Priority
+            || route.DispatchOrder < 1
+            || route.ParallelWave != node.ParallelWave
+            || !string.Equals(
+                initialNodeState.Status,
+                PaperFormalizationFrontierService.InitialNodeStatus,
+                StringComparison.Ordinal)
+            || !string.Equals(
+                claim.Statement,
+                node.InformalStatement,
+                StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                "Frontier selection route changed the admitted node.");
+        }
+        ValidateSelectionRouteAuthority(
+            root,
+            planningCursor,
+            frontier,
+            initialState,
+            node,
+            routeAuthority);
+'''
+          if old not in text:
+              raise SystemExit('wave-zero validation block not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        return new(
+            planningCursor,
+            planningDispatch,'''
+          new = '''        return new(
+            planningCursor with
+            {
+                AdmittedAt = routeAuthority.AuthorizedAt
+            },
+            planningDispatch,'''
+          if old not in text:
+              raise SystemExit('source return block not found')
+          source.write_text(text.replace(old, new, 1))
+
+          validation = Path('src/Trureturing.Paper.Core/PaperFrontierNodeSelectionValidation.cs')
+          text = validation.read_text()
+          count = text.count('content.ParallelWave != 0') + text.count('cursor.ParallelWave != 0')
+          if count != 2:
+              raise SystemExit(f'expected two wave-zero validator checks, found {count}')
+          text = text.replace('content.ParallelWave != 0', 'content.ParallelWave < 0', 1)
+          text = text.replace('cursor.ParallelWave != 0', 'cursor.ParallelWave < 0', 1)
+          validation.write_text(text)
+
+          schema_paths = [
+              'contracts/paper-frontier-node-selection-authorization.v1.schema.json',
+              'contracts/paper-frontier-node-selection-cursor.v1.schema.json',
+              'contracts/paper-frontier-node-selection-admitted.v1.schema.json',
+              'contracts/paper-frontier-node-selection-ready.v1.schema.json',
+          ]
+          old_schema = '"parallel_wave": { "const": 0 }'
+          new_schema = '"parallel_wave": { "type": "integer", "minimum": 0 }'
+          for name in schema_paths:
+              path = Path(name)
+              text = path.read_text()
+              if text.count(old_schema) != 1:
+                  raise SystemExit(f'parallel_wave schema target not found exactly once: {name}')
+              path.write_text(text.replace(old_schema, new_schema, 1))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/Trureturing.Paper.Core/PaperFrontierNodeSelectionSource.cs \
+                  src/Trureturing.Paper.Core/PaperFrontierNodeSelectionValidation.cs \
+                  contracts/paper-frontier-node-selection-authorization.v1.schema.json \
+                  contracts/paper-frontier-node-selection-cursor.v1.schema.json \
+                  contracts/paper-frontier-node-selection-admitted.v1.schema.json \
+                  contracts/paper-frontier-node-selection-ready.v1.schema.json
+          git commit -m "feat(paper): authorize dependency-ready frontier waves"
+          git push origin HEAD:codex/paper-frontier-ready-wave-selection
