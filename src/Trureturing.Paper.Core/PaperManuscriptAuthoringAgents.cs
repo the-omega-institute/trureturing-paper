@@ -260,7 +260,7 @@ public static partial class PaperManuscriptAuthoringAgentService
             dispatch.LiteratureResearchRef,
             dispatch.SelectedReleaseRef,
             dispatch.SelectedReleaseDigest,
-            dispatch.PaperId,
+            draft.Title,
             mainTex,
             bibliography,
             rendered.ClaimBindings,
@@ -405,7 +405,7 @@ public static partial class PaperManuscriptAuthoringAgentService
         ParseUtc(dispatch.RequestedAt, nameof(dispatch.RequestedAt));
     }
 
-    public static void Validate(
+    internal static void Validate(
         PaperScientificManuscript manuscript,
         PaperManuscriptAuthoringContext context,
         ReadOnlySpan<byte> mainTexBytes,
