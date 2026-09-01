@@ -55,7 +55,9 @@ public sealed class PaperFrontierReadyWaveSelectionTests
         Assert.Equal(
             repository.Node("lem:reduction").FormalStatement,
             request.Target.Statement);
-        Assert.Equal(lemma.SelectionRef, request.PaperContext.SelectionRef);
+        Assert.Equal(
+            selection.SelectionContent.CandidatePaperRef,
+            request.PaperContext.ResearchCandidateId);
         Assert.Equal(
             lemma.FormalizationRequestRef,
             request.RequestId);
@@ -97,7 +99,7 @@ public sealed class PaperFrontierReadyWaveSelectionTests
         PaperFrontierReadyWaveSelectionAdmitted replay =
             PaperFrontierNodeSelectionService.AdmitReadyWave(
                 repository.Root,
-                repository.Frontier.FrontierId,
+                repository.Frier.FrontierId,
                 certification.ReadySetRef);
 
         Assert.True(replay.Replayed);
