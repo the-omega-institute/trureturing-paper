@@ -14,7 +14,10 @@ public static class PaperAssembler
         var truthGraph = frozenInputs.TruthGraph is null
             ? null
             : TruthGraphReader.ReadAndVerify(frozenInputs.TruthGraph, snapshot);
-        return ClaimGate.Resolve(recipe, frozenInputs, snapshot, truthGraph);
+        var documentGraph = frozenInputs.DocumentGraph is null
+            ? null
+            : DocumentGraphReader.ReadAndVerify(frozenInputs.DocumentGraph);
+        return ClaimGate.Resolve(recipe, frozenInputs, snapshot, truthGraph, documentGraph);
     }
 }
 
@@ -26,6 +29,7 @@ public sealed class PaperAssemblyService
     private readonly ICitationPort _citations;
     private readonly IEvidencePort _evidence;
     private readonly ITruthGraphPort _truthGraph;
+    private readonly IDocumentGraphPort _documentGraph;
 
     public PaperAssemblyService(
         IBlessedSnapshotPort snapshot,
@@ -33,7 +37,8 @@ public sealed class PaperAssemblyService
         IBlueprintPort blueprint,
         ICitationPort citations,
         IEvidencePort evidence,
-        ITruthGraphPort truthGraph)
+        ITruthGraphPort truthGraph,
+        IDocumentGraphPort documentGraph)
     {
         _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
         _truth = truth ?? throw new ArgumentNullException(nameof(truth));
@@ -41,15 +46,17 @@ public sealed class PaperAssemblyService
         _citations = citations ?? throw new ArgumentNullException(nameof(citations));
         _evidence = evidence ?? throw new ArgumentNullException(nameof(evidence));
         _truthGraph = truthGraph ?? throw new ArgumentNullException(nameof(truthGraph));
+        _documentGraph = documentGraph ?? throw new ArgumentNullException(nameof(documentGraph));
     }
 
-    // The truth-graph is always supplied here, so the claim gate's closed-theorem binding is
-    // never silently skipped in this composed path (contrast the null default on FrozenInputs).
+    // Both graphs are always supplied here: proof state comes only from truth-graph.v1, while
+    // describe nodes and anchors come only from the independently verified document graph.
     public byte[] Assemble(PaperRecipe recipe) => PaperAssembler.Assemble(recipe, new FrozenInputs(
         _snapshot.Read(),
         _truth.ReadDeclarations(),
         _blueprint.ReadBlocks(),
         _citations.ReadCitations(),
         _evidence.ReadEvidence(),
-        _truthGraph.ReadTruthGraph()));
+        _truthGraph.ReadTruthGraph(),
+        _documentGraph.ReadDocumentGraph()));
 }

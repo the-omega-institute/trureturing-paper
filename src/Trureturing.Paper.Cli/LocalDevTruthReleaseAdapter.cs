@@ -25,12 +25,15 @@ public static class LocalDevTruthReleaseAdapter
             ports.ReadBlocks(),
             ports.ReadCitations(),
             ports.ReadEvidence(),
-            ports.ReadTruthGraph());
+            ports.ReadTruthGraph(),
+            ports.ReadDocumentGraph());
 
         SourceSnapshot snapshot = SourceSnapshotReader.ReadAndVerify(frozenInputs.Snapshot);
         FrozenTruthGraph graph = TruthGraphReader.ReadAndVerify(
             frozenInputs.TruthGraph!,
             snapshot);
+        FrozenDocumentGraph documentGraph = DocumentGraphReader.ReadAndVerify(
+            frozenInputs.DocumentGraph!);
         string sourceTree = ReadSourceTree(frozenInputs.Snapshot.Json);
         string releaseDigest = HashReleaseInputs(root);
 
@@ -51,6 +54,7 @@ public static class LocalDevTruthReleaseAdapter
                 declaration,
                 frozenInputs.BlueprintBlocks,
                 graph,
+                documentGraph,
                 snapshot))
             .ToArray();
 
@@ -96,6 +100,7 @@ public static class LocalDevTruthReleaseAdapter
         FrozenDeclaration declaration,
         IReadOnlyList<BlueprintBlock> blueprints,
         FrozenTruthGraph graph,
+        FrozenDocumentGraph documentGraph,
         SourceSnapshot snapshot)
     {
         if (!string.Equals(declaration.Status, "frozen", StringComparison.Ordinal))
@@ -109,6 +114,7 @@ public static class LocalDevTruthReleaseAdapter
             declaration.DeclarationGid);
         ClosedTruthBinding binding = TruthGraphReader.RequireClosedTheorem(
             graph,
+            documentGraph,
             declaration.DeclarationGid,
             blueprint.DescribeAnchor);
         if (!string.Equals(
@@ -172,6 +178,7 @@ public static class LocalDevTruthReleaseAdapter
             "source-snapshot.v1.json",
             "frozen-truth.v1.json",
             "truth-graph.v1.json",
+            "document-graph.v1.json",
             "blueprints.v1.json"
         })
         {
