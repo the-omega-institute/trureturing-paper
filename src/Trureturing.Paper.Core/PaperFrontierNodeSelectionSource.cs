@@ -26,22 +26,9 @@ public static partial class PaperFrontierNodeSelectionService
                 "Frontier selection source cursor changed the planning task identity.");
         }
 
-        PaperFrontierPlanningNodeRoute route = planningCursor.InitialNodeRoutes
-            .SingleOrDefault(value => string.Equals(
-                value.NodeId,
-                nodeId,
-                StringComparison.Ordinal))
-            ?? throw new InvalidDataException(
-                "Frontier-planning admission did not release the requested node.");
-        if (route.ParallelWave != 0
-            || !string.Equals(
-                route.NextRoute,
-                "governed-selection",
-                StringComparison.Ordinal))
-        {
-            throw new InvalidDataException(
-                "Only an admitted wave-zero governed-selection route may be selected.");
-        }
+        PaperFrontierSelectionRouteAuthority routeAuthority =
+            ResolveSelectionRouteAuthority(root, planningCursor, nodeId);
+        PaperFrontierPlanningNodeRoute route = routeAuthority.Route;
 
         string planningDispatchPath = PlanningDispatchPath(
             root,
@@ -212,8 +199,7 @@ public static partial class PaperFrontierNodeSelectionService
                 StringComparison.Ordinal)
             || route.Priority != node.Priority
             || route.DispatchOrder < 1
-            || node.ParallelWave != 0
-            || node.DependencyNodeIds.Count != 0
+            || route.ParallelWave != node.ParallelWave
             || !string.Equals(
                 initialNodeState.Status,
                 PaperFormalizationFrontierService.InitialNodeStatus,
@@ -224,8 +210,15 @@ public static partial class PaperFrontierNodeSelectionService
                 StringComparison.Ordinal))
         {
             throw new InvalidDataException(
-                "Frontier selection route changed the admitted wave-zero node.");
+                "Frontier selection route changed the admitted node.");
         }
+        ValidateSelectionRouteAuthority(
+            root,
+            planningCursor,
+            frontier,
+            initialState,
+            node,
+            routeAuthority);
         if (!string.Equals(
                 researchInput.TruthReleaseDigest,
                 frontier.FrontierContent.TruthReleaseDigest,
@@ -252,7 +245,10 @@ public static partial class PaperFrontierNodeSelectionService
         }
 
         return new(
-            planningCursor,
+            planningCursor with
+            {
+                AdmittedAt = routeAuthority.AuthorizedAt
+            },
             planningDispatch,
             frontier,
             initialState,
