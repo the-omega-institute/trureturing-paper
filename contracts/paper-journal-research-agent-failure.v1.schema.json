@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-journal-research-agent-failure.v1.schema.json",
+  "title": "Paper journal research agent failure v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "task_ref",
+    "result_ref",
+    "source_scientific_editing_task_ref",
+    "source_edited_manuscript_ref",
+    "paper_id",
+    "theory_program_ref",
+    "status",
+    "blocker_code",
+    "summary",
+    "next_route"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-journal-research-agent-failure.v1"
+    },
+    "task_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "result_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_scientific_editing_task_ref": {
+      "oneOf": [
+        {
+          "const": ""
+        },
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      ]
+    },
+    "source_edited_manuscript_ref": {
+      "oneOf": [
+        {
+          "const": ""
+        },
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      ]
+    },
+    "paper_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "theory_program_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "status": {
+      "enum": [
+        "no-progress",
+        "blocked"
+      ]
+    },
+    "blocker_code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384
+    },
+    "next_route": {
+      "enum": [
+        "journal-research",
+        "blocked"
+      ]
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

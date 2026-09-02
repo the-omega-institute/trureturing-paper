@@ -24,6 +24,8 @@ internal static class Program
           admit-manuscript-authoring-result --repository-root <path> --task-ref <sha256:...>
           stage-scientific-editing-task --repository-root <path> --source-authoring-task-ref <sha256:...>
           admit-scientific-editing-result --repository-root <path> --task-ref <sha256:...>
+          stage-journal-research-task --repository-root <path> --source-scientific-editing-task-ref <sha256:...>
+          admit-journal-research-result --repository-root <path> --task-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
@@ -49,6 +51,8 @@ internal static class Program
                 "admit-manuscript-authoring-result" => AdmitManuscriptAuthoringResult(args),
                 "stage-scientific-editing-task" => StageScientificEditingTask(args),
                 "admit-scientific-editing-result" => AdmitScientificEditingResult(args),
+                "stage-journal-research-task" => StageJournalResearchTask(args),
+                "admit-journal-research-result" => AdmitJournalResearchResult(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -325,6 +329,36 @@ internal static class Program
             "--task-ref");
         PaperScientificEditingAgentResultAdmitted result =
             PaperManuscriptAuthoringAgentService.AdmitScientificEditingResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageJournalResearchTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-journal-research-task",
+            "--repository-root",
+            "--source-scientific-editing-task-ref");
+        PaperJournalResearchAgentTaskStaged result =
+            PaperManuscriptAuthoringAgentService.StageJournalResearchTask(
+                values["--repository-root"],
+                values["--source-scientific-editing-task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitJournalResearchResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-journal-research-result",
+            "--repository-root",
+            "--task-ref");
+        PaperJournalResearchAgentResultAdmitted result =
+            PaperManuscriptAuthoringAgentService.AdmitJournalResearchResult(
                 values["--repository-root"],
                 values["--task-ref"]);
         WriteResult(result);
