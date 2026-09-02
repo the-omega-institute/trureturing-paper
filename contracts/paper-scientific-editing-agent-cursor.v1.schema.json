@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-scientific-editing-agent-cursor.v1.schema.json",
+  "title": "Paper scientific editing agent cursor v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "task_ref", "result_ref", "dispatch_ref",
+    "source_authoring_task_ref", "source_manuscript_ref", "paper_id",
+    "theory_program_ref", "claim_manifest_ref", "manuscript_plan_ref",
+    "edit_delta", "edited_manuscript", "main_tex", "bibliography",
+    "changed_prose_block_count", "changed_proof_block_count",
+    "changed_section_ids", "next_route", "run_id", "provenance", "admitted_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-scientific-editing-agent-cursor.v1" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "result_ref": { "$ref": "#/$defs/digest" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "source_authoring_task_ref": { "$ref": "#/$defs/digest" },
+    "source_manuscript_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "claim_manifest_ref": { "$ref": "#/$defs/digest" },
+    "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+    "edit_delta": { "$ref": "#/$defs/stored" },
+    "edited_manuscript": { "$ref": "#/$defs/stored" },
+    "main_tex": { "$ref": "#/$defs/source" },
+    "bibliography": { "$ref": "#/$defs/source" },
+    "changed_prose_block_count": { "type": "integer", "minimum": 2 },
+    "changed_proof_block_count": { "type": "integer", "minimum": 1 },
+    "changed_section_ids": {
+      "type": "array", "minItems": 3, "maxItems": 8, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "next_route": { "const": "journal-research" },
+    "run_id": { "type": "string", "maxLength": 512 },
+    "provenance": { "enum": ["produced", "adopted"] },
+    "admitted_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "stored": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "content_path", "envelope_ref", "envelope_path"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "content_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "envelope_ref": { "$ref": "#/$defs/digest" },
+        "envelope_path": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "media_type", "artifact_ref", "repository_relative_path", "size_bytes"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "media_type": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "size_bytes": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

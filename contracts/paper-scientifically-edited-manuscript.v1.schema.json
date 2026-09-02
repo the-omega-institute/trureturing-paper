@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-scientifically-edited-manuscript.v1.schema.json",
+  "title": "Paper scientifically edited manuscript v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "manuscript_id", "manuscript_content"],
+  "properties": {
+    "schema": { "const": "paper-scientifically-edited-manuscript.v1" },
+    "manuscript_id": { "$ref": "#/$defs/digest" },
+    "manuscript_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_ref", "result_ref", "dispatch_ref", "source_authoring_task_ref",
+        "source_manuscript_ref", "edit_delta_ref", "completion_ref",
+        "evaluation_ref", "claim_manifest_ref", "eligibility_ref",
+        "manuscript_plan_ref", "frontier_ref", "paper_id", "theory_program_ref",
+        "theorem_package_ref", "theory_audit_ref", "literature_research_ref",
+        "selected_release_ref", "selected_release_digest", "title", "main_tex",
+        "bibliography", "claim_bindings", "section_ids", "citation_keys",
+        "formal_claim_count", "informal_item_count", "editing_status", "created_at"
+      ],
+      "properties": {
+        "task_ref": { "$ref": "#/$defs/digest" },
+        "result_ref": { "$ref": "#/$defs/digest" },
+        "dispatch_ref": { "$ref": "#/$defs/digest" },
+        "source_authoring_task_ref": { "$ref": "#/$defs/digest" },
+        "source_manuscript_ref": { "$ref": "#/$defs/digest" },
+        "edit_delta_ref": { "$ref": "#/$defs/digest" },
+        "completion_ref": { "$ref": "#/$defs/digest" },
+        "evaluation_ref": { "$ref": "#/$defs/digest" },
+        "claim_manifest_ref": { "$ref": "#/$defs/digest" },
+        "eligibility_ref": { "$ref": "#/$defs/digest" },
+        "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+        "frontier_ref": { "$ref": "#/$defs/digest" },
+        "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+        "theory_program_ref": { "$ref": "#/$defs/digest" },
+        "theorem_package_ref": { "$ref": "#/$defs/digest" },
+        "theory_audit_ref": { "$ref": "#/$defs/digest" },
+        "literature_research_ref": { "$ref": "#/$defs/digest" },
+        "selected_release_ref": { "$ref": "#/$defs/digest" },
+        "selected_release_digest": { "$ref": "#/$defs/digest" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "main_tex": { "$ref": "#/$defs/source" },
+        "bibliography": { "$ref": "#/$defs/source" },
+        "claim_bindings": {
+          "type": "array", "minItems": 1,
+          "items": { "$ref": "#/$defs/binding" }
+        },
+        "section_ids": {
+          "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+        },
+        "citation_keys": {
+          "type": "array", "maxItems": 512, "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$" }
+        },
+        "formal_claim_count": { "type": "integer", "minimum": 1 },
+        "informal_item_count": { "type": "integer", "minimum": 0 },
+        "editing_status": { "const": "scientifically-edited-journal-neutral" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "media_type", "artifact_ref", "repository_relative_path", "size_bytes"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "media_type": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "size_bytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "binding": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "order", "claim_id", "latex_label", "claim_kind", "environment",
+        "certified_claim_ref", "gid", "statement_id", "requested_statement_digest",
+        "begin_marker", "end_marker"
+      ],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1 },
+        "claim_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "latex_label": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "claim_kind": { "enum": ["lemma", "proposition", "theorem", "corollary"] },
+        "environment": { "enum": ["lemma", "proposition", "theorem", "corollary"] },
+        "certified_claim_ref": { "$ref": "#/$defs/digest" },
+        "gid": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "statement_id": { "$ref": "#/$defs/digest" },
+        "requested_statement_digest": { "$ref": "#/$defs/digest" },
+        "begin_marker": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "end_marker": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-scientific-editing-retry-requested.v1.schema.json",
+  "title": "Paper scientific editing retry requested v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "failed_task_ref", "failed_result_ref", "paper_id",
+    "theory_program_ref", "blocker_code", "next_route"
+  ],
+  "properties": {
+    "schema": { "const": "paper-scientific-editing-retry-requested.v1" },
+    "failed_task_ref": { "$ref": "#/$defs/digest" },
+    "failed_result_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "blocker_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,127}$" },
+    "next_route": { "const": "scientific-editing" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
