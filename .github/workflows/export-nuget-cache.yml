@@ -1,0 +1,31 @@
+name: export-nuget-cache
+
+on:
+  push:
+    branches:
+      - codex/paper-journal-research-selection
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore solution packages
+        shell: bash
+        run: dotnet restore Trureturing.Paper.slnx --ignore-failed-sources
+      - name: Archive NuGet package cache
+        shell: bash
+        run: tar -czf nuget-packages.tar.gz -C "$HOME/.nuget" packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trureturing-paper-nuget-packages
+          path: nuget-packages.tar.gz
+          if-no-files-found: error
+          retention-days: 1
