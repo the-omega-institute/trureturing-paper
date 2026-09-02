@@ -54,7 +54,7 @@ public sealed class PaperTheoryDeepeningTests
                 request,
                 content));
 
-        Assert.Contains("fake extension", error.Message, StringComparison.Ordinal);
+        Assert.Contains("no structural, abstraction, novelty, or counterexample progress", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-agent-task.v1.schema.json",
+  "title": "Paper agent task v1",
+  "description": "A bounded, content-addressed Paper role executed by the FKST Codex SDK inside an isolated workspace. The phase fixes the agent role, context mode, sandbox, and timeout in repository code.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "paper_id",
+    "theory_program_ref",
+    "phase",
+    "agent_role",
+    "context_mode",
+    "exact_inputs",
+    "expected_outputs",
+    "allowed_next_routes",
+    "scientific_instruction",
+    "forbidden_shortcuts",
+    "requested_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-agent-task.v1" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "phase": {
+      "enum": [
+        "candidate-discovery",
+        "literature-query-planning",
+        "literature-synthesis",
+        "theory-scope",
+        "theory-inventory",
+        "theory-deepening",
+        "theory-audit",
+        "portfolio-judgment",
+        "frontier-planning",
+        "journal-research",
+        "manuscript-authoring",
+        "scientific-editing",
+        "journal-style-editing",
+        "language-editing",
+        "proofreading",
+        "cover-letter-authoring"
+      ]
+    },
+    "agent_role": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "context_mode": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "exact_inputs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema", "artifact_ref", "repository_relative_path"],
+        "properties": {
+          "schema": { "$ref": "#/$defs/schema_name" },
+          "artifact_ref": { "$ref": "#/$defs/digest" },
+          "repository_relative_path": { "$ref": "#/$defs/repository_path" }
+        }
+      }
+    },
+    "expected_outputs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema", "workspace_relative_path"],
+        "properties": {
+          "schema": { "$ref": "#/$defs/schema_name" },
+          "workspace_relative_path": { "$ref": "#/$defs/output_path" }
+        }
+      }
+    },
+    "allowed_next_routes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+    },
+    "scientific_instruction": { "type": "string", "minLength": 20, "maxLength": 131072 },
+    "forbidden_shortcuts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 8192 }
+    },
+    "requested_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "schema_name": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$", "maxLength": 512 },
+    "repository_path": {
+      "type": "string",
+      "pattern": "^(artifacts|Papers|work|contracts|docs|src|tools|tests)/[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$",
+      "maxLength": 4096
+    },
+    "output_path": {
+      "type": "string",
+      "pattern": "^outputs/[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*\\.json$",
+      "maxLength": 4096
+    }
+  }
+}
