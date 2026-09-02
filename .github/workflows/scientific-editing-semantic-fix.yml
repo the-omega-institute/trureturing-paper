@@ -1,0 +1,84 @@
+name: scientific-editing-semantic-fix
+
+on:
+  push:
+    branches:
+      - codex/paper-scientific-native-editing
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/paper-scientific-native-editing
+          fetch-depth: 0
+      - name: Bind edit delta to admitted source bytes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/Trureturing.Paper.Core/PaperScientificEditingAgents.cs')
+          source = path.read_text()
+          replacements = [
+              (
+                  '''        PaperScientificEditDelta delta = ComputeScientificEditDelta(
+                      context.SourceDraft,
+                      editDraft,
+                      output.ArtifactRef,
+                      result.CompletedAt);''',
+                  '''        PaperScientificEditDelta delta = ComputeScientificEditDelta(
+                      context.SourceDraft,
+                      dispatch.SourceDraftRef,
+                      editDraft,
+                      output.ArtifactRef,
+                      result.CompletedAt);'''
+              ),
+              (
+                  '''    private static PaperScientificEditDelta ComputeScientificEditDelta(
+              PaperScientificManuscriptDraft source,
+              PaperScientificEditDraft edited,
+              string editedDraftRef,
+              string computedAt)''',
+                  '''    private static PaperScientificEditDelta ComputeScientificEditDelta(
+              PaperScientificManuscriptDraft source,
+              string sourceDraftRef,
+              PaperScientificEditDraft edited,
+              string editedDraftRef,
+              string computedAt)'''
+              ),
+              (
+                  '''            Reference(CanonicalJson.Serialize(source)),
+              editedDraftRef,''',
+                  '''            sourceDraftRef,
+              editedDraftRef,'''
+              ),
+              (
+                  '''                if (oldBlock.Kind is PaperManuscriptDraftBlockKinds.FormalClaim
+                      or PaperManuscriptDraftBlockKinds.InformalItem
+                      && !string.Equals(oldBlock.Latex, newBlock.Latex, StringComparison.Ordinal))''',
+                  '''                if ((oldBlock.Kind is PaperManuscriptDraftBlockKinds.FormalClaim
+                      or PaperManuscriptDraftBlockKinds.InformalItem)
+                      && !string.Equals(oldBlock.Latex, newBlock.Latex, StringComparison.Ordinal))'''
+              ),
+              (
+                  '''        if (!string.Equals(content.SourceAuthoringTaskRef, context.SourceTask.Schema == PaperAgentSchemas.Task ? context.SourceAuthoringCursor.TaskRef : string.Empty, StringComparison.Ordinal)''',
+                  '''        if (!string.Equals(content.SourceAuthoringTaskRef, context.SourceAuthoringCursor.TaskRef, StringComparison.Ordinal)'''
+              ),
+          ]
+          for old, new in replacements:
+              if old not in source:
+                  raise SystemExit('scientific editing semantic fix target not found')
+              source = source.replace(old, new, 1)
+          path.write_text(source)
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/Trureturing.Paper.Core/PaperScientificEditingAgents.cs
+          git commit -m "fix(paper): bind scientific edit delta to admitted source"
+          git push origin HEAD:codex/paper-scientific-native-editing
