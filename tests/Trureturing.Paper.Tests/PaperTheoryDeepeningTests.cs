@@ -37,7 +37,7 @@ public sealed class PaperTheoryDeepeningTests
         {
             NewClaimIds = [],
             ProgressEvidence = new PaperTheoryProgressEvidence(
-                0,
+                1,
                 1,
                 0,
                 1,
