@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-deepening-agent-cursor.v1.schema.json",
+  "title": "Paper theory deepening agent cursor v1",
+  "description": "The immutable one-task-to-one-A2-admission decision, including computed delta, theorem package, split proposals, and research ledger entries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "task_ref", "result_ref", "dispatch_ref", "paper_id",
+    "theory_program_ref", "request_ref", "round", "iteration",
+    "theorem_package", "delta", "split_proposals", "research_ledger_entries",
+    "merge_candidate_paper_ids", "maturity", "next_route", "run_id",
+    "provenance", "admitted_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-theory-deepening-agent-cursor.v1" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "result_ref": { "$ref": "#/$defs/digest" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "$ref": "#/$defs/paper_id" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "request_ref": { "$ref": "#/$defs/digest" },
+    "round": { "type": "integer", "minimum": 1 },
+    "iteration": { "$ref": "#/$defs/artifact" },
+    "theorem_package": { "$ref": "#/$defs/artifact" },
+    "delta": { "$ref": "#/$defs/artifact" },
+    "split_proposals": {
+      "type": "array",
+      "maxItems": 16,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "research_ledger_entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "merge_candidate_paper_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/paper_id" }
+    },
+    "maturity": { "enum": ["developing", "audit-candidate"] },
+    "next_route": { "enum": ["theory-deepening", "theory-audit"] },
+    "run_id": { "type": "string", "maxLength": 512 },
+    "provenance": { "enum": ["produced", "adopted"] },
+    "admitted_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "repository_path": {
+      "type": "string",
+      "pattern": "^(artifacts|Papers|work|contracts|docs|src|tools|tests)/[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$",
+      "maxLength": 4096
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "content_path", "envelope_ref", "envelope_path"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$", "maxLength": 512 },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "content_path": { "$ref": "#/$defs/repository_path" },
+        "envelope_ref": { "$ref": "#/$defs/digest" },
+        "envelope_path": { "$ref": "#/$defs/repository_path" }
+      }
+    }
+  }
+}

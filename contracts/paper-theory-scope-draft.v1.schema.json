@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-scope-draft.v1.schema.json",
+  "title": "Paper theory scope draft v1",
+  "description": "The sole A0 JSON draft that an FKST-managed Codex scope agent may write. Repository code validates it and computes the final scope identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "theory_program_ref",
+    "scope_request_ref",
+    "paper_id",
+    "research_question",
+    "abstraction_target",
+    "publication_floor",
+    "in_scope_obligations",
+    "supporting_only",
+    "out_of_scope",
+    "split_policy",
+    "counterexample_obligations",
+    "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-theory-scope-draft.v1" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "scope_request_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "research_question": { "type": "string", "minLength": 1, "maxLength": 16384 },
+    "abstraction_target": { "type": "string", "minLength": 1, "maxLength": 16384 },
+    "publication_floor": { "type": "string", "minLength": 1, "maxLength": 8192 },
+    "in_scope_obligations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+    },
+    "supporting_only": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 8192 }
+    },
+    "out_of_scope": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 8192 }
+    },
+    "split_policy": { "type": "string", "minLength": 1, "maxLength": 8192 },
+    "counterexample_obligations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 8192 }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}

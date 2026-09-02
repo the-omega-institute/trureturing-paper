@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-audit-agent-dispatch.v1.schema.json",
+  "title": "Paper theory audit agent dispatch v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "paper_id", "theory_program_ref", "audit_request_ref", "exact_inputs", "reviewers", "requested_at"],
+  "properties": {
+    "schema": { "const": "paper-theory-audit-agent-dispatch.v1" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "audit_request_ref": { "$ref": "#/$defs/digest" },
+    "exact_inputs": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "reviewers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/reviewer" }
+    },
+    "requested_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "repository_relative_path"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot", "reviewer_role", "focus", "attempt"],
+      "properties": {
+        "slot": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "reviewer_role": { "enum": ["mathematical-referee", "novelty-referee", "scope-referee", "formalization-referee"] },
+        "focus": { "type": "string", "minLength": 40, "maxLength": 8192 },
+        "attempt": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

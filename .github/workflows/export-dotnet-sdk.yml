@@ -1,0 +1,25 @@
+name: export-dotnet-sdk
+
+on:
+  push:
+    branches:
+      - codex/paper-journal-research-selection
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download CI-matched SDK archive
+        shell: bash
+        run: curl --fail --location --retry 3 --output dotnet-sdk-10.0.103-linux-x64.tar.gz https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.103/dotnet-sdk-10.0.103-linux-x64.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-sdk-10.0.103-linux-x64
+          path: dotnet-sdk-10.0.103-linux-x64.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1

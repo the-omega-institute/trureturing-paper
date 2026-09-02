@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-scientific-edit-draft.v1.schema.json",
+  "title": "Paper scientific edit draft v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "dispatch_ref", "source_manuscript_ref", "claim_manifest_ref",
+    "manuscript_plan_ref", "paper_id", "theory_program_ref", "title",
+    "abstract_latex", "keywords", "sections", "references", "edit_dimensions",
+    "revision_summary", "remaining_risks", "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-scientific-edit-draft.v1" },
+    "dispatch_ref": { "$ref": "#/$defs/digest" },
+    "source_manuscript_ref": { "$ref": "#/$defs/digest" },
+    "claim_manifest_ref": { "$ref": "#/$defs/digest" },
+    "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "abstract_latex": { "type": "string", "minLength": 200, "maxLength": 8192 },
+    "keywords": {
+      "type": "array", "minItems": 3, "maxItems": 10, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 128 }
+    },
+    "sections": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": { "$ref": "#/$defs/section" }
+    },
+    "references": {
+      "type": "array", "maxItems": 512,
+      "items": { "$ref": "#/$defs/reference" }
+    },
+    "edit_dimensions": {
+      "type": "array", "minItems": 3, "maxItems": 6, "uniqueItems": true,
+      "items": {
+        "enum": [
+          "contribution-framing", "literature-boundary", "logical-sequencing",
+          "proof-exposition", "provenance-exposition",
+          "limitations-and-implications"
+        ]
+      }
+    },
+    "revision_summary": {
+      "type": "array", "minItems": 3, "maxItems": 16, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 2048 }
+    },
+    "remaining_risks": {
+      "type": "array", "maxItems": 16, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 2048 }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "kind", "target_id", "latex"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1 },
+        "kind": { "enum": ["prose", "formal-claim", "proof", "informal-item"] },
+        "target_id": { "type": "string", "maxLength": 128 },
+        "latex": { "type": "string", "maxLength": 65536 }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "section_id", "title", "blocks"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "section_id": {
+          "enum": ["introduction", "prior-work", "setting", "main-results", "proof-architecture", "formalization", "boundaries", "discussion"]
+        },
+        "title": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "blocks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/block" } }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["citation_key", "related_work_index", "source_ref", "usage"],
+      "properties": {
+        "citation_key": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$" },
+        "related_work_index": { "type": "integer", "minimum": 1 },
+        "source_ref": { "$ref": "#/$defs/digest" },
+        "usage": { "type": "string", "minLength": 1, "maxLength": 2048 }
+      }
+    }
+  }
+}

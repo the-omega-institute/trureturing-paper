@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-deepening-draft.v1.schema.json",
+  "title": "Paper theory deepening draft v1",
+  "description": "One bounded A2 proposal containing an iteration, post-iteration theorem package, optional split proposals, and mandatory research-ledger evidence. Repository code computes all final identities and the actual theorem delta.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "theory_program_ref", "scope_ref", "inventory_ref",
+    "deepening_request_ref", "prior_theorem_package_refs", "paper_id",
+    "round", "iteration", "theorem_package", "split_proposals",
+    "research_ledger_entries", "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-theory-deepening-draft.v1" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "scope_ref": { "$ref": "#/$defs/digest" },
+    "inventory_ref": { "$ref": "#/$defs/digest" },
+    "deepening_request_ref": { "$ref": "#/$defs/digest" },
+    "prior_theorem_package_refs": {
+      "type": "array",
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/digest" }
+    },
+    "paper_id": { "$ref": "#/$defs/paper_id" },
+    "round": { "type": "integer", "minimum": 1 },
+    "iteration": { "$ref": "#/$defs/iteration" },
+    "theorem_package": { "$ref": "#/$defs/theorem_package" },
+    "split_proposals": {
+      "type": "array",
+      "maxItems": 16,
+      "items": { "$ref": "#/$defs/split_proposal" }
+    },
+    "research_ledger_entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/ledger_entry" }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+    "claim_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/claim_id" }
+    },
+    "text_list": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+    },
+    "progress_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "new_theorem_like_claims", "strengthened_theorem_like_claims",
+        "dependency_edges_added", "proof_obligations_closed",
+        "counterexamples_resolved", "abstraction_changed",
+        "novelty_boundary_changed"
+      ],
+      "properties": {
+        "new_theorem_like_claims": { "type": "integer", "minimum": 0 },
+        "strengthened_theorem_like_claims": { "type": "integer", "minimum": 0 },
+        "dependency_edges_added": { "type": "integer", "minimum": 0 },
+        "proof_obligations_closed": { "type": "integer", "minimum": 0 },
+        "counterexamples_resolved": { "type": "integer", "minimum": 0 },
+        "abstraction_changed": { "type": "boolean" },
+        "novelty_boundary_changed": { "type": "boolean" }
+      }
+    },
+    "iteration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "changed_claim_ids", "new_claim_ids", "strengthened_claim_ids",
+        "retired_claim_ids", "proof_spine", "novel_increment",
+        "prior_work_boundary", "counterexample_findings",
+        "split_candidate_claim_ids", "merge_candidate_paper_ids",
+        "progress_evidence", "created_at"
+      ],
+      "properties": {
+        "changed_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "new_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "strengthened_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "retired_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "proof_spine": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "novel_increment": { "type": "string", "minLength": 80, "maxLength": 32768 },
+        "prior_work_boundary": { "type": "string", "minLength": 40, "maxLength": 32768 },
+        "counterexample_findings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "split_candidate_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "merge_candidate_paper_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/paper_id" }
+        },
+        "progress_evidence": { "$ref": "#/$defs/progress_evidence" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_id", "title", "kind", "statement", "dependencies",
+        "proof_status", "proof_outline", "novelty_status", "load_bearing"
+      ],
+      "properties": {
+        "claim_id": { "$ref": "#/$defs/claim_id" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "kind": { "enum": ["definition", "lemma", "proposition", "theorem", "corollary", "counterexample", "proof-interface"] },
+        "statement": { "type": "string", "minLength": 1, "maxLength": 32768 },
+        "dependencies": { "$ref": "#/$defs/claim_ids" },
+        "proof_status": { "enum": ["certified-foundation", "informal-complete", "informal-gap", "disproved"] },
+        "proof_outline": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "novelty_status": { "enum": ["new", "strengthened", "known-tool", "negative-boundary"] },
+        "load_bearing": { "type": "boolean" }
+      }
+    },
+    "theorem_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maturity", "claims", "main_theorem_claim_ids", "corollary_claim_ids",
+        "sharpness_claim_ids", "open_proof_obligations", "known_results_to_cite",
+        "novelty_summary", "publication_significance", "created_at"
+      ],
+      "properties": {
+        "maturity": { "enum": ["developing", "audit-candidate"] },
+        "claims": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/$defs/claim" }
+        },
+        "main_theorem_claim_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claim_id" }
+        },
+        "corollary_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "sharpness_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "open_proof_obligations": { "$ref": "#/$defs/text_list" },
+        "known_results_to_cite": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "novelty_summary": { "type": "string", "minLength": 80, "maxLength": 32768 },
+        "publication_significance": { "type": "string", "minLength": 80, "maxLength": 32768 },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "split_proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposed_paper_id", "extracted_claim_ids", "independent_research_question",
+        "independent_proof_spine", "scope_mismatch", "publication_rationale",
+        "overlap_risk", "proposed_at"
+      ],
+      "properties": {
+        "proposed_paper_id": { "$ref": "#/$defs/paper_id" },
+        "extracted_claim_ids": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claim_id" }
+        },
+        "independent_research_question": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "independent_proof_spine": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 16384 }
+        },
+        "scope_mismatch": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "publication_rationale": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "overlap_risk": { "type": "string", "minLength": 1, "maxLength": 16384 },
+        "proposed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ledger_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "discovery_kind", "related_refs", "summary", "why_recorded",
+        "promotion_status", "recorded_at"
+      ],
+      "properties": {
+        "discovery_kind": { "enum": ["split-candidate", "merge-candidate", "stronger-route", "counterexample", "prior-work-boundary"] },
+        "related_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/digest" }
+        },
+        "summary": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "why_recorded": { "type": "string", "minLength": 40, "maxLength": 16384 },
+        "promotion_status": { "enum": ["candidate-seed", "promoted", "parked", "consumed"] },
+        "recorded_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-audit-opinion-draft.v1.schema.json",
+  "title": "Paper theory audit opinion draft v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "paper_id", "theory_program_ref", "audit_request_ref", "theorem_package_ref", "reviewer_role", "metrics", "verdict", "blockers", "required_revisions", "novelty_evidence", "proof_audit", "overlap_findings", "reviewed_at"],
+  "properties": {
+    "schema": { "const": "paper-theory-audit-opinion-draft.v1" },
+    "paper_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "audit_request_ref": { "$ref": "#/$defs/digest" },
+    "theorem_package_ref": { "$ref": "#/$defs/digest" },
+    "reviewer_role": { "enum": ["mathematical-referee", "novelty-referee", "scope-referee", "formalization-referee"] },
+    "metrics": { "$ref": "#/$defs/metrics" },
+    "verdict": { "enum": ["pass", "deepen", "split", "merge", "park", "archive"] },
+    "blockers": { "$ref": "#/$defs/text_array" },
+    "required_revisions": { "$ref": "#/$defs/text_array" },
+    "novelty_evidence": { "type": "string", "minLength": 80, "maxLength": 32768 },
+    "proof_audit": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 16384 } },
+    "overlap_findings": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 16384 } },
+    "reviewed_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "text_array": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 16384 } },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["abstraction_quality", "theorem_depth", "logical_closure", "proof_plausibility", "novelty", "significance", "formalization_readiness", "journal_floor", "overlap_hygiene"],
+      "properties": {
+        "abstraction_quality": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "theorem_depth": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "logical_closure": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "proof_plausibility": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "novelty": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "significance": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "formalization_readiness": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "journal_floor": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "overlap_hygiene": { "type": "integer", "minimum": 0, "maximum": 10 }
+      }
+    }
+  }
+}

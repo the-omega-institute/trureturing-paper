@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-current-state-cursor.v1.schema.json",
+  "title": "Paper frontier current state cursor v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "frontier_ref", "state", "version", "updated_at"],
+  "properties": {
+    "schema": { "const": "paper-frontier-current-state-cursor.v1" },
+    "frontier_ref": { "$ref": "#/$defs/digest" },
+    "state": { "$ref": "#/$defs/stored" },
+    "version": { "type": "integer", "minimum": 0 },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "path": { "type": "string", "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$", "maxLength": 4096 },
+    "stored": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "blob_ref", "repository_relative_path"],
+      "properties": {
+        "schema": { "const": "paper-formalization-frontier-state.v1" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "blob_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "$ref": "#/$defs/path" }
+      }
+    }
+  }
+}

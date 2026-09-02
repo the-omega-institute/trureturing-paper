@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-scientific-edit-delta.v1.schema.json",
+  "title": "Paper scientific edit delta v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "delta_id", "delta_content"],
+  "properties": {
+    "schema": { "const": "paper-scientific-edit-delta.v1" },
+    "delta_id": { "$ref": "#/$defs/digest" },
+    "delta_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_manuscript_ref", "source_draft_ref", "edited_draft_ref",
+        "changed_section_ids", "changed_prose_block_count",
+        "changed_proof_block_count", "abstract_changed", "keywords_changed",
+        "citation_set_changed", "substantive_dimensions",
+        "claim_identity_preserved", "evidence_boundary_preserved", "passed",
+        "computed_at"
+      ],
+      "properties": {
+        "source_manuscript_ref": { "$ref": "#/$defs/digest" },
+        "source_draft_ref": { "$ref": "#/$defs/digest" },
+        "edited_draft_ref": { "$ref": "#/$defs/digest" },
+        "changed_section_ids": {
+          "type": "array", "minItems": 3, "maxItems": 8, "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+        },
+        "changed_prose_block_count": { "type": "integer", "minimum": 2 },
+        "changed_proof_block_count": { "type": "integer", "minimum": 1 },
+        "abstract_changed": { "type": "boolean" },
+        "keywords_changed": { "type": "boolean" },
+        "citation_set_changed": { "type": "boolean" },
+        "substantive_dimensions": {
+          "type": "array", "minItems": 3, "maxItems": 6, "uniqueItems": true,
+          "items": {
+            "enum": [
+              "contribution-framing", "literature-boundary", "logical-sequencing",
+              "proof-exposition", "provenance-exposition",
+              "limitations-and-implications"
+            ]
+          }
+        },
+        "claim_identity_preserved": { "const": true },
+        "evidence_boundary_preserved": { "const": true },
+        "passed": { "const": true },
+        "computed_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}

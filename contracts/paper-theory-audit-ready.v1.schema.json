@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-audit-ready.v1.schema.json",
+  "title": "Paper theory audit ready v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "review_plan_ref", "audit_request_ref", "paper_id", "theory_program_ref", "audit", "scorecard", "verdict", "passed", "promotion_eligible", "next_route", "replayed", "dedup_key"],
+  "properties": {
+    "schema": { "const": "paper-theory-audit-ready.v1" },
+    "review_plan_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "audit_request_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "paper_id": { "type": "string" },
+    "theory_program_ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "audit": { "type": "object" },
+    "scorecard": { "type": "object" },
+    "verdict": { "enum": ["pass", "deepen", "split", "merge", "park", "archive"] },
+    "passed": { "type": "boolean" },
+    "promotion_eligible": { "type": "boolean" },
+    "next_route": { "enum": ["portfolio-judgment", "theory-deepening", "portfolio-split", "portfolio-merge", "parked", "archived"] },
+    "replayed": { "type": "boolean" },
+    "dedup_key": { "type": "string", "minLength": 1 }
+  }
+}

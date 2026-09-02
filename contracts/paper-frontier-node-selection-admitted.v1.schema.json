@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-node-selection-admitted.v1.schema.json",
+  "title": "Paper frontier node selection admitted v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "frontier_planning_task_ref", "frontier_planning_result_ref", "frontier_planning_dispatch_ref", "frontier_ref", "initial_state_ref", "paper_id", "theory_program_ref", "theorem_package_ref", "portfolio_decision_ref", "dispatch_order", "node_id", "claim_id", "formalization_kind", "parallel_wave", "priority", "authorization", "verification_budget", "selection_ref", "selection_blob_ref", "selection_path", "formalization_request_ref", "formalization_request_blob_ref", "formalization_request_path", "selection_event", "request_event", "frontier_state", "binding", "truth_release_digest", "source_commit", "source_tree", "gid", "admitted_at", "replayed"],
+  "properties": {
+    "schema": { "const": "paper-frontier-node-selection-admitted.v1" },
+    "frontier_planning_task_ref": { "$ref": "#/$defs/digest" },
+    "frontier_planning_result_ref": { "$ref": "#/$defs/digest" },
+    "frontier_planning_dispatch_ref": { "$ref": "#/$defs/digest" },
+    "frontier_ref": { "$ref": "#/$defs/digest" },
+    "initial_state_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "theorem_package_ref": { "$ref": "#/$defs/digest" },
+    "portfolio_decision_ref": { "$ref": "#/$defs/digest" },
+    "dispatch_order": { "type": "integer", "minimum": 1 },
+    "node_id": { "$ref": "#/$defs/digest" },
+    "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+    "formalization_kind": { "$ref": "#/$defs/kind" },
+    "parallel_wave": { "type": "integer", "minimum": 0 },
+    "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "authorization": { "$ref": "#/$defs/stored" },
+    "verification_budget": { "$ref": "#/$defs/stored" },
+    "selection_ref": { "$ref": "#/$defs/digest" },
+    "selection_blob_ref": { "$ref": "#/$defs/digest" },
+    "selection_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "formalization_request_ref": { "$ref": "#/$defs/digest" },
+    "formalization_request_blob_ref": { "$ref": "#/$defs/digest" },
+    "formalization_request_path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "selection_event": { "$ref": "#/$defs/stored" },
+    "request_event": { "$ref": "#/$defs/stored" },
+    "frontier_state": { "$ref": "#/$defs/stored" },
+    "binding": { "$ref": "#/$defs/stored" },
+    "truth_release_digest": { "$ref": "#/$defs/digest" },
+    "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "source_tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "gid": { "$ref": "#/$defs/gid" },
+    "admitted_at": { "type": "string", "format": "date-time" },
+    "replayed": { "type": "boolean" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "gid": { "type": "string", "pattern": "^D[0-9]+/S[0-9]+/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*(?:\\.[A-Za-z_][A-Za-z0-9_']*)?$" },
+    "kind": { "enum": ["definition", "prerequisite", "structural", "main-theorem", "sharpness", "corollary", "counterexample", "proof-interface"] },
+    "path": { "type": "string", "pattern": "^[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$", "maxLength": 4096 },
+    "stored": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "blob_ref", "repository_relative_path"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "blob_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "$ref": "#/$defs/path" }
+      }
+    }
+  }
+}

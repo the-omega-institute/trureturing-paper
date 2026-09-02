@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-foundation-agent-dispatch.v1.schema.json",
+  "title": "Paper theory foundation agent dispatch v1",
+  "description": "An immutable bridge from one validated A0 scope or A1 inventory request to the FKST-native Paper agent runtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "kind",
+    "paper_id",
+    "theory_program_ref",
+    "request_ref",
+    "exact_inputs",
+    "requested_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-theory-foundation-agent-dispatch.v1" },
+    "kind": { "enum": ["scope", "inventory"] },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "request_ref": { "$ref": "#/$defs/digest" },
+    "exact_inputs": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema", "artifact_ref", "repository_relative_path"],
+        "properties": {
+          "schema": { "$ref": "#/$defs/schema_name" },
+          "artifact_ref": { "$ref": "#/$defs/digest" },
+          "repository_relative_path": { "$ref": "#/$defs/repository_path" }
+        }
+      }
+    },
+    "requested_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "schema_name": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$", "maxLength": 512 },
+    "repository_path": {
+      "type": "string",
+      "pattern": "^(artifacts|Papers|work|contracts|docs|src|tools|tests)/[A-Za-z0-9._+@=-]+(?:/[A-Za-z0-9._+@=-]+)*$",
+      "maxLength": 4096
+    }
+  }
+}

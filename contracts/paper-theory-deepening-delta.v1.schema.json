@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-deepening-delta.v1.schema.json",
+  "title": "Paper theory deepening delta v1",
+  "description": "A repository-computed witness that an A2 agent result made theorem, proof, and structural progress relative to the exact inventory or immediately prior theorem package.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "delta_id", "delta_content"],
+  "properties": {
+    "schema": { "const": "paper-theory-deepening-delta.v1" },
+    "delta_id": { "$ref": "#/$defs/digest" },
+    "delta_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deepening_request_ref", "baseline_schema", "baseline_ref",
+        "iteration_ref", "theorem_package_ref", "new_claim_ids",
+        "strengthened_claim_ids", "retired_claim_ids", "dependency_edges_added",
+        "proof_obligations_closed", "counterexamples_resolved",
+        "abstraction_changed", "novelty_boundary_changed",
+        "substantive_dimensions", "passed", "computed_at"
+      ],
+      "properties": {
+        "deepening_request_ref": { "$ref": "#/$defs/digest" },
+        "baseline_schema": { "enum": ["paper-theory-inventory.v1", "paper-theorem-package.v1"] },
+        "baseline_ref": { "$ref": "#/$defs/digest" },
+        "iteration_ref": { "$ref": "#/$defs/digest" },
+        "theorem_package_ref": { "$ref": "#/$defs/digest" },
+        "new_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "strengthened_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "retired_claim_ids": { "$ref": "#/$defs/claim_ids" },
+        "dependency_edges_added": { "type": "integer", "minimum": 0 },
+        "proof_obligations_closed": { "type": "integer", "minimum": 1 },
+        "counterexamples_resolved": { "type": "integer", "minimum": 0 },
+        "abstraction_changed": { "type": "boolean" },
+        "novelty_boundary_changed": { "type": "boolean" },
+        "substantive_dimensions": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "new-theorem-like-claims", "strengthened-theorem-like-claims",
+              "dependency-structure", "proof-closure", "counterexample-or-sharpness",
+              "abstraction", "novelty-boundary"
+            ]
+          }
+        },
+        "passed": { "const": true },
+        "computed_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+    "claim_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/claim_id" }
+    }
+  }
+}

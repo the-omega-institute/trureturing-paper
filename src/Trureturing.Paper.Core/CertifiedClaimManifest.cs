@@ -231,6 +231,7 @@ public static class PaperCertifiedClaimManifestService
     [
         "theorem",
         "lemma",
+        "proposition",
         "corollary"
     ];
 
@@ -569,7 +570,7 @@ public static class PaperCertifiedClaimManifestService
             if (!FormalClaimKinds.Contains(claim.ClaimKind))
             {
                 throw new InvalidDataException(
-                    "Formal claim kind must be theorem, lemma, or corollary.");
+                    "Formal claim kind must be theorem, lemma, proposition, or corollary.");
             }
             RequireFormalLabelPrefix(
                 claim.ClaimKind,
@@ -1416,6 +1417,7 @@ public static class PaperCertifiedClaimManifestService
         {
             "theorem" => "thm:",
             "lemma" => "lem:",
+            "proposition" => "prop:",
             "corollary" => "cor:",
             _ => throw new InvalidDataException(
                 "Unsupported formal claim kind.")

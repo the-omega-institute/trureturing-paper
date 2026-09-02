@@ -10,6 +10,20 @@ internal static class Program
           register-task --repository-root <path> --task <path>
           prepare-run --repository-root <path> --task-ref <sha256:...>
           record-result --repository-root <path> --task-ref <sha256:...> --stdout <path> --run-id <id-or-empty> --provenance <produced|adopted>
+          stage-foundation-task --repository-root <path> --dispatch <path>
+          admit-foundation-result --repository-root <path> --task-ref <sha256:...>
+          stage-deepening-task --repository-root <path> --dispatch <path>
+          admit-deepening-result --repository-root <path> --task-ref <sha256:...>
+          stage-audit-tasks --repository-root <path> --dispatch <path>
+          admit-audit-opinion --repository-root <path> --task-ref <sha256:...>
+          stage-portfolio-judgment-task --repository-root <path> --dispatch <path>
+          admit-portfolio-judgment-result --repository-root <path> --task-ref <sha256:...>
+          stage-frontier-planning-task --repository-root <path> --portfolio-task-ref <sha256:...> --paper-id <id>
+          admit-frontier-planning-result --repository-root <path> --task-ref <sha256:...>
+          stage-manuscript-authoring-task --repository-root <path> --evaluation-ref <sha256:...> --claim-manifest-ref <sha256:...> --eligibility-ref <sha256:...>
+          admit-manuscript-authoring-result --repository-root <path> --task-ref <sha256:...>
+          stage-scientific-editing-task --repository-root <path> --source-authoring-task-ref <sha256:...>
+          admit-scientific-editing-result --repository-root <path> --task-ref <sha256:...>
         """;
 
     public static int Main(string[] args)
@@ -21,6 +35,20 @@ internal static class Program
                 "register-task" => RegisterTask(args),
                 "prepare-run" => PrepareRun(args),
                 "record-result" => RecordResult(args),
+                "stage-foundation-task" => StageFoundationTask(args),
+                "admit-foundation-result" => AdmitFoundationResult(args),
+                "stage-deepening-task" => StageDeepeningTask(args),
+                "admit-deepening-result" => AdmitDeepeningResult(args),
+                "stage-audit-tasks" => StageAuditTasks(args),
+                "admit-audit-opinion" => AdmitAuditOpinion(args),
+                "stage-portfolio-judgment-task" => StagePortfolioJudgmentTask(args),
+                "admit-portfolio-judgment-result" => AdmitPortfolioJudgmentResult(args),
+                "stage-frontier-planning-task" => StageFrontierPlanningTask(args),
+                "admit-frontier-planning-result" => AdmitFrontierPlanningResult(args),
+                "stage-manuscript-authoring-task" => StageManuscriptAuthoringTask(args),
+                "admit-manuscript-authoring-result" => AdmitManuscriptAuthoringResult(args),
+                "stage-scientific-editing-task" => StageScientificEditingTask(args),
+                "admit-scientific-editing-result" => AdmitScientificEditingResult(args),
                 _ => throw new ArgumentException(Usage)
             };
         }
@@ -83,6 +111,222 @@ internal static class Program
                 values["--stdout"],
                 values["--run-id"],
                 values["--provenance"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageFoundationTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-foundation-task",
+            "--repository-root",
+            "--dispatch");
+        PaperTheoryFoundationAgentTaskStaged result =
+            PaperTheoryFoundationAgentService.StageTask(
+                values["--repository-root"],
+                values["--dispatch"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitFoundationResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-foundation-result",
+            "--repository-root",
+            "--task-ref");
+        PaperTheoryFoundationAgentResultAdmitted result =
+            PaperTheoryFoundationAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageDeepeningTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-deepening-task",
+            "--repository-root",
+            "--dispatch");
+        PaperTheoryDeepeningAgentTaskStaged result =
+            PaperTheoryDeepeningAgentService.StageTask(
+                values["--repository-root"],
+                values["--dispatch"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitDeepeningResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-deepening-result",
+            "--repository-root",
+            "--task-ref");
+        PaperTheoryDeepeningAgentResultAdmitted result =
+            PaperTheoryDeepeningAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageAuditTasks(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-audit-tasks",
+            "--repository-root",
+            "--dispatch");
+        PaperTheoryAuditAgentTasksStaged result =
+            PaperTheoryAuditAgentService.StageTasks(
+                values["--repository-root"],
+                values["--dispatch"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitAuditOpinion(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-audit-opinion",
+            "--repository-root",
+            "--task-ref");
+        PaperTheoryAuditAgentResultAdmitted result =
+            PaperTheoryAuditAgentService.AdmitOpinion(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StagePortfolioJudgmentTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-portfolio-judgment-task",
+            "--repository-root",
+            "--dispatch");
+        PaperPortfolioJudgmentAgentTaskStaged result =
+            PaperPortfolioJudgmentAgentService.StageTask(
+                values["--repository-root"],
+                values["--dispatch"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitPortfolioJudgmentResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-portfolio-judgment-result",
+            "--repository-root",
+            "--task-ref");
+        PaperPortfolioJudgmentAgentResultAdmitted result =
+            PaperPortfolioJudgmentAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageFrontierPlanningTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-frontier-planning-task",
+            "--repository-root",
+            "--portfolio-task-ref",
+            "--paper-id");
+        PaperFrontierPlanningAgentTaskStaged result =
+            PaperFrontierPlanningAgentService.StageTask(
+                values["--repository-root"],
+                values["--portfolio-task-ref"],
+                values["--paper-id"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitFrontierPlanningResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-frontier-planning-result",
+            "--repository-root",
+            "--task-ref");
+        PaperFrontierPlanningAgentResultAdmitted result =
+            PaperFrontierPlanningAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageManuscriptAuthoringTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-manuscript-authoring-task",
+            "--repository-root",
+            "--evaluation-ref",
+            "--claim-manifest-ref",
+            "--eligibility-ref");
+        PaperManuscriptAuthoringAgentTaskStaged result =
+            PaperManuscriptAuthoringAgentService.StageTask(
+                values["--repository-root"],
+                values["--evaluation-ref"],
+                values["--claim-manifest-ref"],
+                values["--eligibility-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitManuscriptAuthoringResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-manuscript-authoring-result",
+            "--repository-root",
+            "--task-ref");
+        PaperManuscriptAuthoringAgentResultAdmitted result =
+            PaperManuscriptAuthoringAgentService.AdmitResult(
+                values["--repository-root"],
+                values["--task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int StageScientificEditingTask(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "stage-scientific-editing-task",
+            "--repository-root",
+            "--source-authoring-task-ref");
+        PaperScientificEditingAgentTaskStaged result =
+            PaperManuscriptAuthoringAgentService.StageScientificEditingTask(
+                values["--repository-root"],
+                values["--source-authoring-task-ref"]);
+        WriteResult(result);
+        return 0;
+    }
+
+    private static int AdmitScientificEditingResult(string[] args)
+    {
+        Dictionary<string, string> values = ParseValues(
+            args,
+            "admit-scientific-editing-result",
+            "--repository-root",
+            "--task-ref");
+        PaperScientificEditingAgentResultAdmitted result =
+            PaperManuscriptAuthoringAgentService.AdmitScientificEditingResult(
+                values["--repository-root"],
+                values["--task-ref"]);
         WriteResult(result);
         return 0;
     }

@@ -2,6 +2,8 @@
   <Project Path="src/Trureturing.Paper.Core/Trureturing.Paper.Core.csproj" />
   <Project Path="src/Trureturing.Paper.Cli/Trureturing.Paper.Cli.csproj" />
   <Project Path="src/Trureturing.Paper.ResearchSelection.Cli/Trureturing.Paper.ResearchSelection.Cli.csproj" />
+  <Project Path="src/Trureturing.Paper.FrontierSelection.Cli/Trureturing.Paper.FrontierSelection.Cli.csproj" />
+  <Project Path="src/Trureturing.Paper.FrontierLifecycle.Cli/Trureturing.Paper.FrontierLifecycle.Cli.csproj" />
   <Project Path="src/Trureturing.Paper.Certification.Cli/Trureturing.Paper.Certification.Cli.csproj" />
   <Project Path="src/Trureturing.Paper.ClaimManifest.Cli/Trureturing.Paper.ClaimManifest.Cli.csproj" />
   <Project Path="src/Trureturing.Paper.Agent.Cli/Trureturing.Paper.Agent.Cli.csproj" />

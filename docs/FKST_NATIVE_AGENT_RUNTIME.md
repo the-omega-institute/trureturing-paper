@@ -111,8 +111,40 @@ theorem-frontier parallelism:
 
 The ordinary Paper test assembly covers task registration, exact evidence materialization, output admission, route enforcement, immutable replay, result-envelope parsing, symbolic-link rejection, and the direct FKST Codex SDK wiring. These tests execute alongside the stacked portfolio, theory, audit, and frontier regression suite.
 
-## Non-goals of this PR
+## Connected business phases
 
-This boundary does not yet create the upstream task artifacts for every A0, A1, A2, A3, literature, journal, manuscript, editing, or review phase. It also does not provide web-source adapters, invoke Formalize, write Base, generate a finished paper, or submit a manuscript.
+A0 scope and A1 inventory use the generic runtime through domain-specific adapters:
 
-The next PRs should connect individual Paper business events to `paper-agent-task.v1`, beginning with A0 scope and A1 inventory. Each integration must retain its existing domain validator after Codex returns.
+```text
+paper_theory_scope_requested | paper_theory_inventory_requested
+    -> immutable foundation dispatch
+    -> reconstructed phase-owned paper-agent-task.v1
+    -> native Codex execution
+    -> scope or inventory draft
+    -> existing domain validator
+    -> canonical content ID and full envelope
+    -> paper_theory_scope_ready | paper_theory_inventory_ready
+```
+
+A2 abstract-theory deepening uses the same runtime:
+
+```text
+paper_theory_deepening_requested
+    -> immutable A2 dispatch
+    -> reconstructed paper-theory-developer task
+    -> native Codex execution
+    -> one theory-deepening draft bundle
+    -> existing iteration and theorem-package validators
+    -> repository-computed theorem delta
+    -> typed theorem package, split, merge-research, and ledger events
+```
+
+The A2 adapter compares the returned package with the exact A1 inventory or immediately prior theorem package. Agent-provided progress counters must match repository-computed new, strengthened, retired, dependency, proof-closure, sharpness, abstraction, and novelty changes. The model cannot promote presentation edits or fabricated counters as mathematical progress.
+
+See `docs/FKST_A0_A1_NATIVE_AGENTS.md` and `docs/FKST_A2_NATIVE_AGENT.md` for the complete lanes.
+
+## Remaining integrations
+
+Fresh multi-agent A3 audit, source acquisition, journal research, manuscript authoring, editing, proofreading, and SSHX review still need business-event adapters. They should use the same task runtime and preserve their existing domain validators and progress gates.
+
+This runtime does not invoke Formalize, write Base, submit a manuscript, or treat an agent draft as certified truth.

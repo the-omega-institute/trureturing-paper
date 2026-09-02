@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-theory-audit-agent-failure.v1.schema.json",
+  "title": "Paper theory audit agent failure v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "task_ref", "result_ref", "paper_id", "theory_program_ref", "status", "summary", "blocker_code", "next_route", "run_id", "provenance", "replayed", "dedup_key"],
+  "properties": {
+    "schema": { "const": "paper-theory-audit-agent-failure.v1" },
+    "task_ref": { "$ref": "#/$defs/digest" },
+    "result_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "status": { "enum": ["no-progress", "blocked"] },
+    "summary": { "type": "string" },
+    "blocker_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,127}$" },
+    "next_route": { "const": "theory-audit" },
+    "run_id": { "type": "string" },
+    "provenance": { "enum": ["produced", "adopted"] },
+    "replayed": { "type": "boolean" },
+    "dedup_key": { "type": "string", "minLength": 1 }
+  },
+  "$defs": { "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" } }
+}

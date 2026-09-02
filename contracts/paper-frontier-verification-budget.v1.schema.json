@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-frontier-verification-budget.v1.schema.json",
+  "title": "Paper frontier verification budget v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "budget_id", "budget_content"],
+  "properties": {
+    "schema": { "const": "paper-frontier-verification-budget.v1" },
+    "budget_id": { "$ref": "#/$defs/digest" },
+    "budget_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frontier_ref", "node_id", "claim_id", "maximum_formalization_rounds", "require_exact_truth_release", "require_certified_dependencies", "counterexample_is_useful", "missing_prerequisite_is_reportable", "created_at"],
+      "properties": {
+        "frontier_ref": { "$ref": "#/$defs/digest" },
+        "node_id": { "$ref": "#/$defs/digest" },
+        "claim_id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$" },
+        "maximum_formalization_rounds": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "require_exact_truth_release": { "const": true },
+        "require_certified_dependencies": { "const": true },
+        "counterexample_is_useful": { "const": true },
+        "missing_prerequisite_is_reportable": { "const": true },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
