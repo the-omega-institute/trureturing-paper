@@ -1,0 +1,27 @@
+name: export-journal-worktree
+
+on:
+  push:
+    branches:
+      - codex/paper-journal-research-selection
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Archive tracked worktree
+        shell: bash
+        run: git archive --format=zip --output=trureturing-paper-journal-worktree.zip HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trureturing-paper-journal-worktree
+          path: trureturing-paper-journal-worktree.zip
+          if-no-files-found: error
+          retention-days: 1
