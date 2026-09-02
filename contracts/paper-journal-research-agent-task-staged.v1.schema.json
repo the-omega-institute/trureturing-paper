@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-journal-research-agent-task-staged.v1.schema.json",
+  "title": "Paper journal research agent task staged v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "dispatch_ref",
+    "task_ref",
+    "task_path",
+    "source_scientific_editing_task_ref",
+    "source_edited_manuscript_ref",
+    "paper_id",
+    "theory_program_ref",
+    "phase",
+    "agent_role",
+    "context_mode",
+    "replayed"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-journal-research-agent-task-staged.v1"
+    },
+    "dispatch_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "task_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "task_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "source_scientific_editing_task_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_edited_manuscript_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "paper_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "theory_program_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "phase": {
+      "const": "journal-research"
+    },
+    "agent_role": {
+      "const": "paper-journal-researcher"
+    },
+    "context_mode": {
+      "const": "source-bundle-only"
+    },
+    "replayed": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

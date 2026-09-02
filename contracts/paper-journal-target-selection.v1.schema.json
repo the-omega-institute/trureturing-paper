@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-journal-target-selection.v1.schema.json",
+  "title": "Paper journal target selection v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "selection_id",
+    "selection_content"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-journal-target-selection.v1"
+    },
+    "selection_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selection_content": {
+      "$ref": "#/$defs/selection_content"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selection_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dossier_ref",
+        "source_edited_manuscript_ref",
+        "paper_id",
+        "theory_program_ref",
+        "maximum_publication_tier",
+        "selected_venue_id",
+        "selected_journal_name",
+        "selected_article_type",
+        "selected_publication_tier",
+        "selected_scorecard_ref",
+        "ranked_scorecard_refs",
+        "selected_source_ids",
+        "next_route",
+        "selected_at"
+      ],
+      "properties": {
+        "dossier_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "source_edited_manuscript_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "paper_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "theory_program_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "maximum_publication_tier": {
+          "const": 2
+        },
+        "selected_venue_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+        },
+        "selected_journal_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 512
+        },
+        "selected_article_type": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+        },
+        "selected_publication_tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "selected_scorecard_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "ranked_scorecard_refs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "selected_source_ids": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "next_route": {
+          "const": "journal-style-editing"
+        },
+        "selected_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-journal-venue-scorecard.v1.schema.json",
+  "title": "Paper journal venue scorecard v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scorecard_id",
+    "scorecard_content"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-journal-venue-scorecard.v1"
+    },
+    "scorecard_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "scorecard_content": {
+      "$ref": "#/$defs/scorecard_content"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "scorecard_content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dossier_ref",
+        "venue_id",
+        "journal_name",
+        "target_article_type",
+        "publication_tier",
+        "scope_fit_score",
+        "theorem_package_fit_score",
+        "article_type_fit_score",
+        "comparable_paper_score",
+        "format_feasibility_score",
+        "length_feasibility_score",
+        "policy_compatibility_score",
+        "fee_feasibility_score",
+        "evidence_completeness_score",
+        "evidence_recency_score",
+        "overall_score",
+        "eligible",
+        "blockers",
+        "computed_at"
+      ],
+      "properties": {
+        "dossier_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "venue_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+        },
+        "journal_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 512
+        },
+        "target_article_type": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+        },
+        "publication_tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "scope_fit_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "theorem_package_fit_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "article_type_fit_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "comparable_paper_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "format_feasibility_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "length_feasibility_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "policy_compatibility_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "fee_feasibility_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "evidence_completeness_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "evidence_recency_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "overall_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "eligible": {
+          "type": "boolean"
+        },
+        "blockers": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "computed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

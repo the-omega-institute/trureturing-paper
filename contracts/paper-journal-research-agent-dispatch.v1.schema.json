@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-journal-research-agent-dispatch.v1.schema.json",
+  "title": "Paper journal research agent dispatch v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "source_scientific_editing_task_ref",
+    "source_scientific_editing_result_ref",
+    "source_scientific_editing_cursor_ref",
+    "source_edited_manuscript_ref",
+    "source_edited_manuscript_envelope_ref",
+    "source_edit_draft_ref",
+    "source_edit_delta_ref",
+    "source_main_tex_ref",
+    "source_bibliography_ref",
+    "claim_manifest_ref",
+    "manuscript_plan_ref",
+    "frontier_ref",
+    "paper_id",
+    "theory_program_ref",
+    "theorem_package_ref",
+    "theory_audit_ref",
+    "literature_research_ref",
+    "selected_release_ref",
+    "selected_release_digest",
+    "policy",
+    "exact_inputs",
+    "requested_at"
+  ],
+  "properties": {
+    "schema": {
+      "const": "paper-journal-research-agent-dispatch.v1"
+    },
+    "source_scientific_editing_task_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_scientific_editing_result_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_scientific_editing_cursor_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_edited_manuscript_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_edited_manuscript_envelope_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_edit_draft_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_edit_delta_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_main_tex_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_bibliography_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "claim_manifest_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "manuscript_plan_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "frontier_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "theory_program_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "theorem_package_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "theory_audit_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "literature_research_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selected_release_ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "selected_release_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "paper_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "policy": {
+      "$ref": "#/$defs/policy"
+    },
+    "exact_inputs": {
+      "type": "array",
+      "minItems": 27,
+      "items": {
+        "$ref": "#/$defs/input"
+      },
+      "maxItems": 28,
+      "uniqueItems": true
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "artifact_ref",
+        "repository_relative_path"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$"
+        },
+        "artifact_ref": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "repository_relative_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum_candidate_count",
+        "maximum_candidate_count",
+        "minimum_eligible_candidate_count",
+        "maximum_publication_tier",
+        "maximum_source_age_days",
+        "desired_article_type"
+      ],
+      "properties": {
+        "minimum_candidate_count": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8
+        },
+        "maximum_candidate_count": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8
+        },
+        "minimum_eligible_candidate_count": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8
+        },
+        "maximum_publication_tier": {
+          "const": 2
+        },
+        "maximum_source_age_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        },
+        "desired_article_type": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,255}$"
+        }
+      }
+    }
+  }
+}
