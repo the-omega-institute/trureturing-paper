@@ -1,0 +1,35 @@
+name: finalize-journal-research-selection
+
+on:
+  push:
+    branches:
+      - codex/paper-journal-research-selection
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/paper-journal-research-selection
+          fetch-depth: 0
+      - name: Apply validated journal research implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 -d tools/journal41.patch.gz.b64 | gzip -d > /tmp/journal41.patch
+          git apply --index --whitespace=nowarn /tmp/journal41.patch
+          git rm -f \
+            tools/journal41.patch.gz.b64 \
+            .github/workflows/finalize-journal41.yml \
+            .github/workflows/export-dotnet-sdk.yml \
+            .github/workflows/export-journal-worktree.yml \
+            .github/workflows/export-nuget-cache.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git commit -m "feat(paper): research and govern journal targets"
+          git push origin HEAD:codex/paper-journal-research-selection
