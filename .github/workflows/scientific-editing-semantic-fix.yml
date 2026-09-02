@@ -22,59 +22,40 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path('src/Trureturing.Paper.Core/PaperScientificEditingAgents.cs')
           source = path.read_text()
-          replacements = [
-              (
-                  '''        PaperScientificEditDelta delta = ComputeScientificEditDelta(
-                      context.SourceDraft,
-                      editDraft,
-                      output.ArtifactRef,
-                      result.CompletedAt);''',
-                  '''        PaperScientificEditDelta delta = ComputeScientificEditDelta(
-                      context.SourceDraft,
-                      dispatch.SourceDraftRef,
-                      editDraft,
-                      output.ArtifactRef,
-                      result.CompletedAt);'''
-              ),
-              (
-                  '''    private static PaperScientificEditDelta ComputeScientificEditDelta(
-              PaperScientificManuscriptDraft source,
-              PaperScientificEditDraft edited,
-              string editedDraftRef,
-              string computedAt)''',
-                  '''    private static PaperScientificEditDelta ComputeScientificEditDelta(
-              PaperScientificManuscriptDraft source,
-              string sourceDraftRef,
-              PaperScientificEditDraft edited,
-              string editedDraftRef,
-              string computedAt)'''
-              ),
-              (
-                  '''            Reference(CanonicalJson.Serialize(source)),
-              editedDraftRef,''',
-                  '''            sourceDraftRef,
-              editedDraftRef,'''
-              ),
-              (
-                  '''                if (oldBlock.Kind is PaperManuscriptDraftBlockKinds.FormalClaim
-                      or PaperManuscriptDraftBlockKinds.InformalItem
-                      && !string.Equals(oldBlock.Latex, newBlock.Latex, StringComparison.Ordinal))''',
-                  '''                if ((oldBlock.Kind is PaperManuscriptDraftBlockKinds.FormalClaim
-                      or PaperManuscriptDraftBlockKinds.InformalItem)
-                      && !string.Equals(oldBlock.Latex, newBlock.Latex, StringComparison.Ordinal))'''
-              ),
-              (
-                  '''        if (!string.Equals(content.SourceAuthoringTaskRef, context.SourceTask.Schema == PaperAgentSchemas.Task ? context.SourceAuthoringCursor.TaskRef : string.Empty, StringComparison.Ordinal)''',
-                  '''        if (!string.Equals(content.SourceAuthoringTaskRef, context.SourceAuthoringCursor.TaskRef, StringComparison.Ordinal)'''
-              ),
-          ]
-          for old, new in replacements:
-              if old not in source:
-                  raise SystemExit('scientific editing semantic fix target not found')
-              source = source.replace(old, new, 1)
+
+          source, first = re.subn(
+              r'(PaperScientificEditDelta delta = ComputeScientificEditDelta\(\s*context\.SourceDraft,\s*)(editDraft,)',
+              r'\1dispatch.SourceDraftRef,\n            \2',
+              source,
+              count=1)
+          source, second = re.subn(
+              r'(private static PaperScientificEditDelta ComputeScientificEditDelta\(\s*PaperScientificManuscriptDraft source,\s*)(PaperScientificEditDraft edited,)',
+              r'\1string sourceDraftRef,\n        \2',
+              source,
+              count=1)
+          source, third = re.subn(
+              r'Reference\(CanonicalJson\.Serialize\(source\)\),(\s*editedDraftRef,)',
+              r'sourceDraftRef,\1',
+              source,
+              count=1)
+          source, fourth = re.subn(
+              r'if \(oldBlock\.Kind is PaperManuscriptDraftBlockKinds\.FormalClaim\s*or PaperManuscriptDraftBlockKinds\.InformalItem\s*&&',
+              'if ((oldBlock.Kind is PaperManuscriptDraftBlockKinds.FormalClaim\n                    or PaperManuscriptDraftBlockKinds.InformalItem)\n                    &&',
+              source,
+              count=1)
+          source, fifth = re.subn(
+              r'context\.SourceTask\.Schema == PaperAgentSchemas\.Task \? context\.SourceAuthoringCursor\.TaskRef : string\.Empty',
+              'context.SourceAuthoringCursor.TaskRef',
+              source,
+              count=1)
+
+          if (first, second, third, fourth, fifth) != (1, 1, 1, 1, 1):
+              raise SystemExit(
+                  f'scientific editing semantic patch counts: {(first, second, third, fourth, fifth)}')
           path.write_text(source)
           PY
           git config user.name github-actions[bot]
