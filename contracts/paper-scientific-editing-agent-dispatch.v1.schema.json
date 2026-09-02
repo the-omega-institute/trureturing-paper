@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.trureturing.org/paper/paper-scientific-editing-agent-dispatch.v1.schema.json",
+  "title": "Paper scientific editing agent dispatch v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "source_authoring_task_ref", "source_authoring_result_ref",
+    "source_authoring_cursor_ref", "source_manuscript_ref",
+    "source_manuscript_envelope_ref", "source_draft_ref", "source_main_tex_ref",
+    "source_bibliography_ref", "evaluation_ref", "claim_manifest_ref",
+    "eligibility_ref", "manuscript_plan_ref", "completion_ref", "frontier_ref",
+    "paper_id", "theory_program_ref", "theorem_package_ref", "theory_audit_ref",
+    "literature_research_ref", "selected_release_ref", "selected_release_digest",
+    "exact_inputs", "requested_at"
+  ],
+  "properties": {
+    "schema": { "const": "paper-scientific-editing-agent-dispatch.v1" },
+    "source_authoring_task_ref": { "$ref": "#/$defs/digest" },
+    "source_authoring_result_ref": { "$ref": "#/$defs/digest" },
+    "source_authoring_cursor_ref": { "$ref": "#/$defs/digest" },
+    "source_manuscript_ref": { "$ref": "#/$defs/digest" },
+    "source_manuscript_envelope_ref": { "$ref": "#/$defs/digest" },
+    "source_draft_ref": { "$ref": "#/$defs/digest" },
+    "source_main_tex_ref": { "$ref": "#/$defs/digest" },
+    "source_bibliography_ref": { "$ref": "#/$defs/digest" },
+    "evaluation_ref": { "$ref": "#/$defs/digest" },
+    "claim_manifest_ref": { "$ref": "#/$defs/digest" },
+    "eligibility_ref": { "$ref": "#/$defs/digest" },
+    "manuscript_plan_ref": { "$ref": "#/$defs/digest" },
+    "completion_ref": { "$ref": "#/$defs/digest" },
+    "frontier_ref": { "$ref": "#/$defs/digest" },
+    "paper_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "theory_program_ref": { "$ref": "#/$defs/digest" },
+    "theorem_package_ref": { "$ref": "#/$defs/digest" },
+    "theory_audit_ref": { "$ref": "#/$defs/digest" },
+    "literature_research_ref": { "$ref": "#/$defs/digest" },
+    "selected_release_ref": { "$ref": "#/$defs/digest" },
+    "selected_release_digest": { "$ref": "#/$defs/digest" },
+    "exact_inputs": {
+      "type": "array",
+      "minItems": 19,
+      "maxItems": 19,
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "requested_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifact_ref", "repository_relative_path"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*\\.v[0-9]+$" },
+        "artifact_ref": { "$ref": "#/$defs/digest" },
+        "repository_relative_path": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    }
+  }
+}
