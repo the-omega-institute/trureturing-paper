@@ -199,6 +199,7 @@ public static partial class PaperManuscriptAuthoringAgentService
                 result.CompletedAt);
         PaperScientificEditDelta delta = ComputeScientificEditDelta(
             context.SourceDraft,
+            dispatch.SourceDraftRef,
             editDraft,
             output.ArtifactRef,
             result.CompletedAt);
@@ -580,7 +581,7 @@ public static partial class PaperManuscriptAuthoringAgentService
             minimum: 0,
             maximum: 512,
             maximumItemLength: 128);
-        if (!string.Equals(content.SourceAuthoringTaskRef, context.SourceTask.Schema == PaperAgentSchemas.Task ? context.SourceAuthoringCursor.TaskRef : string.Empty, StringComparison.Ordinal)
+        if (!string.Equals(content.SourceAuthoringTaskRef, context.SourceAuthoringCursor.TaskRef, StringComparison.Ordinal)
             || !string.Equals(content.SourceManuscriptRef, context.SourceManuscript.ManuscriptId, StringComparison.Ordinal)
             || !string.Equals(content.EditDeltaRef, delta.DeltaId, StringComparison.Ordinal)
             || !string.Equals(content.CompletionRef, context.SourceAuthoringCursor.CompletionRef, StringComparison.Ordinal)
@@ -793,8 +794,8 @@ public static partial class PaperManuscriptAuthoringAgentService
                     throw new InvalidDataException(
                         "Scientific editing cannot change block order, kind, or target identity.");
                 }
-                if (oldBlock.Kind is PaperManuscriptDraftBlockKinds.FormalClaim
-                    or PaperManuscriptDraftBlockKinds.InformalItem
+                if ((oldBlock.Kind is PaperManuscriptDraftBlockKinds.FormalClaim
+                    or PaperManuscriptDraftBlockKinds.InformalItem)
                     && !string.Equals(oldBlock.Latex, newBlock.Latex, StringComparison.Ordinal))
                 {
                     throw new InvalidDataException(
@@ -806,6 +807,7 @@ public static partial class PaperManuscriptAuthoringAgentService
 
     private static PaperScientificEditDelta ComputeScientificEditDelta(
         PaperScientificManuscriptDraft source,
+        string sourceDraftRef,
         PaperScientificEditDraft edited,
         string editedDraftRef,
         string computedAt)
@@ -890,7 +892,7 @@ public static partial class PaperManuscriptAuthoringAgentService
         }
         var content = new PaperScientificEditDeltaContent(
             edited.SourceManuscriptRef,
-            Reference(CanonicalJson.Serialize(source)),
+            sourceDraftRef,
             editedDraftRef,
             changedSections.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
             proseChanges,
